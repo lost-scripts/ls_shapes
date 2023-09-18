@@ -1,0 +1,38 @@
+# GENERAL #
+###########
+
+# Ignore everything in Modules/
+Modules/*
+
+# Ignore everything in Utility/
+Utility/*
+
+# But not ignore...
+#!Utility/ls_utilities.lua
+
+
+#*.git/
+# Ignore folders:
+#/ls_*/
+# Ignore files:
+#ls_*
+# Ignore all:
+#ls_
+
+# PATHS #
+#########
+
+
+
+# FOLDERS #
+###########
+
+
+
+# FILE TYPES #
+##############
+
+
+
+# FILES #
+#########

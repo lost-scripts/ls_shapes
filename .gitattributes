@@ -1,0 +1,32 @@
+# Explicit line ending normalization, with the corresponding warning. Other files will be left untouched (assumes 'core.autocrlf=false')
+
+*.bat text eol=crlf
+*.css text eol=lf
+*.html text eol=lf
+*.js text eol=lf
+*.lua text eol=lf
+*.md text eol=lf
+*.sh text eol=lf
+*.svg text eol=lf
+
+
+# Merge rules:
+
+/.github merge=ours
+/docs merge=ours
+/ScriptResources/ls/docs merge=ours
+.gitattributes merge=ours
+.gitignore merge=ours
+LICENSE merge=ours
+README.md merge=ours
+
+
+# Export rules for archives/releases:
+
+/.github export-ignore
+/docs export-ignore
+/ScriptResources/ls/docs export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+LICENSE export-ignore
+README.md export-ignore
