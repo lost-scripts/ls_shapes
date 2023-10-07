@@ -4,7 +4,7 @@
 
 ScriptName = "RL_ShapesWindow"
 ScriptBirth = "20230918-0248"
-ScriptBuild = "20231007-1838"
+ScriptBuild = "20231007-1832"
 
 -- **************************************************
 -- General information about this script
@@ -47,6 +47,8 @@ function RL_ShapesWindow:LoadPrefs(prefs)
 	self.showInfobar = prefs:GetBool("RL_ShapesWindow.showInfobar", true)
 	self.alertCantOpen = prefs:GetInt("RL_ShapesWindow.alertCantOpen", 0)
 	self.endMessage = prefs:GetBool("RL_ShapesWindow.endMessage", false)
+	--self.endedByMoho = prefs:GetBool("RL_ShapesWindow.endedByApp", false)
+	--self.endedByUser = prefs:GetBool("RL_ShapesWindow.endedByUser", false)
 end
 
 function RL_ShapesWindow:SavePrefs(prefs)
@@ -127,7 +129,7 @@ RL_ShapesWindowDialog.SELECTBASETOP			= MOHO.MSG_BASE + 39
 RL_ShapesWindowDialog.SELECTBASETOP_ALT		= MOHO.MSG_BASE + 40
 RL_ShapesWindowDialog.OPTIONS_MENU			= MOHO.MSG_BASE + 41
 
-function RL_ShapesWindowDialog:new(moho) print("RL_ShapesWindowDialog:new(" .. tostring(moho) .. "): ", os.clock()) -- This print makes the window get closed upon closing the LCW!
+function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" .. tostring(moho) .. "): ", os.clock()) -- This print makes the window get closed upon closing the LCW!
 	local d = LM.GUI.SimpleDialog("☰  " .. MOHO.Localize("/Windows/Style/Shapes=Shapes"), RL_ShapesWindowDialog)
 	local l = d:GetLayout()
 	local wWidth = 132
@@ -155,7 +157,7 @@ function RL_ShapesWindowDialog:new(moho) print("RL_ShapesWindowDialog:new(" .. t
 		--d.optionsPopup:SetToolTip(MOHO.Localize("/Dialogs/LayerSettings/GeneralTab/Options=Options"))
 		d.optionsPopup:SetMenu(d.optionsMenu)
 		l:AddChild(d.optionsPopup, LM.GUI.ALIGN_LEFT, 0)
-		d.optionsMenu:AddItem(MOHO.Localize("/Scripts/Tool/ShapesWindow/AllowHybridSelection=Use Hybrid Selection"), 0, self.OPTIONS_MENU)
+		d.optionsMenu:AddItem(MOHO.Localize("/Scripts/Tool/ShapesWindow/UseHybridSelection=Use Hybrid Selection"), 0, self.OPTIONS_MENU)
 		d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
 		d.optionsMenu:AddItem(MOHO.Localize("/Windows/Style/Advanced=Advanced") .. " (" .. MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. ")", 0, self.OPTIONS_MENU + 1) d.optionsMenu:SetEnabled(self.OPTIONS_MENU, true)
 		d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
@@ -673,7 +675,7 @@ function RL_ShapesWindowDialog:Update(moho) print("RL_ShapesWindowDialog:Update(
 		--end
 	end
 
-	if self.skipBlock == true then -- 20231007-1730: Perform ONLY widget updates above when called from HandlMessage/UpdateUI in order to avoid the loop!
+	if self.skipBlock == true and tool:find("SelectPoints") then -- 20231007-1730: Perform ONLY widget updates above when called from HandlMessage/UpdateUI in order to avoid the loop!
 		return
 	end
 
@@ -724,7 +726,7 @@ function RL_ShapesWindowDialog:Update(moho) print("RL_ShapesWindowDialog:Update(
 	else
 		self.shapeName:Enable(false)
 		self.shapeName:SetValue("")
-		self.shapeList:SetSelItem(self.shapeList:GetItem(0), true, false) -- 20230920-1605: Had to pass false for redraw (2nd arg.) to avoid items deselection! 20230920-1730: But now is again true 🤔
+		self.shapeList:SetSelItem(self.shapeList:GetItem(0), true, false) -- 20230920-1605: Had to pass false for redraw (2nd arg.) to avoid items deselection! 20230920-1730: But now is again true and works? 🤔
 		self.shapeList:ScrollItemIntoView(0, true) -- It doesn't seem to scroll to item 0
 	end
 	self.skipBlock = false
@@ -826,7 +828,7 @@ function RL_ShapesWindowDialog:OnOK() --print("RL_ShapesWindowDialog:OnOK(): ", 
 	helper:delete()
 end
 
-function RL_ShapesWindowDialog_Update(moho) --print("RL_ShapesWindowDialog_Update(moho): ", os.clock())
+function RL_ShapesWindowDialog_Update(moho) --print("RL_ShapesWindowDialog_Update(" .. moho .."): ", os.clock())
 	if RL_ShapesWindow.dlog then
 		RL_ShapesWindow.dlog:Update(moho)
 	end
@@ -848,7 +850,6 @@ function RL_ShapesWindowDialog:HandleMessage(msg) print("RL_ShapesWindowDialog:H
 	--local vHeight = moho.view:Height()
 	--local caller = debug.getinfo(3) and debug.getinfo(3).name or "NULL" print(caller) --0: getinfo, 1: NULL/NULL, 2: SetSelItem/NULL, 3: NULL/Update, 4: NULL/func, 5: NULL/NULL
 
-	
 	if (mesh == nil) then
 		helper:delete()
 		return
@@ -882,9 +883,11 @@ function RL_ShapesWindowDialog:HandleMessage(msg) print("RL_ShapesWindowDialog:H
 
 	if (msg == self.CHANGE) then
 		if self.skipBlock == true then -- Try to avoid unwanted call to Update/UpdateWidgets bellow upon selecting, no matter how, a list item!
-			moho:UpdateUI()
+			if (RL_ShapesWindow.useHybridSel and tool:find("SelectPoints")) then
+				moho:UpdateUI()
+			end
 			helper:delete()
-			return -- 20230920-2103: Commented, since it seems to make dialog widgets not update propertly... 20231006-2004: But now it's uncommented 🤔
+			return -- 20230920-2103: Commented, since it seems to make dialog widgets not update propertly... 20231006-2004: But now it's uncommented and works? 🤔
 		end
 
 		shapeID = self.shapeList:SelItem() > 0 and mesh:CountShapes() - self.shapeList:SelItem() or -1
