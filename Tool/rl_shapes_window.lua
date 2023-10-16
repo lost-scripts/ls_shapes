@@ -4,7 +4,7 @@
 
 ScriptName = "RL_ShapesWindow"
 ScriptBirth = "20230918-0248"
-ScriptBuild = "20231014-0711"
+ScriptBuild = "20231017-0040"
 
 -- **************************************************
 -- General information about this script
@@ -42,9 +42,9 @@ function RL_ShapesWindow:LoadPrefs(prefs) --print("RL_ShapesWindow:LoadPrefs(" .
 	self.creationMode = prefs:GetInt("LM_CreateShape.creationMode", 2)
 	self.pointsBasedSel = prefs:GetBool("RL_ShapesWindow.pointsBasedSel", false)
 	self.ignoreNonRegular = prefs:GetBool("RL_ShapesWindow.ignoreNonRegular", true)
+	self.showTooltips = prefs:GetBool("RL_ShapesWindow.showTooltips", true)
 	self.advanced = prefs:GetBool("RL_ShapesWindow.advanced", true)
 	self.halfDimensions = prefs:GetBool("RL_ShapesWindow.halfDimensions", true)
-	self.showTooltips = prefs:GetBool("RL_ShapesWindow.showTooltips", true)
 	self.showInfobar = prefs:GetBool("RL_ShapesWindow.showInfobar", true)
 	self.alertCantOpen = prefs:GetInt("RL_ShapesWindow.alertCantOpen", 0)
 	self.endMessage = prefs:GetBool("RL_ShapesWindow.endMessage", false)
@@ -56,9 +56,9 @@ function RL_ShapesWindow:SavePrefs(prefs) --print("RL_ShapesWindow:SavePrefs(" .
 	prefs:SetInt("LM_CreateShape.creationMode", self.creationMode)
 	prefs:SetBool("RL_ShapesWindow.pointsBasedSel", self.pointsBasedSel)
 	prefs:SetBool("RL_ShapesWindow.ignoreNonRegular", self.ignoreNonRegular)
+	prefs:SetBool("RL_ShapesWindow.showTooltips", self.showTooltips)
 	prefs:SetBool("RL_ShapesWindow.advanced", self.advanced)
 	prefs:SetBool("RL_ShapesWindow.halfDimensions", self.halfDimensions)
-	prefs:SetBool("RL_ShapesWindow.showTooltips", self.showTooltips)
 	prefs:SetBool("RL_ShapesWindow.showInfobar", self.showInfobar)
 	prefs:SetInt("RL_ShapesWindow.alertCantOpen", self.alertCantOpen)
 	prefs:SetBool("RL_ShapesWindow.endMessage", true)
@@ -68,9 +68,9 @@ function RL_ShapesWindow:ResetPrefs()
 	LM_CreateShape.creationMode = 2
 	RL_ShapesWindow.pointsBasedSel = false
 	RL_ShapesWindow.ignoreNonRegular = true
-	RL_ShapesWindow.halfDimensions = true -- 0: Max, 1: Full, 2: Half, 3: Third?
-	RL_ShapesWindow.advanced = true
 	RL_ShapesWindow.showTooltips = true
+	RL_ShapesWindow.advanced = true
+	RL_ShapesWindow.halfDimensions = true -- 0: Max, 1: Full, 2: Half, 3: Third?
 	RL_ShapesWindow.showInfobar = true
 	RL_ShapesWindow.alertCantOpen = 0
 end
@@ -162,6 +162,7 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 
 	d.v = moho.view
 	d.w = {} -- widgets, wTable?
+	d.msg = MOHO.MSG_BASE
 	d.isNewRun = true
 	d.count = 0
 	d.skipBlock = false
@@ -174,25 +175,28 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 	l:AddPadding(-12)
 	l:Unindent(6)
 
-	l:AddPadding(-18) ---14 (if modeBut)
+	l:AddPadding(-16) ---14 (if modeBut)
 	l:PushV(LM.GUI.ALIGN_LEFT, 0)
 		l:AddPadding(-4) -- Comment if modeBut
 		d.optionsMenu = LM.GUI.Menu("…") --⁝☰⚙…
-		d.optionsPopup = LM.GUI.PopupMenu(28, false) --56
+		d.optionsPopup = LM.GUI.PopupMenu(22, false)
 		--d.optionsPopup:SetToolTip(MOHO.Localize("/Dialogs/LayerSettings/GeneralTab/Options=Options"))
 		d.optionsPopup:SetMenu(d.optionsMenu)
-		l:AddChild(d.optionsPopup, LM.GUI.ALIGN_LEFT, 0)
+		l:AddChild(d.optionsPopup, LM.GUI.ALIGN_LEFT, 6)
 		d.optionsMenu:AddItem(MOHO.Localize("/Scripts/Tool/ShapesWindow/PointsBasedSelection=Points-Based Selection") .. " [🧪]", 0, self.OPTIONS_MENU)
 		d.optionsMenu:AddItem(MOHO.Localize("/Scripts/Tool/ShapesWindow/IgnoreNonRegularVectorLayers=Ignore Non-Regular Vector Layers"), 0, self.OPTIONS_MENU + 1)
 		d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
-		d.optionsMenu:AddItem(MOHO.Localize("/Windows/Style/Advanced=Advanced") .. " (" .. MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. ")", 0, self.OPTIONS_MENU + 2) d.optionsMenu:SetEnabled(self.OPTIONS_MENU + 2, true)
+		d.optionsMenu:AddItem(MOHO.Localize("/Windows/LayerComps/ShowComp=Show") .. " " .. "All Tooltips", 0, self.OPTIONS_MENU + 2)
 		d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
-		d.optionsMenu:AddItem(MOHO.Localize("/Dialogs/ExportSettings/HalfDimensions=Half Dimensions (%dx%d)"):match("[^%(]+"), 0, self.OPTIONS_MENU + 3)
-		d.optionsMenu:AddItem(MOHO.Localize("/Windows/LayerComps/ShowComp=Show") .. " " .. "Tooltips", 0, self.OPTIONS_MENU + 4)
+		d.optionsMenu:AddItem(MOHO.Localize("/Windows/Style/Advanced=Advanced") .. " (" .. MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. ")", 0, self.OPTIONS_MENU + 3) d.optionsMenu:SetEnabled(self.OPTIONS_MENU + 3, true)
+		d.optionsMenu:AddItem(MOHO.Localize("/Dialogs/ExportSettings/HalfDimensions=Half Dimensions (%dx%d)"):match("[^%(]+"), 0, self.OPTIONS_MENU + 4)
 		d.optionsMenu:AddItem(MOHO.Localize("/Windows/LayerComps/ShowComp=Show") .. " " .. "Infobar", 0, self.OPTIONS_MENU + 5)
+		--d.optionsMenu:AddItem(MOHO.Localize("/Scripts/Tool/ShapesWindow/ResizeAndReopen=Resize & Reopen"), 0, self.OPTIONS_MENU + 6)
 		d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
 		d.optionsMenu:AddItem(MOHO.Localize("/Dialogs/ProjectSettings/RestoreDefaults=Restore Defaults") .. " [?]", 0, self.OPTIONS_MENU + 6)
 		d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
+		--d.optionsMenu:AddItem(MOHO.Localize("/Menus/Help/Help=Help") ..  "...", 0, self.OPTIONS_MENU + 7)
+		--d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
 		d.optionsMenu:AddItem(MOHO.Localize("/Menus/Application/About=About") .. " " .. RL_ShapesWindow:UILabel() .. "...", 0, self.OPTIONS_MENU + 7)
 		--d.optionsMenu:AddItem("...", 0, self.OPTIONS_MENU + self:CountRealItems(d.optionsMenu)) --d.optionsMenu:SetEnabled(self.OPTIONS_MENU + self:CountRealItems(d.optionsMenu), false) -- Last (Testground!)
 	
@@ -224,6 +228,7 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 
 		l:AddPadding(4)
 		d.dummyList = LM.GUI.ImageTextList(0, 1, LM.GUI.MSG_CANCEL)
+		d.dummyList:AddItem("", false)
 		l:AddChild(d.dummyList, LM.GUI.ALIGN_FILL, 0)
 		l:AddPadding(3)
 
@@ -528,7 +533,7 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 end
 
 --function RL_ShapesWindowDialog:UpdateWidgets(moho) --print("RL_ShapesWindowDialog:UpdateWidgets(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock())
-	-- This only run once upon opening the dialog, so using "Update()" function bellow for al purposes instead. 🤔 Not sure if at some point it may have some use...
+	-- This only run once upon opening the dialog even if its modeless, so using "Update()" function bellow for al purposes instead. 🤔 Not sure if at some point it may have some use...
 --end
 
 function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Update(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock())
@@ -540,6 +545,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	local tool = moho:CurrentTool()
 	local toolsDisabled = moho:DisableDrawingTools()
 	local l = self:GetLayout()
+	local msg = self.msg ~= nil and self.msg or MOHO.MSG_BASE
 	local info = {} --[1] = "ℹ ", [2] = "🆔 ", [3] = "#️⃣ ", [4] = "♒ "
 	local itemsSel = math.floor(self.shapeList:NumSelectedItems())
 
@@ -588,14 +594,21 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 			but:Enable(not toolsDisabled)
 		end
 	end
-	self.optionsMenu:SetChecked(self.OPTIONS_MENU, RL_ShapesWindow.pointsBasedSel)
-	self.optionsMenu:SetChecked(self.OPTIONS_MENU + 1, RL_ShapesWindow.ignoreNonRegular)
-	self.optionsMenu:SetChecked(self.OPTIONS_MENU + 2, RL_ShapesWindow.advanced)
-	self.optionsMenu:SetChecked(self.OPTIONS_MENU + 3, RL_ShapesWindow.halfDimensions)
-	self.optionsMenu:SetChecked(self.OPTIONS_MENU + 4, RL_ShapesWindow.showTooltips)
-	self.optionsMenu:SetChecked(self.OPTIONS_MENU + 5, RL_ShapesWindow.showInfobar)
 
-	if (mesh == nil) or (lDrawing and lDrawing:IsCurver() or (lDrawing:IsWarpLayer() and (lDrawing:ContinuousTriangulation() or RL_ShapesWindow.ignoreNonRegular))) then -- Disable everything irrelevant if no valid/drawing layer is active
+	---[[20231014-1955: Try to move all this to DoLayout? They may not need to be updated all the time after all...
+	--if (msg >= self.OPTIONS_MENU and msg <= self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) then -- Do nothing else than update the menu?
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU, RL_ShapesWindow.pointsBasedSel)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 1, RL_ShapesWindow.ignoreNonRegular)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 2, RL_ShapesWindow.showTooltips)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 3, RL_ShapesWindow.advanced)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 4, RL_ShapesWindow.halfDimensions)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 5, RL_ShapesWindow.showInfobar)
+		--helper:delete()
+		--return
+	--end
+	--]]
+
+	if (mesh == nil) or ((lDrawing and lDrawing:IsCurver()) or (lDrawing:IsWarpLayer() and (lDrawing:ContinuousTriangulation() or RL_ShapesWindow.ignoreNonRegular))) then -- Disable everything irrelevant if no valid/drawing layer is active (Ignore Non-Regular makes e.g. non-continuously-triangulated layers be also ignored).
 		l:Enable(false)
 		self.itemName:SetValue("")
 		self.combineNormal:SetValue(false)
@@ -631,21 +644,25 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		end
 
 		if (doc == nil) then -- Disable everything else irrelevant if there is no document open
-			self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 2, false) -- Advanced (Create)
-			self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 3, false) -- Half Dimensions
-			--self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 4, false) -- Show Tooltips
+			self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 3, false) -- Advanced (Create)
+			self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 4, false) -- Half Dimensions
 			self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 5, false) -- Show Infobar
-			self.fillCol:Enable(false)
-			self.lineCol:Enable(false)
-			self.widthLabel:Enable(false)
-			self.lineWidth:Enable(false)
-			self.capsBut:Enable(false)
+			if RL_ShapesWindow.advanced then
+				self.fillCol:Enable(false)
+				self.lineCol:Enable(false)
+				self.widthLabel:Enable(false)
+				self.lineWidth:Enable(false)
+				self.capsBut:Enable(false)
+			end
 		end
 
 		helper:delete()
 		return
 	else -- Enable everything relevant if a valid/drawing layer is active
 		l:Enable(true)
+		self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 3, true) -- Advanced (Create)
+		self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 4, true) -- Half Dimensions
+		self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 5, true) -- Show Infobar
 		if RL_ShapesWindow.advanced then
 			self.shapeList:Enable(true)
 			self.shapeList:Redraw()
@@ -917,6 +934,9 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	end
 	
 	shapes = mesh and mesh:CountShapes() or 0
+	for i = 0, #self.shapeTable do -- Ensure the table is empty before updating! Otherwise if it had more elements, they will remain and the system will think there are more shapes than actually are (force an unnecessary list update).
+		self.shapeTable[i] = nil
+	end
 	for i = 1, shapes do -- Previous shapes state
 		local shape = mesh:Shape(i - 1)
 		self.shapeTable[0] = moho.drawingLayer:UUID()
@@ -958,56 +978,62 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 	local tool = moho:CurrentTool()
 	local l = self:GetLayout()
 	--local vHeight, vWidth = moho.view:Height(), moho.view:Width()
+	self.msg = msg or MOHO.MSG_BASE
 
-	if (msg >= self.OPTIONS_MENU and msg <= self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) then -- Process first of all stuff that can be accesed even without an open doc
-		if (doc == nil) then -- Since there doesn't seem to be possible to trigger anything upon closing last document, try to disable irrelevant widgets as soon as something is pressed by user...  
+
+	if (msg >= self.OPTIONS_MENU and msg <= self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) then -- Process first of all stuff that can be accesed even without an open document.
+		if (doc == nil) then -- Since there doesn't seem to be possible to trigger anything upon closing last document... well try to disable irrelevant widgets as soon as user click any menu entry.  
 			self:Update()
 		end
 		if (msg == self.OPTIONS_MENU) then -- Points-Based Selection
 			RL_ShapesWindow.pointsBasedSel = not RL_ShapesWindow.pointsBasedSel
 		elseif (msg == self.OPTIONS_MENU + 1) then -- Ignore Non-Regular Vector Layers
-				RL_ShapesWindow.ignoreNonRegular = not RL_ShapesWindow.ignoreNonRegular
-				self:Update()
-		elseif (msg == self.OPTIONS_MENU + 2) then -- Advanced (Create)
-			self.dummyList:AddItem("", false)
-			self.dummyList:SetSelItem(self.dummyList:GetItem(0), false)
-
-			if (RL_ShapesWindow.dlog) then
-				RL_ShapesWindow.dlog = nil
-			end
-			RL_ShapesWindow.advanced = not RL_ShapesWindow.advanced
-			return
-		elseif (msg == self.OPTIONS_MENU + 3) then -- Half Dimensions
-			--print("1: (msg >= self.OPTIONS_MENU and msg <= self.OPTIONS_MENU + 7)")
-			self.dummyList:AddItem("", false)
-			self.dummyList:SetSelItem(self.dummyList:GetItem(0), false)
-			--print("2: (msg >= self.OPTIONS_MENU and msg <= self.OPTIONS_MENU + 7)")
-			if (RL_ShapesWindow.dlog) then
-				RL_ShapesWindow.dlog = nil
-			end
-			RL_ShapesWindow.halfDimensions = not RL_ShapesWindow.halfDimensions
-			return
-		elseif (msg == self.OPTIONS_MENU + 4) then -- Show Tooltips
+			RL_ShapesWindow.ignoreNonRegular = not RL_ShapesWindow.ignoreNonRegular
+		elseif (msg == self.OPTIONS_MENU + 2) then -- Show Tooltips
 			RL_ShapesWindow.showTooltips = not RL_ShapesWindow.showTooltips
-			self:Update()
-		elseif (msg == self.OPTIONS_MENU + 5) then -- Show Infobar
-			self.dummyList:AddItem("", false)
-			self.dummyList:SetSelItem(self.dummyList:GetItem(0), false)
-
-			if (RL_ShapesWindow.dlog) then
-				RL_ShapesWindow.dlog = nil
+		elseif (msg >= self.OPTIONS_MENU + 3 and msg <= self.OPTIONS_MENU + 5) then -- Try to encompass here options which require auto-reopening.
+			if (msg == self.OPTIONS_MENU + 3) and doc ~= nil then -- Advanced (Create)
+				RL_ShapesWindow.advanced = not RL_ShapesWindow.advanced
+				--self.optionsMenu:SetChecked(msg, RL_ShapesWindow.advanced) -- Not necessary in this case, but another possibility of update entries' checkmarks...
+			elseif (msg == self.OPTIONS_MENU + 4) and doc ~= nil then -- Half Dimensions
+				RL_ShapesWindow.halfDimensions = not RL_ShapesWindow.halfDimensions
+			elseif (msg == self.OPTIONS_MENU + 5) and doc ~= nil then -- Show Infobar
+				RL_ShapesWindow.showInfobar = not RL_ShapesWindow.showInfobar
 			end
-			RL_ShapesWindow.showInfobar = not RL_ShapesWindow.showInfobar
+			if doc ~= nil then
+				--print("1: (msg >= self.OPTIONS_MENU + 3 and msg <= self.OPTIONS_MENU + 5)")
+				self.dummyList:SetSelItem(self.dummyList:GetItem(0), false)
+				--print("2: (msg >= self.OPTIONS_MENU + 3 and msg <= self.OPTIONS_MENU + 5)")
+				if (RL_ShapesWindow.dlog) then
+					RL_ShapesWindow.dlog = nil
+				end
+			end
+			helper:delete()
 			return
 		elseif (msg == self.OPTIONS_MENU + 6) then -- Restore Defaults [?]
-			local alert = LM.GUI.Alert(LM.GUI.ALERT_QUESTION, RL_ShapesWindow:UILabel() .. ": " .. MOHO.Localize("/Dialogs/Preferences/ToolPrefs/RestoreDefaults=Restore Factory Defaults") .. "?", nil, nil, MOHO.Localize("/Dialogs/ProjectSettings/RestoreDefaults=Restore Defaults"):gmatch("%w+")(), MOHO.Localize("/Strings/Cancel=Cancel"), nil) --OK: 0, Cancel: 1
+			local alert = LM.GUI.Alert(LM.GUI.ALERT_QUESTION,
+			RL_ShapesWindow:UILabel() .. ": " .. MOHO.Localize("/Dialogs/Preferences/ToolPrefs/RestoreDefaults=Restore Factory Defaults") .. "?",
+			MOHO.Localize(doc ~= nil and "/Scripts/Tool/ShapesWindow/TheWindowWillReopen=The window will reopen if necessary." or "/Scripts/Tool/ShapesWindow/TheWindowWillClose=The window will close if necessary."), nil,
+			MOHO.Localize("/Dialogs/ProjectSettings/RestoreDefaults=Restore Defaults"):gmatch("%w+")(), MOHO.Localize("/Strings/Cancel=Cancel")) --Restore: 0, Cancel: 1
 			if alert == 0 then
 				RL_ShapesWindow:ResetPrefs()
+				if RL_ShapesWindow.advanced ~= self.optionsMenu:IsChecked(self.OPTIONS_MENU + 3) or RL_ShapesWindow.halfDimensions ~= self.optionsMenu:IsChecked(self.OPTIONS_MENU + 4) or RL_ShapesWindow.showInfobar ~= self.optionsMenu:IsChecked(self.OPTIONS_MENU + 5) then -- Only Reopen window if necessary.
+					--print("1: (msg == self.OPTIONS_MENU + 6)")
+					self.dummyList:SetSelItem(self.dummyList:GetItem(0), false)
+					--print("2: (msg == self.OPTIONS_MENU + 6)")
+					if (RL_ShapesWindow.dlog) and doc ~= nil then -- It may be better not try to reopen without an open document, otherwise the lack of view (among other things) will make it open weirdly.
+						RL_ShapesWindow.dlog = nil
+					end
+					helper:delete()
+					return
+				end
+			else
+				helper:delete()
+				return
 			end
-			self:Update()
 		elseif (msg == self.OPTIONS_MENU + 7) then -- About...
 			local block1a = RL_ShapesWindow:UILabel() .. " " .. RL_ShapesWindow:Version()
-			local block1b = "\n" ..  RL_ShapesWindow:Creator()
+			local block1b = "\n" ..  RL_ShapesWindow:Creator() .. ", All Rights Reserved."
 			--local blockSep = "\n" ..  ("_"):rep(math.max(block1a and #block1a or 0, block1b and #block1b or 0))
 			local block2 = RL_ShapesWindow:Description() .. "\n\n"
 			local block3 = "Licensed under the Apache License, Version 2.0"
@@ -1017,22 +1043,20 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			elseif alert == 1 then
 				local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, RL_ShapesWindow.ack[1], table.concat(RL_ShapesWindow.ack, "    \n\n", 2, #RL_ShapesWindow.ack - 1) , RL_ShapesWindow.ack[#RL_ShapesWindow.ack], MOHO.Localize("/Menus/File/CloseRender=Close"))
 			end
-			self:Update()
-			helper:delete()
-			return
 		elseif (msg == self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) then -- Last (Testground!)
-			print("...")
+			--print("...")
 		end
 
-		if (doc ~= nil) then
+		--if (doc ~= nil) then
 			self:Update()
-			--MOHO.Redraw()
-		end
+			MOHO.Redraw()
+		--end
+		helper:delete()
+		return
 	end
 
 	if (doc == nil) then -- Ensure nothing is run from here on after closing last document (or things like LayerAsVector will make Moho crash).
 		self:Update()
-		--moho:UpdateUI()
 		helper:delete()
 		return
 	end
@@ -1077,8 +1101,12 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 				if shapesSel == 0 then
 					self.count = 0
 				end
-				if self.count and self.count == shapesSel then 
-					moho:UpdateUI()
+				if self.count and self.count == shapesSel then
+					self:Update()
+					if tool:find("SelectShape") then -- Use this solution (when possible) instead UpdateUI() bellow to avoid updating unnecesary UI elements and thus performance loss!
+						LM_SelectShape:UpdateWidgets(moho)
+					end
+					--moho:UpdateUI()
 					self.count = 0
 				end
 				self.count = self.count + 1
@@ -1122,7 +1150,11 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 		self.lower:Enable(self.shapeList:SelItem() > 0 and self.shapeList:SelItem() < self.shapeList:CountItems() - 1)
 		--]=]
 		MOHO.Redraw()
-		moho:UpdateUI()
+		self:Update()
+		if tool:find("SelectShape") then -- Use this solution (when possible) instead UpdateUI() bellow to avoid updating unnecesary UI elements and thus performance loss!
+			LM_SelectShape:UpdateWidgets(moho)
+		end
+		--moho:UpdateUI()
 	elseif (msg == self.NAME) then
 		if shapeID and shapeID >= 0 then
 			local shape = mesh:Shape(shapeID)
@@ -1524,10 +1556,10 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 	elseif (msg == self.RESET) or (msg == self.RESET_ALT) then
 		local MohoLineWidth = 0.005556 -- Factory default value * 2 = 8px (No MohoGlobal??)
 		if (style ~= nil) then
-			--style.fFillCol:SetValue(moho.drawingLayerFrame, MOHO.MohoGlobals.FillCol)
-			--style.fLineCol:SetValue(moho.drawingLayerFrame, MOHO.MohoGlobals.LineCol)
-			--style.fLineWidth = MohoLineWidth * 2
-			--style.fLineCaps = 1
+			style.fFillCol:SetValue(moho.drawingLayerFrame, MOHO.MohoGlobals.FillCol)
+			style.fLineCol:SetValue(moho.drawingLayerFrame, MOHO.MohoGlobals.LineCol)
+			style.fLineWidth = MohoLineWidth * 2
+			style.fLineCaps = 1
 		end
 		for i = 0, mesh:CountShapes() - 1 do
 			local shape = mesh:Shape(i)
