@@ -3,8 +3,8 @@
 -- **************************************************
 
 ScriptName = "RL_ShapesWindow"
-ScriptBirth = "20230918-0248"
-ScriptBuild = "20231018-0709"
+ScriptBirth = "20220918-0248"
+ScriptBuild = "20231018-1959"
 
 -- **************************************************
 -- General information about this script
@@ -23,7 +23,7 @@ function RL_ShapesWindow:Version()
 end
 
 function RL_ShapesWindow:Description()
-	return MOHO.Localize("/Scripts/Tool/ShapesWindow/Description=A persistent shape palette plus helpers for better management of vectors in general and the AMAZING new \"Liquid Shapes\" in particular.")
+	return MOHO.Localize("/Scripts/Tool/ShapesWindow/Description=A persistent shape palette plus helpers for better management of Moho® vectors in general and the AMAZING new \"Liquid Shapes\" in particular.")
 end
 
 function RL_ShapesWindow:Creator()
@@ -42,7 +42,8 @@ function RL_ShapesWindow:LoadPrefs(prefs) --print("RL_ShapesWindow:LoadPrefs(" .
 	self.creationMode = prefs:GetInt("LM_CreateShape.creationMode", 2)
 	self.pointsBasedSel = prefs:GetBool("RL_ShapesWindow.pointsBasedSel", false)
 	self.ignoreNonRegular = prefs:GetBool("RL_ShapesWindow.ignoreNonRegular", true)
-	self.showTooltips = prefs:GetBool("RL_ShapesWindow.showTooltips", true)
+	self.showTooltips = prefs:GetBool("RL_ShapesWindow.showTooltips", true) -- Basic Tooltips Only
+	self.linkToStyle = prefs:GetBool("RL_ShapesWindow.linkToStyle", true)
 	self.advanced = prefs:GetBool("RL_ShapesWindow.advanced", true)
 	self.halfDimensions = prefs:GetBool("RL_ShapesWindow.halfDimensions", true)
 	self.showInfobar = prefs:GetBool("RL_ShapesWindow.showInfobar", true)
@@ -57,6 +58,7 @@ function RL_ShapesWindow:SavePrefs(prefs) --print("RL_ShapesWindow:SavePrefs(" .
 	prefs:SetBool("RL_ShapesWindow.pointsBasedSel", self.pointsBasedSel)
 	prefs:SetBool("RL_ShapesWindow.ignoreNonRegular", self.ignoreNonRegular)
 	prefs:SetBool("RL_ShapesWindow.showTooltips", self.showTooltips)
+	prefs:SetBool("RL_ShapesWindow.linkToStyle", self.linkToStyle)
 	prefs:SetBool("RL_ShapesWindow.advanced", self.advanced)
 	prefs:SetBool("RL_ShapesWindow.halfDimensions", self.halfDimensions)
 	prefs:SetBool("RL_ShapesWindow.showInfobar", self.showInfobar)
@@ -69,6 +71,7 @@ function RL_ShapesWindow:ResetPrefs()
 	RL_ShapesWindow.pointsBasedSel = false
 	RL_ShapesWindow.ignoreNonRegular = true
 	RL_ShapesWindow.showTooltips = true
+	RL_ShapesWindow.linkToStyle = true
 	RL_ShapesWindow.advanced = true
 	RL_ShapesWindow.halfDimensions = true -- 0: Max, 1: Full, 2: Half, 3: Third?
 	RL_ShapesWindow.showInfobar = true
@@ -84,7 +87,8 @@ RL_ShapesWindow.birth = ScriptBirth
 RL_ShapesWindow.build = ScriptBuild
 RL_ShapesWindow.path = debug.getinfo(1,'S')
 RL_ShapesWindow.filename = (RL_ShapesWindow.path.source):match("^.*[/\\](.*).lua$")
-RL_ShapesWindow.url = "https://mohoscripts.com/script/" .. RL_ShapesWindow.filename
+RL_ShapesWindow.url = "https://github.com/lost-scripts/" .. RL_ShapesWindow.filename
+--RL_ShapesWindow.url = "https://mohoscripts.com/script/" .. RL_ShapesWindow.filename
 RL_ShapesWindow.dlog = nil
 RL_ShapesWindow.ack = {
 "My sincere thanks to...",
@@ -187,17 +191,19 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 		d.optionsMenu:AddItem(MOHO.Localize("/Scripts/Tool/ShapesWindow/IgnoreNonRegularVectorLayers=Ignore Non-Regular Vector Layers"), 0, self.OPTIONS_MENU + 1)
 		d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
 		d.optionsMenu:AddItem(MOHO.Localize("/Windows/LayerComps/ShowComp=Show") .. " " .. "All Tooltips", 0, self.OPTIONS_MENU + 2)
+		d.optionsMenu:AddItem(MOHO.Localize("/Scripts/Tool/ShapesWindow/LinkToStyleWindow=Link To Style Window"), 0, self.OPTIONS_MENU + 3)
 		d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
-		d.optionsMenu:AddItem(MOHO.Localize("/Windows/Style/Advanced=Advanced") .. " (" .. MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. ")", 0, self.OPTIONS_MENU + 3) d.optionsMenu:SetEnabled(self.OPTIONS_MENU + 3, true)
-		d.optionsMenu:AddItem(MOHO.Localize("/Dialogs/ExportSettings/HalfDimensions=Half Dimensions (%dx%d)"):match("[^%(]+"), 0, self.OPTIONS_MENU + 4)
-		d.optionsMenu:AddItem(MOHO.Localize("/Windows/LayerComps/ShowComp=Show") .. " " .. "Infobar", 0, self.OPTIONS_MENU + 5)
+		d.optionsMenu:AddItem(MOHO.Localize("/Windows/Style/Advanced=Advanced") .. " (" .. MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. ")", 0, self.OPTIONS_MENU + 4) d.optionsMenu:SetEnabled(self.OPTIONS_MENU + 3, true)
+		d.optionsMenu:AddItem(MOHO.Localize("/Dialogs/ExportSettings/HalfDimensions=Half Dimensions (%dx%d)"):match("[^%(]+"), 0, self.OPTIONS_MENU + 5)
+		d.optionsMenu:AddItem(MOHO.Localize("/Windows/LayerComps/ShowComp=Show") .. " " .. "Infobar", 0, self.OPTIONS_MENU + 6)
 		--d.optionsMenu:AddItem(MOHO.Localize("/Scripts/Tool/ShapesWindow/ResizeAndReopen=Resize & Reopen"), 0, self.OPTIONS_MENU + 6)
 		d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
-		d.optionsMenu:AddItem(MOHO.Localize("/Dialogs/ProjectSettings/RestoreDefaults=Restore Defaults") .. " [?]", 0, self.OPTIONS_MENU + 6)
+		d.optionsMenu:AddItem(MOHO.Localize("/Dialogs/ProjectSettings/RestoreDefaults=Restore Defaults") .. " [?]", 0, self.OPTIONS_MENU + 7)
 		d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
 		--d.optionsMenu:AddItem(MOHO.Localize("/Menus/Help/Help=Help") ..  "...", 0, self.OPTIONS_MENU + 7)
+		d.optionsMenu:AddItem(MOHO.Localize("/Menus/Help/CheckForUpdates=Check For Updates..."), 0, self.OPTIONS_MENU + 8)
 		--d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
-		d.optionsMenu:AddItem(MOHO.Localize("/Menus/Application/About=About") .. " " .. RL_ShapesWindow:UILabel() .. "...", 0, self.OPTIONS_MENU + 7)
+		d.optionsMenu:AddItem(MOHO.Localize("/Menus/Application/About=About") .. " " .. RL_ShapesWindow:UILabel() .. "...", 0, self.OPTIONS_MENU + 9)
 		--d.optionsMenu:AddItem("...", 0, self.OPTIONS_MENU + self:CountRealItems(d.optionsMenu)) --d.optionsMenu:SetEnabled(self.OPTIONS_MENU + self:CountRealItems(d.optionsMenu), false) -- Last (Testground!)
 	
 		l:Indent(6)
@@ -611,9 +617,10 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		self.optionsMenu:SetChecked(self.OPTIONS_MENU, RL_ShapesWindow.pointsBasedSel)
 		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 1, RL_ShapesWindow.ignoreNonRegular)
 		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 2, RL_ShapesWindow.showTooltips)
-		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 3, RL_ShapesWindow.advanced)
-		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 4, RL_ShapesWindow.halfDimensions)
-		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 5, RL_ShapesWindow.showInfobar)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 3, RL_ShapesWindow.linkToStyle)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 4, RL_ShapesWindow.advanced)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 5, RL_ShapesWindow.halfDimensions)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 6, RL_ShapesWindow.showInfobar)
 		--helper:delete()
 		--return
 	--end
@@ -840,8 +847,10 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		if RL_ShapesWindow.advanced then
 			self.fillCheck:SetValue(true)
 			self.fillCheck:Enable(false)
+			self.fillCol:Enable(true)
 			self.lineCheck:SetValue(true)
 			self.lineCheck:Enable(false)
+			self.lineCol:Enable(true)
 		end
 	end
 
@@ -1025,13 +1034,15 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			RL_ShapesWindow.ignoreNonRegular = not RL_ShapesWindow.ignoreNonRegular
 		elseif (msg == self.OPTIONS_MENU + 2) then -- Show Tooltips
 			RL_ShapesWindow.showTooltips = not RL_ShapesWindow.showTooltips
-		elseif (msg >= self.OPTIONS_MENU + 3 and msg <= self.OPTIONS_MENU + 5) then -- Try to encompass here options which require auto-reopening.
-			if (msg == self.OPTIONS_MENU + 3) and doc ~= nil then -- Advanced (Create)
+		elseif (msg == self.OPTIONS_MENU + 3) then -- Link To Style Window
+			RL_ShapesWindow.linkToStyle = not RL_ShapesWindow.linkToStyle
+		elseif (msg >= self.OPTIONS_MENU + 4 and msg <= self.OPTIONS_MENU + 6) then -- Try to encompass here options which require auto-reopening.
+			if (msg == self.OPTIONS_MENU + 4) and doc ~= nil then -- Advanced (Create)
 				RL_ShapesWindow.advanced = not RL_ShapesWindow.advanced
 				--self.optionsMenu:SetChecked(msg, RL_ShapesWindow.advanced) -- Not necessary in this case, but another possibility of update entries' checkmarks...
-			elseif (msg == self.OPTIONS_MENU + 4) and doc ~= nil then -- Half Dimensions
+			elseif (msg == self.OPTIONS_MENU + 5) and doc ~= nil then -- Half Dimensions
 				RL_ShapesWindow.halfDimensions = not RL_ShapesWindow.halfDimensions
-			elseif (msg == self.OPTIONS_MENU + 5) and doc ~= nil then -- Show Infobar
+			elseif (msg == self.OPTIONS_MENU + 6) and doc ~= nil then -- Show Infobar
 				RL_ShapesWindow.showInfobar = not RL_ShapesWindow.showInfobar
 			end
 			if doc ~= nil then
@@ -1044,7 +1055,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			end
 			helper:delete()
 			return
-		elseif (msg == self.OPTIONS_MENU + 6) then -- Restore Defaults [?]
+		elseif (msg == self.OPTIONS_MENU + 7) then -- Restore Defaults [?]
 			local alert = LM.GUI.Alert(LM.GUI.ALERT_QUESTION,
 			RL_ShapesWindow:UILabel() .. ": " .. MOHO.Localize("/Dialogs/Preferences/ToolPrefs/RestoreDefaults=Restore Factory Defaults") .. "?",
 			MOHO.Localize(doc ~= nil and "/Scripts/Tool/ShapesWindow/TheWindowWillReopen=The window will reopen if necessary." or "/Scripts/Tool/ShapesWindow/TheWindowWillClose=The window will close if necessary."), nil,
@@ -1065,17 +1076,20 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 				helper:delete()
 				return
 			end
-		elseif (msg == self.OPTIONS_MENU + 7) then -- About...
+		elseif (msg == self.OPTIONS_MENU + 8) then -- Check For Updates...
+			os.execute('start "" ' .. RL_ShapesWindow.url) --os.execute('start "" "https://mohoscripts.com/script/"' .. (info.source):match("^.*[/\\](.*).lua$"))
+		elseif (msg == self.OPTIONS_MENU + 9) then -- About...
+			local years = ScriptBirth:sub(1,4) .. (tonumber(ScriptBuild:sub(1, 4)) > tonumber(ScriptBirth:sub(1, 4)) and "-" .. ScriptBuild:sub(1,4) or "")
 			local block1a = RL_ShapesWindow:UILabel() .. " " .. RL_ShapesWindow:Version()
-			local block1b = "\n" ..  RL_ShapesWindow:Creator() .. ", All Rights Reserved."
+			local block1b = "\n" ..  RL_ShapesWindow:Creator()
 			--local blockSep = "\n" ..  ("_"):rep(math.max(block1a and #block1a or 0, block1b and #block1b or 0))
 			local block2 = RL_ShapesWindow:Description() .. "\n\n"
 			local block3 = "Licensed under the Apache License, Version 2.0"
-			local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, block1a .. block1b, block2, block3, MOHO.Localize("/Menus/Help/CheckForUpdates=Check For Updates..."), MOHO.Localize("/Scripts/Tool/ShapesWindow/Acknowledgements=Acknowledgements"), MOHO.Localize("/Menus/File/CloseRender=Close")) --This script is freeware and released under the GNU General Public License. --Licensed under the MIT License.
+			local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, block1a .. block1b, block2, block3, MOHO.Localize("/Scripts/Tool/ShapesWindow/Acknowledgements=Acknowledgements"), MOHO.Localize("/Dialogs/SLAPanel/ReadLicense=Read License"), MOHO.Localize("/Menus/File/CloseRender=Close")) --This script is freeware and released under the GNU General Public License. --Licensed under the MIT License.
 			if alert == 0 then
-				os.execute('start "" ' .. RL_ShapesWindow.url) --os.execute('start "" "https://mohoscripts.com/script/"' .. (info.source):match("^.*[/\\](.*).lua$"))
-			elseif alert == 1 then
 				local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, RL_ShapesWindow.ack[1], table.concat(RL_ShapesWindow.ack, "    \n\n", 2, #RL_ShapesWindow.ack - 1) , RL_ShapesWindow.ack[#RL_ShapesWindow.ack], MOHO.Localize("/Menus/File/CloseRender=Close"))
+			elseif alert == 1 then
+				local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, "Licence & Warranty", RL_ShapesWindow:License(years), nil, MOHO.Localize("/Menus/File/CloseRender=Close"))
 			end
 		elseif (msg == self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) then -- Last (Testground!)
 			--print("...")
@@ -1167,7 +1181,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 					local shape = mesh:Shape(i)
 					if shape.fSelected == true then -- Select selected shape's points
 						shape:SelectAllPoints()
-					else
+					else -- 20231018-1645 TODO: There's an issue arround all this and different shapes sharing points (e.g. if you select all shapes of a Grid WITH stroke).
 						for pID = shape:CountPoints() - 1, 0, -1 do -- De-select unselected shape's points
 							local point = mesh:Point(shape:GetPoint(pID))
 							point.fSelected = false
@@ -1183,10 +1197,25 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			self.lower:Enable(self.shapeList:SelItem() > 0 and self.shapeList:SelItem() < self.shapeList:CountItems() - 1)
 			--]=]
 			MOHO.Redraw()
-			--if tool:find("SelectShape") then -- This will be quicker than UpdateUI(), but then Style window wouldn't update accordingly to selected item by list.
-				--LM_SelectShape:UpdateWidgets(moho)
-			--end
-			moho:UpdateUI()
+			if RL_ShapesWindow.linkToStyle then
+				moho:UpdateUI()
+			else
+				--style.fFillCol:SetValue(lDrawingFrame, self.fillCol:Value())
+				--self.fillCol:SetValue(style.fFillCol.value)
+				if tool:find("SelectShape") then -- This will be quicker than UpdateUI(), but then Style window wouldn't update accordingly to selected item by list.
+					---[[Other tries of updating the toolbar without any success...
+					--self:UpdateWidgets()
+					--doc:Refresh()
+					--doc:PrepUndo(layer, true)
+					--doc:Undo()
+					--moho:SetCurFrame(1)
+					--moho:SetCurFrame(0)
+					--moho:UpdateUI()
+					--]]
+					--LM_SelectShape:UpdateWidgets(moho)
+				end
+				--self:Update()
+			end
 		end
 	elseif (msg == self.NAME) then
 		if shapeID and shapeID >= 0 then
@@ -1789,15 +1818,19 @@ function RL_ShapesWindow.Abbreviator(s)
 	return abrev, num
 end
 
---[[ ***** Licence & Warranty *****
+function RL_ShapesWindow:License(years, name, company)
+	years = years or self.ScriptBirth or os.date("%Y")
+	name = name or "Rai López"
+	company = company or "Lost Scripts™"
 
-	Copyright © 2022 - Rai López (Lost Scripts™)
+	local license =	[[
+	Copyright © %s - %s (%s)
 
 	Licensed under the Apache License, Version 2.0 (the "License");
 	you may not use this file except in compliance with the License.
 	You may obtain a copy of the License at:
 
-		http://www.apache.org/licenses/LICENSE-2.0
+	        http://www.apache.org/licenses/LICENSE-2.0
 
 	Conditions require preservation of copyright and license notices.
 
@@ -1807,27 +1840,30 @@ end
 	that do not pertain to any part of the Derivative Works.
 
 	You can:
-		Use   - use/reuse freely, even commercially
-		Adapt - remix, transform, and build upon for any purpose
-		Share - redistribute the material in any medium or format
+	        Use         - use/reuse freely, even commercially
+	        Adapt  - remix, transform, and build upon for any purpose
+	        Share    - redistribute the material in any medium or format
 
 	Adapt / Share under the following terms:
-		Attribution - You must give appropriate credit, provide a link to
-		the Apache 2.0 license, and indicate if changes were made. You may
-		do so in any reasonable manner, but not in any way that suggests
-		the licensor endorses you or your use.
+	        Attribution - You must give appropriate credit, provide a link to
+	        the Apache 2.0 license, and indicate if changes were made. You may
+	        do so in any reasonable manner, but not in any way that suggests
+	        the licensor endorses you or your use.
 
 	Licensed works, modifications and larger works may be distributed
 	under different License terms and without source code.
 
 	Unless required by applicable law or agreed to in writing, software
 	distributed under the License is distributed on an "AS IS" BASIS,
-	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 	See the License for the specific language governing permissions and
 	limitations under the License.
 
-	The Developer Rai López will not be liable for any direct,
+	The Developer %s will not be liable for any direct,
 	indirect or consequential loss of actual or anticipated - data, revenue,
 	profits, business, trade or goodwill that is suffered as a result of the
 	use of the software provided.
---]]
+	]]
+	--                                                                                                                                                      
+	return string.format(license, tostring(years), name, company, name)
+end --print(RL_ShapesWindow:License())
