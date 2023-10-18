@@ -4,7 +4,7 @@
 
 ScriptName = "RL_ShapesWindow"
 ScriptBirth = "20230918-0248"
-ScriptBuild = "20231017-0040"
+ScriptBuild = "20231018-0709"
 
 -- **************************************************
 -- General information about this script
@@ -106,7 +106,7 @@ local RL_ShapesWindowDialog = {}
 
 RL_ShapesWindowDialog.OPTIONS_MENU			= MOHO.MSG_BASE
 
-RL_ShapesWindowDialog.FILLED				= MOHO.MSG_BASE + 100--LM_CreateShape.CREATE or MOHO.MSG_BASE (pairs)
+RL_ShapesWindowDialog.FILLED				= MOHO.MSG_BASE + 100 --LM_CreateShape.CREATE or MOHO.MSG_BASE (pairs)
 RL_ShapesWindowDialog.FILLED_ALT			= MOHO.MSG_BASE + 101
 RL_ShapesWindowDialog.OUTLINED				= MOHO.MSG_BASE + 102
 RL_ShapesWindowDialog.OUTLINED_ALT			= MOHO.MSG_BASE + 103
@@ -146,14 +146,14 @@ RL_ShapesWindowDialog.RAISE					= MOHO.MSG_BASE + 135
 RL_ShapesWindowDialog.RAISE_ALT				= MOHO.MSG_BASE + 136
 RL_ShapesWindowDialog.LOWER					= MOHO.MSG_BASE + 137
 RL_ShapesWindowDialog.LOWER_ALT				= MOHO.MSG_BASE + 138
-RL_ShapesWindowDialog.CHANGE				= MOHO.MSG_BASE + 139
-RL_ShapesWindowDialog.DELETE				= MOHO.MSG_BASE + 140
-RL_ShapesWindowDialog.SELECTALL				= MOHO.MSG_BASE + 141
-RL_ShapesWindowDialog.SELECTALL_ALT			= MOHO.MSG_BASE + 142
-RL_ShapesWindowDialog.SELECTSIMILAR			= MOHO.MSG_BASE + 143
-RL_ShapesWindowDialog.SELECTSIMILAR_ALT		= MOHO.MSG_BASE + 144
-RL_ShapesWindowDialog.SELECTBASETOP			= MOHO.MSG_BASE + 145
-RL_ShapesWindowDialog.SELECTBASETOP_ALT		= MOHO.MSG_BASE + 146
+RL_ShapesWindowDialog.DELETE				= MOHO.MSG_BASE + 139
+RL_ShapesWindowDialog.SELECTALL				= MOHO.MSG_BASE + 140
+RL_ShapesWindowDialog.SELECTALL_ALT			= MOHO.MSG_BASE + 141
+RL_ShapesWindowDialog.SELECTSIMILAR			= MOHO.MSG_BASE + 142
+RL_ShapesWindowDialog.SELECTSIMILAR_ALT		= MOHO.MSG_BASE + 143
+RL_ShapesWindowDialog.SELECTBASETOP			= MOHO.MSG_BASE + 144
+RL_ShapesWindowDialog.SELECTBASETOP_ALT		= MOHO.MSG_BASE + 145
+RL_ShapesWindowDialog.CHANGE				= MOHO.MSG_BASE + 146
 
 function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock()) -- This print makes the window get closed upon closing the LCW!
 	local d = LM.GUI.SimpleDialog("☰  " .. MOHO.Localize("/Windows/Style/Shapes=Shapes"), RL_ShapesWindowDialog) --RL_ShapesWindow:UILabel()
@@ -179,7 +179,7 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 	l:PushV(LM.GUI.ALIGN_LEFT, 0)
 		l:AddPadding(-4) -- Comment if modeBut
 		d.optionsMenu = LM.GUI.Menu("…") --⁝☰⚙…
-		d.optionsPopup = LM.GUI.PopupMenu(22, false)
+		d.optionsPopup = LM.GUI.PopupMenu(23, false)
 		--d.optionsPopup:SetToolTip(MOHO.Localize("/Dialogs/LayerSettings/GeneralTab/Options=Options"))
 		d.optionsPopup:SetMenu(d.optionsMenu)
 		l:AddChild(d.optionsPopup, LM.GUI.ALIGN_LEFT, 6)
@@ -213,7 +213,8 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 		l:AddPadding(4)
 		--]]
 		l:PushH(LM.GUI.ALIGN_LEFT, 0)
-			d.itemNameLabel = LM.GUI.DynamicText("    ", 18) --"🏷"
+			d.itemNameLabel = LM.GUI.DynamicText("    ", 18)
+			d.itemNameLabel:SetValue(" 🏷") -- Set labels text this way for full control over width.
 			d.itemNameLabel:SetToolTip(MOHO.Localize("/Windows/Style/Name=Name")) -- .. " (Tab key to confirm)"
 			l:AddChild(d.itemNameLabel, LM.GUI.ALIGN_CENTER)
 
@@ -233,7 +234,8 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 		l:AddPadding(3)
 
 		l:PushH(LM.GUI.ALIGN_LEFT, 0)
-			d.liquidShapesLabel = LM.GUI.DynamicText("    ", 18) --" 💧"
+			d.liquidShapesLabel = LM.GUI.DynamicText("    ", 18)
+			d.liquidShapesLabel:SetValue(" 💧")
 			--d.liquidShapesLabel:SetToolTip(MOHO.Localize("/Scripts/Tool/SelectShape/LiquidShapes=Liquid Shapes"))
 			l:AddChild(d.liquidShapesLabel, LM.GUI.ALIGN_CENTER)
 			l:PushV(LM.GUI.ALIGN_FILL, 0)
@@ -432,7 +434,8 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 
 		if RL_ShapesWindow.advanced then
 			l:PushH(LM.GUI.ALIGN_LEFT, 0)
-				d.shapeCreationLabel = LM.GUI.DynamicText("    ", 18) --" ©"
+				d.shapeCreationLabel = LM.GUI.DynamicText("    ", 18)
+				d.shapeCreationLabel:SetValue(" ©")
 				d.shapeCreationLabel:SetToolTip(MOHO.Localize("/Scripts/Tool/CreateShape/CreateShape=Create Shape") .." (" .. MOHO.Localize("/Windows/Style/Advanced=Advanced") .. ")")
 				l:AddChild(d.shapeCreationLabel, LM.GUI.ALIGN_CENTER, 0)
 				l:PushV(LM.GUI.ALIGN_FILL, 0)
@@ -542,6 +545,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	local moho = helper:MohoObject() --moho or helper:MohoObject() -- TBC!
 	local pro = MOHO.IsMohoPro()
 	local doc = moho.document
+	local docH = doc and doc:Height() or 240
 	local tool = moho:CurrentTool()
 	local toolsDisabled = moho:DisableDrawingTools()
 	local l = self:GetLayout()
@@ -550,29 +554,38 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	local itemsSel = math.floor(self.shapeList:NumSelectedItems())
 
 	local style = moho:CurrentEditStyle() --print(tostring(style) .. ": ", tostring(style.fFillCol.value.r), ", ", tostring(style.fFillCol.value.g), ", ", tostring(style.fFillCol.value.b))
+	local styleID = -1
 	local styleUUID = style and style.fUUID:Buffer() or "?" --doc:StyleByID(i) print(iStyle.fUUID:Buffer())
 	local styles = doc and math.floor(doc:CountStyles()) or 0
 	local styleName = ""
 
-	if (doc ~= nil and style ~= nil) then
+	if (style ~= nil) then
 		if shape and shape.MyStyle ~= style then
 			--self.tempShape
 		end
 		if RL_ShapesWindow.advanced then
 			self.fillCol:SetValue(style.fFillCol.value)
 			self.lineCol:SetValue(style.fLineCol.value)
-			self.lineWidth:SetValue(style.fLineWidth * doc:Height())
+			self.lineWidth:SetValue(style.fLineWidth * docH)
 			self.capsBut:SetValue(style.fLineCaps == 1 and true or false)
 		end
 		styleName = style.fName:Buffer()
 		if styleName == "" then
 			--self.modeBut:SetLabel(MOHO.Localize("/Windows/Style/DefaultsForNewShapes=DEFAULTS (For new shapes)"):gsub("%s+%b()", "")) self.modeBut:Redraw() --:match("%w+"))
+			self.itemName:SetValue("")
 			info[1] = "ℹ " .. MOHO.Localize("/Windows/Style/DefaultsForNewShapes=DEFAULTS (For new shapes)"):gsub("%s+%b()", "") --:match("%w+") -- Exclude everything between the patenthesis, including the preceding space, instead?
 			info[2] = moho:CountShapes() > 0 and "#️⃣ " .. math.floor(moho:CountShapes()) or nil
 		else
 			--self.modeBut:SetLabel(MOHO.Localize("/Windows/Style/STYLE=STYLE")) self.modeBut:Redraw()
+			self.itemName:SetValue(styleName or "?")
+			for i = 0, styles - 1 do
+				if doc:StyleByID(i) == style then
+					styleID = math.floor(i)
+				end
+			end
 			info[1] = "ℹ " .. MOHO.Localize("/Windows/Style/STYLE=STYLE")
-			info[2] = styleName and "🏷 " .. styleName or "?"
+			--info[2] = shapeLUID > -1 and "🆔 " .. shapeLUID or "🆔 " .. "?" --string.format("%d", shape:ShapeID())
+			info[2] = "🆔 " .. styleID
 			info[3] = styles > 0 and "#️⃣ " .. itemsSel .. "/" .. styles or  "#️⃣ " .. styles
 			info[4] = "🔣 " .. styleUUID
 		end
@@ -583,15 +596,13 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	local lDrawing = moho.drawingLayer and moho:LayerAsVector(moho.drawingLayer) or nil
 	local lDrawingUUID = lDrawing and lDrawing:UUID() or ""
 	local mesh = moho:DrawingMesh()
+	local edges = moho:CountEdges()
 
-	self.itemNameLabel:SetValue(" 🏷")
 	self.itemNameLabel:Enable(true)
-	self.liquidShapesLabel:SetValue(" 💧")
 	if RL_ShapesWindow.advanced then
-		self.shapeCreationLabel:SetValue(" ©")
-		self.shapeCreationLabel:Enable(not toolsDisabled)
+		--self.shapeCreationLabel:Enable(not toolsDisabled)
 		for i, but in ipairs(self.shapeButtons) do
-			but:Enable(not toolsDisabled)
+			but:Enable(edges > 0 and not toolsDisabled)
 		end
 	end
 
@@ -608,16 +619,26 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	--end
 	--]]
 
-	if (mesh == nil) or ((lDrawing and lDrawing:IsCurver()) or (lDrawing:IsWarpLayer() and (lDrawing:ContinuousTriangulation() or RL_ShapesWindow.ignoreNonRegular))) then -- Disable everything irrelevant if no valid/drawing layer is active (Ignore Non-Regular makes e.g. non-continuously-triangulated layers be also ignored).
-		l:Enable(false)
+	if (mesh == nil) or ((lDrawing and lDrawing:IsCurver()) or (lDrawing:IsWarpLayer() and (lDrawing:ContinuousTriangulation() or RL_ShapesWindow.ignoreNonRegular))) then -- Disable everything irrelevant if no valid/drawing layer is active ("Ignore Non-Regular" makes e.g. non-continuously-triangulated layers be also ignored).
+		--l:Enable(false) -- Used classic enable/disable method due to this causes unwanted blinking at frame change and so...
+		self.itemName:Enable(false)
 		self.itemName:SetValue("")
+		self.combineNormal:Enable(false)
 		self.combineNormal:SetValue(false)
+		self.combineAdd:Enable(false)
 		self.combineAdd:SetValue(false)
+		self.combineSubtract:Enable(false)
 		self.combineSubtract:SetValue(false)
+		self.combineIntersect:Enable(false)
 		self.combineIntersect:SetValue(false)
+		self.combineBlendBut:Enable(false)
 		self.combineBlendBut:SetValue(false)
+		self.combineBlend:Enable(false)
 		self.combineBlend:SetValue(0)
+		self.mergeBut:Enable(false)
+		self.baseBut:Enable(false)
 		self.baseBut:SetValue(false)
+		self.topBut:Enable(false)
 		self.topBut:SetValue(false)
 
 		self.skipBlock = true
@@ -627,13 +648,23 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		self.skipBlock = false
 		self.shapeList:Enable(false)
 		self.shapeList:Redraw()
+		self.raise:Enable(false)
+		self.lower:Enable(false)
+		self.selectAllBut:Enable(false)
+		self.selectSimilarBut:Enable(false)
+		self.deleteBut:Enable(false)
 
 		self.optionsPopup:Enable(true)
 		if RL_ShapesWindow.advanced then
-			self.shapeCreationLabel:Enable(false)
+			--self.shapeCreationLabel:Enable(false)
+			self.copyBut:Enable(true)
+			self.pasteBut:Enable(true)
+			self.resetBut:Enable(true)
 			self.fillCheck:Enable(false)
+			self.fillCheck:SetValue(true)
 			self.fillCol:Enable(true)
 			self.lineCheck:Enable(false)
+			self.lineCheck:SetValue(true)
 			self.lineCol:Enable(true)
 			self.widthLabel:Enable(true)
 			self.lineWidth:Enable(true)
@@ -647,28 +678,31 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 			self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 3, false) -- Advanced (Create)
 			self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 4, false) -- Half Dimensions
 			self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 5, false) -- Show Infobar
+			self.itemNameLabel:Enable(false)
+			self.liquidShapesLabel:Enable(false)
+
 			if RL_ShapesWindow.advanced then
-				self.fillCol:Enable(false)
-				self.lineCol:Enable(false)
-				self.widthLabel:Enable(false)
-				self.lineWidth:Enable(false)
-				self.capsBut:Enable(false)
+				self.shapeCreationLabel:Enable(false)
+				self.copyBut:Enable(false)
+				self.pasteBut:Enable(false)
 			end
 		end
 
 		helper:delete()
 		return
 	else -- Enable everything relevant if a valid/drawing layer is active
-		l:Enable(true)
+		--l:Enable(true) -- Used classic enable/disable method due to this causes unwanted blinking at frame change and so...
 		self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 3, true) -- Advanced (Create)
 		self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 4, true) -- Half Dimensions
 		self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 5, true) -- Show Infobar
+		self.itemNameLabel:Enable(true)
+		self.liquidShapesLabel:Enable(true)
 		if RL_ShapesWindow.advanced then
 			self.shapeList:Enable(true)
 			self.shapeList:Redraw()
-			self.shapeCreationLabel:Enable(not toolsDisabled)
+			self.shapeCreationLabel:Enable(true) --self.shapeCreationLabel:Enable(not toolsDisabled)
 			for i, but in ipairs(self.shapeButtons) do
-				but:Enable(not toolsDisabled)
+				but:Enable(edges > 0 and not toolsDisabled)
 			end
 		end
 	end
@@ -676,7 +710,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	---[[20231006-1745: Before selecting items in list much bellow, do here the "Points-Based Selection" thing if active (so then you can rely on shape/shapeID/etc. kind of values)
 	if mesh ~= nil and not (lDrawing:IsCurver() or lDrawing:IsWarpLayer()) then
 		if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
-			if moho:CountSelectedPoints() > 1 then
+			if styleName == "" and moho:CountSelectedPoints() > 1 then -- Avoid Points-Based Selection select any shape if a style is being edited to allow normal Style workflow. 
 				for i = 0, mesh:CountShapes() - 1 do
 					local shape = mesh:Shape(i)
 					if shape:AllPointsSelected() == true then
@@ -767,6 +801,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		end
 
 		self.itemNameLabel:Enable(not shape.fHidden)
+		self.itemName:Enable(true)
 		if RL_ShapesWindow.advanced then
 			self.fillCheck:SetValue(shape.fHasFill)
 			self.fillCheck:Enable(shape.fFillAllowed)
@@ -801,15 +836,13 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		end
 
 		self.deleteBut:Enable(false)
+		self.itemName:Enable(false)
 		if RL_ShapesWindow.advanced then
-			self.fillCheck:SetValue(false)
+			self.fillCheck:SetValue(true)
 			self.fillCheck:Enable(false)
-			self.lineCheck:SetValue(false)
+			self.lineCheck:SetValue(true)
 			self.lineCheck:Enable(false)
 		end
-		--if (self.shapeID ~= nil) then
-			--self.shapeID:SetValue("ShapeID: X")
-		--end
 	end
 
 	local infoContent = table.concat(info, " • ") --•·∙⸱∣
@@ -824,7 +857,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		self.itemNameLabel:SetToolTip(MOHO.Localize("/Windows/Style/Name=Name") .. " (" .. infoContent .. ")")
 	end
 
-	if self.skipBlock == true then -- if self.skipBlock == true and tool:find("SelectPoints") then -- 20231007-1730: Perform ONLY widget updates above when called from HandlMessage/UpdateUI in order to avoid entering into endless loop!
+	if self.skipBlock == true then --if self.skipBlock == true and tool:find("SelectPoints") then -- 20231007-1730: Perform ONLY widget updates above when called from HandlMessage/UpdateUI in order to avoid entering into endless loop!
 		return
 	end
 
@@ -874,17 +907,16 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		self.itemName:SetValue(mesh:Shape(shapeID):Name()) --self.itemName:Redraw()
 		self.shapeList:ScrollItemIntoView(shapes - shapeID, true)
 	else
-		--[[20231010-1630: Don't try to support Style management, yet...
+		---[[20231010-1630: OK, display it's name, but don't try to support Style management, yet...
 		if styleName ~= "" then
-			self.itemName:Enable(true)
+			--self.itemName:Enable(true)
 			self.itemName:SetValue(styleName)
 		else
-			self.itemName:Enable(false)
+			--self.itemName:Enable(false)
 			self.itemName:SetValue("")
 		end
 		--]]
 		self.itemName:Enable(false)
-		self.itemName:SetValue("")
 		self.shapeList:SetSelItem(self.shapeList:GetItem(0), true, false) -- 20230920-1605: Had to pass false for redraw (2nd arg.) to avoid items deselection! 20231008-0036: Passing true again, otherwise <None> item isn't selected upon e.g. deselecting all
 		self.shapeList:ScrollItemIntoView(0, true) -- It doesn't seem to scroll to item 0
 	end
@@ -942,7 +974,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		self.shapeTable[0] = moho.drawingLayer:UUID()
 		self.shapeTable[i] = shape:Name() .. shape.fComboMode
 	end
-
+	self.style = moho:CurrentEditStyle()
 	self.isNewRun = false
 	helper:delete()
 end
@@ -974,12 +1006,14 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 	--local caller = debug.getinfo(3) and debug.getinfo(3).name or "NULL" print(caller) --0: getinfo, 1: NULL/NULL, 2: SetSelItem/NULL, 3: NULL/Update, 4: NULL/func, 5: NULL/NULL
 	local helper = MOHO.ScriptInterfaceHelper:new_local()
 	local moho = helper:MohoObject()
+	local styleName = moho:CurrentEditStyle() and moho:CurrentEditStyle().fName:Buffer() or ""
+	local style = moho:CurrentEditStyle() -- 20231010-0554: For some reason, "styleName" must be gathered before this assignment, otherwise won't be possible to access "style" properties!
+	--local vHeight, vWidth = moho.view:Height(), moho.view:Width()
 	local doc = moho.document
+	local docH = doc and doc:Height() or 240
 	local tool = moho:CurrentTool()
 	local l = self:GetLayout()
-	--local vHeight, vWidth = moho.view:Height(), moho.view:Width()
 	self.msg = msg or MOHO.MSG_BASE
-
 
 	if (msg >= self.OPTIONS_MENU and msg <= self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) then -- Process first of all stuff that can be accesed even without an open document.
 		if (doc == nil) then -- Since there doesn't seem to be possible to trigger anything upon closing last document... well try to disable irrelevant widgets as soon as user click any menu entry.  
@@ -1055,7 +1089,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 		return
 	end
 
-	if (doc == nil) then -- Ensure nothing is run from here on after closing last document (or things like LayerAsVector will make Moho crash).
+	if (style == nil and doc == nil) then -- Ensure nothing is run from here on after closing last doc (or things like LayerAsVector will make Moho crash).
 		self:Update()
 		helper:delete()
 		return
@@ -1063,24 +1097,17 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 
 	local mesh = moho:DrawingMesh()
 	local layer = moho.layer
-	local lFrame = moho.layerFrame
-	local lDrawing = moho:LayerAsVector(moho.drawingLayer)
-	local lDrawingFrame = moho.drawingLayerFrame
+	local lFrame = layer and moho.layerFrame or 0
+	local lDrawing = moho.drawingLayer and moho:LayerAsVector(moho.drawingLayer) or nil
+	local lDrawingFrame = lDrawing and moho.drawingLayerFrame or 0
 	local shape = moho:SelectedShape()
 	local shapeID = shape and mesh:ShapeID(shape) or -1
 	local shapeName = shape and shape:Name() or ""
 	local shapes = mesh and mesh:CountShapes() or 0
 	local shapesSel = moho:CountSelectedShapes(true) -- Use this instead LM_SelectShape:CountSelectedShapes??
-	local style = moho:CurrentEditStyle()
-	local styleName = "" --style and style.fName:Buffer() or "" -- 20231010-0554: This doesn't seem to work! (See bellow).
 
-	if (style ~= nil) then
-		styleName = style.fName:Buffer()
-		style = moho:CurrentEditStyle() -- 20231010-0554: For some reason, reassign this seems necessary! Otherwise is not possible to access style properties afterwards??
-	end
-
-	if mesh == nil or (style == nil and shape == nil) then
-		if msg > self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1 then --print(msg, ", ", self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) -- If doc but not object, exit should msg was other than options menu's
+	if (style == nil and mesh == nil) then print(RL_ShapesWindowDialog:WhatMsg(msg))
+		if msg < self.FILL and msg > self.RESET_ALT and msg ~= self.CHANGE then --print(msg, ", ", self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) -- If doc but not object, exit should msg was other than options menu's
 			helper:delete()
 			return
 		end
@@ -1090,23 +1117,28 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 	if ((msg >= self.OPTIONS_MENU and msg < self.FILLED) or msg == self.CHANGE or msg == self.BASE_SHAPE or msg == self.BASE_SHAPE_ALT or msg == self.TOP_SHAPE or msg == self.TOP_SHAPE_ALT or msg == self.SELECTALL or msg == self.SELECTALL_ALT or msg == self.SELECTSIMILAR or msg == self.SELECTSIMILAR_ALT or msg == self.COPY or (msg >= self.FILLCOLOR and msg <= self.FILLCOLOR_END) or (msg >= self.LINECOLOR and msg <= self.LINECOLOR_END)) then
 		undoable = false
 	end
-	if (undoable) then
-		doc:PrepUndo(moho.drawingLayer)
+	if (doc ~= nil and undoable) then
+		doc:PrepUndo(lDrawing)
 		doc:SetDirty()
 	end
 
 	if (msg == self.CHANGE) then
+		if doc == nil and mesh == nil then
+			self:Update()
+			helper:delete()
+			return 
+		end
 		if self.skipBlock == true then -- Try to avoid unwanted call to Update/UpdateWidgets bellow upon selecting, no matter how, a list item!
 			if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then --if (RL_ShapesWindow.pointsBasedSel and tool:find("SelectPoints")) then
 				if shapesSel == 0 then
 					self.count = 0
 				end
 				if self.count and self.count == shapesSel then
-					self:Update()
-					if tool:find("SelectShape") then -- Use this solution (when possible) instead UpdateUI() bellow to avoid updating unnecesary UI elements and thus performance loss!
-						LM_SelectShape:UpdateWidgets(moho)
-					end
-					--moho:UpdateUI()
+					--self:Update()
+					--if tool:find("SelectShape") then -- Use this solution instead of UpdateUI() bellow? It's quicker cause doesn't update the entire UI, but e.g. Style window could get outdated!
+						--LM_SelectShape:UpdateWidgets(moho)
+					--end
+					moho:UpdateUI()
 					self.count = 0
 				end
 				self.count = self.count + 1
@@ -1115,46 +1147,47 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			return -- 20230920-2103: Commented, since it seems to make dialog widgets not update propertly... 20231006-2004: But now it's uncommented and works? 🤔
 		end
 
-		shapeID = self.shapeList:SelItem() > 0 and mesh:CountShapes() - self.shapeList:SelItem() or -1
-		for i = 1, self.shapeList:CountItems() - 1 do
-			local shape = mesh:Shape(mesh:CountShapes() - i)
-			if self.shapeList:IsItemSelected(i) then
-				if shape ~= nil then
-					shape.fSelected = true
-				end
-			else
-				if shape ~= nil then
-					shape.fSelected = false
-				end
-			end
-		end
-		---[=[Experimental Points-Based Selection Mode...
-		if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
-			for i = 0, mesh:CountShapes() - 1 do
-				local shape = mesh:Shape(i)
-				if shape.fSelected == true then -- Select selected shape's points
-					shape:SelectAllPoints()
+		if (mesh ~= nil) then
+			shapeID = self.shapeList:SelItem() > 0 and mesh:CountShapes() - self.shapeList:SelItem() or -1
+			for i = 1, self.shapeList:CountItems() - 1 do
+				local shape = mesh:Shape(mesh:CountShapes() - i)
+				if self.shapeList:IsItemSelected(i) then
+					if shape ~= nil then
+						shape.fSelected = true
+					end
 				else
-					for pID = shape:CountPoints() - 1, 0, -1 do -- De-select unselected shape's points
-						local point = mesh:Point(shape:GetPoint(pID))
-						point.fSelected = false
+					if shape ~= nil then
+						shape.fSelected = false
 					end
 				end
 			end
+			---[=[Experimental Points-Based Selection Mode...
+			if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
+				for i = 0, mesh:CountShapes() - 1 do
+					local shape = mesh:Shape(i)
+					if shape.fSelected == true then -- Select selected shape's points
+						shape:SelectAllPoints()
+					else
+						for pID = shape:CountPoints() - 1, 0, -1 do -- De-select unselected shape's points
+							local point = mesh:Point(shape:GetPoint(pID))
+							point.fSelected = false
+						end
+					end
+				end
+			end
+			--]=]
+			--[=[20231010-0414: It doesn't seem really necessary to set/update these widgets also from here, but keep an eye on it...
+			self.itemName:Enable(self.shapeList:SelItem() > 0)
+			self.itemName:SetValue(self.shapeList:SelItem() > 0 and mesh:Shape(mesh:CountShapes() - self.shapeList:SelItem()):Name() or "")
+			self.raise:Enable(self.shapeList:SelItem() > 1)
+			self.lower:Enable(self.shapeList:SelItem() > 0 and self.shapeList:SelItem() < self.shapeList:CountItems() - 1)
+			--]=]
+			MOHO.Redraw()
+			--if tool:find("SelectShape") then -- This will be quicker than UpdateUI(), but then Style window wouldn't update accordingly to selected item by list.
+				--LM_SelectShape:UpdateWidgets(moho)
+			--end
+			moho:UpdateUI()
 		end
-		--]=]
-		--[=[20231010-0414: It doesn't seem really necessary to set/update these widgets also from here, but keep an eye on it...
-		self.itemName:Enable(self.shapeList:SelItem() > 0)
-		self.itemName:SetValue(self.shapeList:SelItem() > 0 and mesh:Shape(mesh:CountShapes() - self.shapeList:SelItem()):Name() or "")
-		self.raise:Enable(self.shapeList:SelItem() > 1)
-		self.lower:Enable(self.shapeList:SelItem() > 0 and self.shapeList:SelItem() < self.shapeList:CountItems() - 1)
-		--]=]
-		MOHO.Redraw()
-		self:Update()
-		if tool:find("SelectShape") then -- Use this solution (when possible) instead UpdateUI() bellow to avoid updating unnecesary UI elements and thus performance loss!
-			LM_SelectShape:UpdateWidgets(moho)
-		end
-		--moho:UpdateUI()
 	elseif (msg == self.NAME) then
 		if shapeID and shapeID >= 0 then
 			local shape = mesh:Shape(shapeID)
@@ -1175,7 +1208,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 		--]=]
 		moho:UpdateUI()
 	elseif (msg == self.COMBINE_NORMAL) then
-		for i = 0, mesh:CountShapes() - 1 do
+		for i = 0, shapes - 1 do
 			local shape = mesh:Shape(i)
 			if (shape.fSelected) then
 				shape.fComboMode = MOHO.COMBO_NORMAL
@@ -1184,10 +1217,10 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 		--lDrawing:UpdateCurFrame(false)
 		--moho.view:DrawMe()
 		MOHO.Redraw()
-		--self:Update()
+		self:Update()
 		moho:UpdateUI()
 	elseif (msg == self.COMBINE_ADD) then
-		for i = 0, mesh:CountShapes() - 1 do
+		for i = 0, shapes - 1 do
 			local shape = mesh:Shape(i)
 			if (shape.fSelected) then
 				shape.fComboMode = MOHO.COMBO_ADD
@@ -1196,10 +1229,10 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 		--lDrawing:UpdateCurFrame(false)
 		--moho.view:DrawMe()
 		MOHO.Redraw()
-		--self:Update()
+		self:Update()
 		moho:UpdateUI()
 	elseif (msg == self.COMBINE_SUBTRACT) then
-		for i = 0, mesh:CountShapes() - 1 do
+		for i = 0, shapes - 1 do
 			local shape = mesh:Shape(i)
 			if (shape.fSelected) then
 				shape.fComboMode = MOHO.COMBO_SUBTRACT
@@ -1208,10 +1241,10 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 		--lDrawing:UpdateCurFrame(false)
 		--moho.view:DrawMe()
 		MOHO.Redraw()
-		--self:Update()
+		self:Update()
 		moho:UpdateUI()
 	elseif (msg == self.COMBINE_INTERSECT) then
-		for i = 0, mesh:CountShapes() - 1 do
+		for i = 0, shapes - 1 do
 			local shape = mesh:Shape(i)
 			if (shape.fSelected) then
 				shape.fComboMode = MOHO.COMBO_INTERSECT
@@ -1220,10 +1253,10 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 		--lDrawing:UpdateCurFrame(false)
 		--moho.view:DrawMe()
 		MOHO.Redraw()
-		--self:Update()
+		self:Update()
 		moho:UpdateUI()
 	elseif (msg == self.COMBINE_BLEND_BUT or msg == self.COMBINE_BLEND_BUT_ALT) then
-		for i = 0, mesh:CountShapes() - 1 do
+		for i = 0, shapes - 1 do
 			local shape = mesh:Shape(i)
 			if (shape.fSelected) then
 				if (msg == self.COMBINE_BLEND_BUT) then
@@ -1253,16 +1286,15 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 	elseif (msg == self.COMBINE_BLEND) then
 		local blend = self.combineBlend:FloatValue()
 		blend = LM.Clamp(blend, 0.0, 1.0)
-		for i = 0, mesh:CountShapes() - 1 do
+		for i = 0, shapes - 1 do
 			local shape = mesh:Shape(i)
 			if (shape.fSelected) then
 				shape.fComboBlend:SetValue(lDrawingFrame, blend)
 			end
 		end
-		--lDrawing:UpdateCurFrame(false) -- 20231011-1933: It doesn't seem unnecessary...
 		--moho.view:DrawMe()
 		MOHO.Redraw()
-		--self:Update() -- 20231011-1933: It doesn't seem unnecessary...
+		self:Update()
 		--LM_SelectShape:UpdateWidgets(moho) -- 20231011-1933: This indeed updates Select Shapes tool toolbar's "Blend" widget, but little less!
 		moho:UpdateUI() -- 20231011-1933: It only seems necessary to update Timeline and Select Shapes tool toolbar's "Blend" widget? So let's try the above...
 	elseif (msg == self.BASE_SHAPE) then
@@ -1307,180 +1339,30 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 	elseif (msg == self.MERGE) then
 		LM_SelectShape:MergeShapes(moho, moho.view)
 		MOHO.Redraw()
+		self:Update()
 	elseif (msg == self.RAISE or msg == self.RAISE_ALT) then
-		for i = mesh:CountShapes() - 1, 0, -1 do
+		for i = shapes - 1, 0, -1 do
 			if (mesh:Shape(i).fSelected) then
 				mesh:RaiseShape(i, msg == self.RAISE_ALT)
 			end
 		end
-		self:Update()
 		MOHO.Redraw()
+		self:Update()
 	elseif (msg == self.LOWER or msg == self.LOWER_ALT) then
-		for i = 0, mesh:CountShapes() - 1 do
+		for i = 0, shapes - 1 do
 			if (mesh:Shape(i).fSelected) then
 				mesh:LowerShape(i, msg == self.LOWER_ALT)
 			end
 		end
+		MOHO.Redraw()
 		self:Update()
-		MOHO.Redraw()
-	elseif (msg == self.FILL) then
-		---[=[LM_SelectShape:HandleMessage(moho, moho.view, LM_SelectShape.FILL)
-		if (shape ~= nil) then
-			if (shape.fFillAllowed) then
-				shape.fHasFill = self.fillCheck:Value()
-			end
-			if (shape:IsInCluster() and shape.fComboMode ~= MOHO.COMBO_INTERSECT) then
-				shape:BottomOfCluster().fHasFill = self.fillCheck:Value()
-			end
-		end
-		for i = 0, mesh:CountShapes() - 1 do
-			local shape = mesh:Shape(i)
-			if (shape.fSelected) then
-				if (shape.fFillAllowed) then
-					shape.fHasFill = self.fillCheck:Value()
-				end
-			end
-		end
-		MOHO.Redraw()
-		moho:UpdateUI()
-		--]=]
-	elseif (msg == self.FILL_ALT) then
-		local shapeFillCol = LM.ColorVector:new_local()
-		for i = 0, mesh:CountShapes() - 1 do
-			local shape = mesh:Shape(i)
-			if (shape.fSelected) then
-				shapeFillCol:Set(shape.fMyStyle.fFillCol:GetValue(lDrawingFrame))
-				if lDrawingFrame ~= 0 then
-					shape.fMyStyle.fFillCol:SetValue(lDrawingFrame - 1, shapeFillCol)
-				end
-				shapeFillCol:Set(shapeFillCol.r, shapeFillCol.g, shapeFillCol.b, shapeFillCol:IsTransparent() and 1 or 0)
-				shape.fMyStyle.fFillCol:SetValue(lDrawingFrame, shapeFillCol)
-			end
-		end
-		MOHO.Redraw()
-		moho:UpdateUI()
-	elseif (msg == self.FILLCOLOR) then
-		if (not self.editingColor) then
-			moho.document:PrepUndo(moho.drawingLayer)
-			moho.document:SetDirty()
-		end
-		if (style ~= nil) then
-			style.fFillCol:SetValue(moho.drawingLayerFrame, self.fillCol:Value())
-		end
-		for i = 0, mesh:CountShapes() - 1 do
-			local shape = mesh:Shape(i)
-			if (shape.fSelected) then
-				shape.fMyStyle.fFillCol:SetValue(moho.drawingLayerFrame, self.fillCol:Value())
-			end
-		end
-		MOHO.Redraw()
-		if (not self.editingColor) then
-			moho:NewKeyframe(CHANNEL_FILL)
-			moho:UpdateUI()
-		end
-	elseif (msg == self.FILLCOLOR_BEGIN) then
-		self.editingColor = true
-		self:HandleMessage(self.FILLCOLOR)
-	elseif (msg == self.FILLCOLOR_END) then
-		self.editingColor = false
-	elseif (msg == self.LINE) then
-		---[=[LM_SelectShape:HandleMessage(moho, moho.view, LM_SelectShape.LINE)
-		if (shape ~= nil) then
-			shape.fHasOutline = self.lineCheck:Value()
-			if (shape:IsInCluster() and shape.fComboMode ~= MOHO.COMBO_INTERSECT) then
-				shape:BottomOfCluster().fHasOutline = self.lineCheck:Value()
-			end
-		end
-		for i = 0, mesh:CountShapes() - 1 do
-			local shape = mesh:Shape(i)
-			if (shape.fSelected) then
-				shape.fHasOutline = self.lineCheck:Value()
-			end
-		end
-		MOHO.Redraw()
-		moho:UpdateUI()
-		--]=]
-	elseif (msg == self.LINE_ALT) then
-		local shapeLineCol = LM.ColorVector:new_local()
-		for i = 0, mesh:CountShapes() - 1 do
-			local shape = mesh:Shape(i)
-			if (shape.fSelected) then
-				shapeLineCol:Set(shape.fMyStyle.fLineCol:GetValue(lDrawingFrame))
-				if lDrawingFrame ~= 0 then
-					shape.fMyStyle.fLineCol:SetValue(lDrawingFrame - 1, shapeLineCol)
-				end
-				shapeLineCol:Set(shapeLineCol.r, shapeLineCol.g, shapeLineCol.b, shapeLineCol:IsTransparent() and 1 or 0)
-				shape.fMyStyle.fLineCol:SetValue(lDrawingFrame, shapeLineCol)
-			end
-		end
-		MOHO.Redraw()
-		moho:UpdateUI()
-	elseif (msg == self.LINECOLOR) then
-		if (not self.editingColor) then
-			moho.document:PrepUndo(moho.drawingLayer)
-			moho.document:SetDirty()
-		end
-		if (style ~= nil) then
-			style.fLineCol:SetValue(moho.drawingLayerFrame, self.lineCol:Value())
-		end
-		for i = 0, mesh:CountShapes() - 1 do
-			local shape = mesh:Shape(i)
-			if (shape.fSelected) then
-				shape.fMyStyle.fLineCol:SetValue(moho.drawingLayerFrame, self.lineCol:Value())
-			end
-		end
-		MOHO.Redraw()
-		if (not self.editingColor) then
-			moho:NewKeyframe(CHANNEL_LINE)
-			moho:UpdateUI()
-		end
-	elseif (msg == self.LINECOLOR_BEGIN) then
-		self.editingColor = true
-		self:HandleMessage(self.LINECOLOR)
-	elseif (msg == self.LINECOLOR_END) then
-		self.editingColor = false
-	elseif (msg == self.LINEWIDTH) then
-		if (style ~= nil) then
-			local lineWidth = self.lineWidth:FloatValue()
-			lineWidth = LM.Clamp(lineWidth, 0.25, 256)
-			style.fLineWidth = lineWidth / moho.document:Height()
-		end
-		for i = 0, mesh:CountShapes() - 1 do
-			local shape = mesh:Shape(i)
-			if (shape.fSelected) then
-				local lineWidth = self.lineWidth:FloatValue()
-				lineWidth = LM.Clamp(lineWidth, 0.25, 256)
-				shape.fMyStyle.fLineWidth = lineWidth / moho.document:Height()
-			end
-		end
-		MOHO.Redraw()
-		moho:UpdateUI()
-	elseif (msg == self.ROUNDCAPS) then
-		if (style ~= nil) then
-			style.fLineCaps = self.capsBut:Value() and 1 or 0
-		end
-		for i = 0, mesh:CountShapes() - 1 do
-			local shape = mesh:Shape(i)
-			if (shape.fSelected) then
-				shape.fMyStyle.fLineCaps = self.capsBut:Value() and 1 or 0
-			end
-		end
-		MOHO.Redraw()
-		moho:UpdateUI()
-	elseif (msg >= self.FILLED and msg <= self.FILLEDOUTLINED_ALT) then
-		local m = msg - self.FILLED
-		local creationMode = LM_CreateShape.creationMode
-		LM_CreateShape.creationMode = math.floor(m / 2) --- #self.shapeButtons
-		LM_CreateShape:HandleMessage(moho, moho.view, msg % 2 == 0 and LM_CreateShape.CREATE or LM_CreateShape.CREATE_CONNECTED)
-		LM_CreateShape.creationMode = creationMode
-		moho:UpdateUI()
 	elseif (msg == self.SELECTALL or msg == self.SELECTALL_ALT) then -- 🤔 What if click once selected all, another click deselected all and holding <alt> selected similar?
 		if (msg == self.SELECTALL and shapes == shapesSel) then 
 			LM.Beep()
 			helper:delete()
 			return
 		end
-		for i = 0, mesh:CountShapes() - 1 do
+		for i = 0, shapes - 1 do
 			local shape = mesh:Shape(i)
 			shape.fSelected = (msg == self.SELECTALL and true) or not shape.fSelected
 			if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
@@ -1494,11 +1376,11 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 				end
 			end
 		end
-		self:Update()
 		MOHO.Redraw()
+		self:Update()
 	elseif (msg == self.SELECTSIMILAR or msg == self.SELECTSIMILAR_ALT) then
 		local count = 0
-		for i = 0, mesh:CountShapes() - 1 do
+		for i = 0, shapes - 1 do
 			local iShape = mesh:Shape(i)
 			if (mesh:ShapeID(iShape) ~= shapeID) and iShape:ArePropertiesEqual(shape) then
 				iShape.fSelected = true
@@ -1511,28 +1393,203 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 		if count < 1 then
 			LM.Beep()
 		else
-			self:Update()
 			MOHO.Redraw()
+			self:Update()
 		end
 	elseif (msg == self.DELETE) then
-		local i = 0
-		while i < mesh:CountShapes() do
-			if (mesh:Shape(i).fSelected) then
-				mesh:DeleteShape(i)
-			else
-				i = i + 1
+		if (mesh ~= nil) then
+			local i = 0
+			while i < mesh:CountShapes() do
+				if (mesh:Shape(i).fSelected) then
+					mesh:DeleteShape(i)
+				else
+					i = i + 1
+				end
 			end
 		end
-		--self:Update()
+		--moho.view:DrawMe()
+		self:Update()
+		MOHO.Redraw()
 		moho:UpdateUI() -- Contrary to self:Update(), it correctly updates infobar e.g. upon deleting shapes while Select Shape tool is active, but does it worth? 🤔
-		moho.view:DrawMe()
+	elseif (msg == self.FILL) then
+		---[=[LM_SelectShape:HandleMessage(moho, moho.view, LM_SelectShape.FILL)
+		if (mesh ~= nil and shape ~= nil) then
+			if (shape.fFillAllowed) then
+				shape.fHasFill = self.fillCheck:Value()
+			end
+			if (shape:IsInCluster() and shape.fComboMode ~= MOHO.COMBO_INTERSECT) then
+				shape:BottomOfCluster().fHasFill = self.fillCheck:Value()
+			end
+
+			for i = 0, shapes - 1 do
+				local shape = mesh:Shape(i)
+				if (shape.fSelected) then
+					if (shape.fFillAllowed) then
+						shape.fHasFill = self.fillCheck:Value()
+					end
+				end
+			end
+			MOHO.Redraw()
+			moho:UpdateUI()
+		end
+		--]=]
+	elseif (msg == self.FILL_ALT) then
+		if (mesh ~= nil) then
+			local shapeFillCol = LM.ColorVector:new_local()
+			for i = 0, shapes - 1 do
+				local shape = mesh:Shape(i)
+				if (shape.fSelected) then
+					shapeFillCol:Set(shape.fMyStyle.fFillCol:GetValue(lDrawingFrame))
+					if lDrawingFrame ~= 0 then
+						shape.fMyStyle.fFillCol:SetValue(lDrawingFrame - 1, shapeFillCol)
+					end
+					shapeFillCol:Set(shapeFillCol.r, shapeFillCol.g, shapeFillCol.b, shapeFillCol:IsTransparent() and 1 or 0)
+					shape.fMyStyle.fFillCol:SetValue(lDrawingFrame, shapeFillCol)
+				end
+			end
+			MOHO.Redraw()
+			moho:UpdateUI()
+		end
+	elseif (msg == self.FILLCOLOR) then
+		if (doc ~= nil and not self.editingColor) then
+			doc:PrepUndo(lDrawing)
+			doc:SetDirty()
+		end
+		if (style ~= nil) then
+			style.fFillCol:SetValue(lDrawingFrame, self.fillCol:Value())
+			if (not self.editingColor) then
+				--moho:UpdateUI()
+			end
+		end
+		if (mesh ~= nil) then
+			for i = 0, shapes - 1 do
+				local shape = mesh:Shape(i)
+				if (shape.fSelected) then
+					shape.fMyStyle.fFillCol:SetValue(lDrawingFrame, self.fillCol:Value())
+				end
+			end
+			MOHO.Redraw()
+			if (not self.editingColor) then
+				moho:NewKeyframe(CHANNEL_FILL)
+				moho:UpdateUI()
+			end
+		end
+	elseif (msg == self.FILLCOLOR_BEGIN) then
+		self.editingColor = true
+		self:HandleMessage(self.FILLCOLOR)
+	elseif (msg == self.FILLCOLOR_END) then
+		self.editingColor = false
+	elseif (msg == self.LINE) then
+		---[=[LM_SelectShape:HandleMessage(moho, moho.view, LM_SelectShape.LINE)
+		if (mesh ~= nil and shape ~= nil) then
+			if (shape ~= nil) then
+				shape.fHasOutline = self.lineCheck:Value()
+				if (shape:IsInCluster() and shape.fComboMode ~= MOHO.COMBO_INTERSECT) then
+					shape:BottomOfCluster().fHasOutline = self.lineCheck:Value()
+				end
+			end
+			for i = 0, shapes - 1 do
+				local shape = mesh:Shape(i)
+				if (shape.fSelected) then
+					shape.fHasOutline = self.lineCheck:Value()
+				end
+			end
+			MOHO.Redraw()
+			moho:UpdateUI()
+		end
+		--]=]
+	elseif (msg == self.LINE_ALT) then
+		local shapeLineCol = LM.ColorVector:new_local()
+		for i = 0, shapes - 1 do
+			local shape = mesh:Shape(i)
+			if (shape.fSelected) then
+				shapeLineCol:Set(shape.fMyStyle.fLineCol:GetValue(lDrawingFrame))
+				if lDrawingFrame ~= 0 then
+					shape.fMyStyle.fLineCol:SetValue(lDrawingFrame - 1, shapeLineCol)
+				end
+				shapeLineCol:Set(shapeLineCol.r, shapeLineCol.g, shapeLineCol.b, shapeLineCol:IsTransparent() and 1 or 0)
+				shape.fMyStyle.fLineCol:SetValue(lDrawingFrame, shapeLineCol)
+			end
+		end
+		MOHO.Redraw()
+		moho:UpdateUI()
+	elseif (msg == self.LINECOLOR) then
+		if (doc ~= nil and not self.editingColor) then
+			doc:PrepUndo(lDrawing)
+			doc:SetDirty()
+		end
+		if (style ~= nil) then
+			style.fLineCol:SetValue(lDrawingFrame, self.lineCol:Value())
+			if (not self.editingColor) then
+				--moho:UpdateUI()
+			end
+		end
+		if (mesh ~= nil) then
+			for i = 0, shapes - 1 do
+				local shape = mesh:Shape(i)
+				if (shape.fSelected) then
+					shape.fMyStyle.fLineCol:SetValue(lDrawingFrame, self.lineCol:Value())
+				end
+			end
+			MOHO.Redraw()
+			if (not self.editingColor) then
+				moho:NewKeyframe(CHANNEL_LINE)
+				moho:UpdateUI()
+			end
+		end
+	elseif (msg == self.LINECOLOR_BEGIN) then
+		self.editingColor = true
+		self:HandleMessage(self.LINECOLOR)
+	elseif (msg == self.LINECOLOR_END) then
+		self.editingColor = false
+	elseif (msg == self.LINEWIDTH) then
+		if (style ~= nil) then
+			local lineWidth = self.lineWidth:FloatValue()
+			lineWidth = LM.Clamp(lineWidth, 0.25, 256)
+			style.fLineWidth = lineWidth / docH
+		end
+		if mesh ~= nil then
+			for i = 0, shapes - 1 do
+				local shape = mesh:Shape(i)
+				if (shape.fSelected) then
+					local lineWidth = self.lineWidth:FloatValue()
+					lineWidth = LM.Clamp(lineWidth, 0.25, 256)
+					shape.fMyStyle.fLineWidth = lineWidth / docH
+				end
+			end
+			MOHO.Redraw()
+		end
+		moho:UpdateUI()
+	elseif (msg == self.ROUNDCAPS) then
+		if (style ~= nil) then
+			style.fLineCaps = self.capsBut:Value() and 1 or 0
+		end
+		if mesh ~= nil then
+			for i = 0, shapes - 1 do
+				local shape = mesh:Shape(i)
+				if (shape.fSelected) then
+					shape.fMyStyle.fLineCaps = self.capsBut:Value() and 1 or 0
+				end
+			end
+			MOHO.Redraw()
+		end
+		moho:UpdateUI()
+	elseif (msg >= self.FILLED and msg <= self.FILLEDOUTLINED_ALT) then
+		local m = msg - self.FILLED
+		local creationMode = LM_CreateShape.creationMode
+		if mesh ~= nil then
+			LM_CreateShape.creationMode = math.floor(m / 2) --- #self.shapeButtons
+			LM_CreateShape:HandleMessage(moho, moho.view, msg % 2 == 0 and LM_CreateShape.CREATE or LM_CreateShape.CREATE_CONNECTED)
+			LM_CreateShape.creationMode = creationMode
+		end
+		moho:UpdateUI()
 	elseif (msg == self.COPY or msg == self.PASTE) then
 		if shape ~= nil then
 			if msg == self.COPY then
 				self.tempShape = moho:NewShapeProperties()
 			else -- PASTE
-				if self.tempShape then
-					for i = 0, mesh:CountShapes() - 1 do
+				if mesh ~= nil and self.tempShape then
+					for i = 0, shapes - 1 do
 						local shape = mesh:Shape(i)
 						if (shape.fSelected) then
 							shape:CopyStyleProperties(self.tempShape, false, false)
@@ -1540,76 +1597,82 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 					end
 				end
 			end
+			MOHO.Redraw()
 		else
 			if style ~= nil then
 				if msg == self.COPY then
 					self.tempShape = moho:NewShapeProperties()
 				else -- PASTE
-					if self.tempShape then
+					if mesh ~= nil and self.tempShape then
 						moho:PickStyleProperties(self.tempShape)
 					end
 				end
+				MOHO.Redraw()
 			end
 		end
-		MOHO.Redraw()
+		self:Update()
 		moho:UpdateUI()
 	elseif (msg == self.RESET) or (msg == self.RESET_ALT) then
 		local MohoLineWidth = 0.005556 -- Factory default value * 2 = 8px (No MohoGlobal??)
 		if (style ~= nil) then
-			style.fFillCol:SetValue(moho.drawingLayerFrame, MOHO.MohoGlobals.FillCol)
-			style.fLineCol:SetValue(moho.drawingLayerFrame, MOHO.MohoGlobals.LineCol)
+			style.fFillCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.FillCol)
+			style.fLineCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.LineCol)
 			style.fLineWidth = MohoLineWidth * 2
 			style.fLineCaps = 1
+			MOHO.Redraw()
 		end
-		for i = 0, mesh:CountShapes() - 1 do
-			local shape = mesh:Shape(i)
-			if (shape.fSelected) then
-				if moho.drawingLayerFrame == 0 then
-					shape.fMyStyle.fFillCol:SetValue(moho.drawingLayerFrame, MOHO.MohoGlobals.FillCol)
-					shape.fMyStyle.fLineCol:SetValue(moho.drawingLayerFrame, MOHO.MohoGlobals.LineCol)
-					shape.fMyStyle.fLineWidth = MohoLineWidth * 2
-					shape.fMyStyle.fLineCaps = 1
-					shape.f3DThickness:SetValue(moho.drawingLayerFrame, 0.1250)
-					if msg == self.RESET_ALT then
-						shape:MakePlain() --shape:RemoveStyles()
-					end
-				else
-					if shape.fHasFill == true then
-						shape.fMyStyle.fFillCol:SetValue(moho.drawingLayerFrame, shape.fMyStyle.fFillCol:GetValue(0))
+		if (mesh ~= nil) then
+			for i = 0, shapes - 1 do
+				local shape = mesh:Shape(i)
+				if (shape.fSelected) then
+					if lDrawingFrame == 0 then
+						shape.fMyStyle.fFillCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.FillCol)
+						shape.fMyStyle.fLineCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.LineCol)
+						shape.fMyStyle.fLineWidth = MohoLineWidth * 2
+						shape.fMyStyle.fLineCaps = 1
+						shape.f3DThickness:SetValue(lDrawingFrame, 0.1250)
 						if msg == self.RESET_ALT then
-							shape.fMyStyle.fFillCol:SetValue(moho.drawingLayerFrame, MOHO.MohoGlobals.FillCol)
+							shape:MakePlain() --shape:RemoveStyles()
 						end
-					end
-					if shape.fHasOutline == true then
-						shape.fMyStyle.fLineCol:SetValue(moho.drawingLayerFrame, shape.fMyStyle.fLineCol:GetValue(0))
-						if msg == self.RESET_ALT then
-							shape.fMyStyle.fLineCol:SetValue(moho.drawingLayerFrame, MOHO.MohoGlobals.LineCol)
-						end
-					end
-					if (lDrawing.f3DMode ~= MOHO.VECTOR3D_NONE and lDrawing.f3DMode ~= MOHO.VECTOR3D_LATHE) then
-						if msg == self.RESET_ALT then
-							shape.f3DThickness:SetValue(moho.drawingLayerFrame, 0.1250) -- */ moho.document:Height())
-						else
-							if shape.f3DThickness:Duration() > 0 and (shape.f3DThickness:GetValue(moho.drawingLayerFrame) ~= shape.f3DThickness:GetValue(0)) then
-								shape.f3DThickness:SetValue(moho.drawingLayerFrame, shape.f3DThickness:GetValue(0))
+					else
+						if shape.fHasFill == true then
+							shape.fMyStyle.fFillCol:SetValue(lDrawingFrame, shape.fMyStyle.fFillCol:GetValue(0))
+							if msg == self.RESET_ALT then
+								shape.fMyStyle.fFillCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.FillCol)
 							end
 						end
-					end
-					if shape.fEffectOffset:Duration() > 0 then
-						shape.fEffectOffset:SetValue(moho.drawingLayerFrame, shape.fEffectOffset:GetValue(0))
-					end
-					if shape.fEffectRotation:Duration() > 0 then
-						shape.fEffectRotation:SetValue(moho.drawingLayerFrame, shape.fEffectRotation:GetValue(0))
-					end
-					if shape.fEffectScale:Duration() > 0 then
-						shape.fEffectScale:SetValue(moho.drawingLayerFrame, shape.fEffectScale:GetValue(0))
+						if shape.fHasOutline == true then
+							shape.fMyStyle.fLineCol:SetValue(lDrawingFrame, shape.fMyStyle.fLineCol:GetValue(0))
+							if msg == self.RESET_ALT then
+								shape.fMyStyle.fLineCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.LineCol)
+							end
+						end
+						if (lDrawing.f3DMode ~= MOHO.VECTOR3D_NONE and lDrawing.f3DMode ~= MOHO.VECTOR3D_LATHE) then
+							if msg == self.RESET_ALT then
+								shape.f3DThickness:SetValue(lDrawingFrame, 0.1250) -- */ docH)
+							else
+								if shape.f3DThickness:Duration() > 0 and (shape.f3DThickness:GetValue(lDrawingFrame) ~= shape.f3DThickness:GetValue(0)) then
+									shape.f3DThickness:SetValue(lDrawingFrame, shape.f3DThickness:GetValue(0))
+								end
+							end
+						end
+						if shape.fEffectOffset:Duration() > 0 then
+							shape.fEffectOffset:SetValue(lDrawingFrame, shape.fEffectOffset:GetValue(0))
+						end
+						if shape.fEffectRotation:Duration() > 0 then
+							shape.fEffectRotation:SetValue(lDrawingFrame, shape.fEffectRotation:GetValue(0))
+						end
+						if shape.fEffectScale:Duration() > 0 then
+							shape.fEffectScale:SetValue(lDrawingFrame, shape.fEffectScale:GetValue(0))
+						end
 					end
 				end
 			end
+			MOHO.Redraw()
 		end
-		MOHO.Redraw()
+		self:Update()
 		moho:UpdateUI()
-	elseif LM.GUI.MSG_CANCEL then
+	elseif LM.GUI.MSG_CANCEL then -- Triggered upon auto-closing.
 		--return
 		--helper:delete()
 	end
