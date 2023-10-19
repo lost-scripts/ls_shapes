@@ -2,7 +2,7 @@
 -- Provide Moho with the name of this script object
 -- **************************************************
 
-ScriptName = "RL_ShapesWindow"
+ScriptName = "LS_ShapesWindow"
 ScriptBirth = "20220918-0248"
 ScriptBuild = "20231018-1959"
 
@@ -10,87 +10,87 @@ ScriptBuild = "20231018-1959"
 -- General information about this script
 -- **************************************************
 
-RL_ShapesWindow = {}
+LS_ShapesWindow = {}
 
-RL_ShapesWindow.BASE_STR = 2320
+LS_ShapesWindow.BASE_STR = 2320
 
-function RL_ShapesWindow:Name()
+function LS_ShapesWindow:Name()
 	return "Shapes Window"
 end
 
-function RL_ShapesWindow:Version()
+function LS_ShapesWindow:Version()
 	return "0.0.1" .. " (Build " ..  ScriptBuild .. ") for Moho® 14.0+" -- "0.0.1-20231005.1731"
 end
 
-function RL_ShapesWindow:Description()
+function LS_ShapesWindow:Description()
 	return MOHO.Localize("/Scripts/Tool/ShapesWindow/Description=A persistent shape palette plus helpers for better management of Moho® vectors in general and the AMAZING new \"Liquid Shapes\" in particular.")
 end
 
-function RL_ShapesWindow:Creator()
+function LS_ShapesWindow:Creator()
 	return "Copyright © " .. ScriptBirth:sub(1,4) .. (tonumber(ScriptBuild:sub(1, 4)) > tonumber(ScriptBirth:sub(1, 4)) and "-" .. ScriptBuild:sub(1,4) or "") .. " Rai López (Lost Scripts™)"
 end
 
-function RL_ShapesWindow:UILabel()
+function LS_ShapesWindow:UILabel()
 	return(MOHO.Localize("/Scripts/Tool/ShapesWindow/ShapesWindow=Shapes Window"))
 end
 
-function RL_ShapesWindow:ColorizeIcon()
+function LS_ShapesWindow:ColorizeIcon()
 	return true
 end
 
-function RL_ShapesWindow:LoadPrefs(prefs) --print("RL_ShapesWindow:LoadPrefs(" .. tostring(prefs) .. ")", " 🕗: " .. os.clock())
+function LS_ShapesWindow:LoadPrefs(prefs) --print("LS_ShapesWindow:LoadPrefs(" .. tostring(prefs) .. ")", " 🕗: " .. os.clock())
 	self.creationMode = prefs:GetInt("LM_CreateShape.creationMode", 2)
-	self.pointsBasedSel = prefs:GetBool("RL_ShapesWindow.pointsBasedSel", false)
-	self.ignoreNonRegular = prefs:GetBool("RL_ShapesWindow.ignoreNonRegular", true)
-	self.showTooltips = prefs:GetBool("RL_ShapesWindow.showTooltips", true) -- Basic Tooltips Only
-	self.linkToStyle = prefs:GetBool("RL_ShapesWindow.linkToStyle", true)
-	self.advanced = prefs:GetBool("RL_ShapesWindow.advanced", true)
-	self.halfDimensions = prefs:GetBool("RL_ShapesWindow.halfDimensions", true)
-	self.showInfobar = prefs:GetBool("RL_ShapesWindow.showInfobar", true)
-	self.alertCantOpen = prefs:GetInt("RL_ShapesWindow.alertCantOpen", 0)
-	self.endMessage = prefs:GetBool("RL_ShapesWindow.endMessage", false)
-	--self.endedByMoho = prefs:GetBool("RL_ShapesWindow.endedByApp", false)
-	--self.endedByUser = prefs:GetBool("RL_ShapesWindow.endedByUser", false)
+	self.pointsBasedSel = prefs:GetBool("LS_ShapesWindow.pointsBasedSel", false)
+	self.ignoreNonRegular = prefs:GetBool("LS_ShapesWindow.ignoreNonRegular", true)
+	self.showTooltips = prefs:GetBool("LS_ShapesWindow.showTooltips", true) -- Basic Tooltips Only
+	self.linkToStyle = prefs:GetBool("LS_ShapesWindow.linkToStyle", true)
+	self.advanced = prefs:GetBool("LS_ShapesWindow.advanced", true)
+	self.halfDimensions = prefs:GetBool("LS_ShapesWindow.halfDimensions", true)
+	self.showInfobar = prefs:GetBool("LS_ShapesWindow.showInfobar", true)
+	self.alertCantOpen = prefs:GetInt("LS_ShapesWindow.alertCantOpen", 0)
+	self.endMessage = prefs:GetBool("LS_ShapesWindow.endMessage", false)
+	--self.endedByMoho = prefs:GetBool("LS_ShapesWindow.endedByApp", false)
+	--self.endedByUser = prefs:GetBool("LS_ShapesWindow.endedByUser", false)
 end
 
-function RL_ShapesWindow:SavePrefs(prefs) --print("RL_ShapesWindow:SavePrefs(" .. tostring(prefs) .. ")", " 🕗: " .. os.clock())
+function LS_ShapesWindow:SavePrefs(prefs) --print("LS_ShapesWindow:SavePrefs(" .. tostring(prefs) .. ")", " 🕗: " .. os.clock())
 	prefs:SetInt("LM_CreateShape.creationMode", self.creationMode)
-	prefs:SetBool("RL_ShapesWindow.pointsBasedSel", self.pointsBasedSel)
-	prefs:SetBool("RL_ShapesWindow.ignoreNonRegular", self.ignoreNonRegular)
-	prefs:SetBool("RL_ShapesWindow.showTooltips", self.showTooltips)
-	prefs:SetBool("RL_ShapesWindow.linkToStyle", self.linkToStyle)
-	prefs:SetBool("RL_ShapesWindow.advanced", self.advanced)
-	prefs:SetBool("RL_ShapesWindow.halfDimensions", self.halfDimensions)
-	prefs:SetBool("RL_ShapesWindow.showInfobar", self.showInfobar)
-	prefs:SetInt("RL_ShapesWindow.alertCantOpen", self.alertCantOpen)
-	prefs:SetBool("RL_ShapesWindow.endMessage", true)
+	prefs:SetBool("LS_ShapesWindow.pointsBasedSel", self.pointsBasedSel)
+	prefs:SetBool("LS_ShapesWindow.ignoreNonRegular", self.ignoreNonRegular)
+	prefs:SetBool("LS_ShapesWindow.showTooltips", self.showTooltips)
+	prefs:SetBool("LS_ShapesWindow.linkToStyle", self.linkToStyle)
+	prefs:SetBool("LS_ShapesWindow.advanced", self.advanced)
+	prefs:SetBool("LS_ShapesWindow.halfDimensions", self.halfDimensions)
+	prefs:SetBool("LS_ShapesWindow.showInfobar", self.showInfobar)
+	prefs:SetInt("LS_ShapesWindow.alertCantOpen", self.alertCantOpen)
+	prefs:SetBool("LS_ShapesWindow.endMessage", true)
 end
 
-function RL_ShapesWindow:ResetPrefs()
+function LS_ShapesWindow:ResetPrefs()
 	LM_CreateShape.creationMode = 2
-	RL_ShapesWindow.pointsBasedSel = false
-	RL_ShapesWindow.ignoreNonRegular = true
-	RL_ShapesWindow.showTooltips = true
-	RL_ShapesWindow.linkToStyle = true
-	RL_ShapesWindow.advanced = true
-	RL_ShapesWindow.halfDimensions = true -- 0: Max, 1: Full, 2: Half, 3: Third?
-	RL_ShapesWindow.showInfobar = true
-	RL_ShapesWindow.alertCantOpen = 0
+	LS_ShapesWindow.pointsBasedSel = false
+	LS_ShapesWindow.ignoreNonRegular = true
+	LS_ShapesWindow.showTooltips = true
+	LS_ShapesWindow.linkToStyle = true
+	LS_ShapesWindow.advanced = true
+	LS_ShapesWindow.halfDimensions = true -- 0: Max, 1: Full, 2: Half, 3: Third?
+	LS_ShapesWindow.showInfobar = true
+	LS_ShapesWindow.alertCantOpen = 0
 end
 
 -- **************************************************
 -- Recurring values
 -- **************************************************
 
-RL_ShapesWindow.name = ScriptName
-RL_ShapesWindow.birth = ScriptBirth
-RL_ShapesWindow.build = ScriptBuild
-RL_ShapesWindow.path = debug.getinfo(1,'S')
-RL_ShapesWindow.filename = (RL_ShapesWindow.path.source):match("^.*[/\\](.*).lua$")
-RL_ShapesWindow.url = "https://github.com/lost-scripts/" .. RL_ShapesWindow.filename
---RL_ShapesWindow.url = "https://mohoscripts.com/script/" .. RL_ShapesWindow.filename
-RL_ShapesWindow.dlog = nil
-RL_ShapesWindow.ack = {
+LS_ShapesWindow.name = ScriptName
+LS_ShapesWindow.birth = ScriptBirth
+LS_ShapesWindow.build = ScriptBuild
+LS_ShapesWindow.path = debug.getinfo(1,'S')
+LS_ShapesWindow.filename = (LS_ShapesWindow.path.source):match("^.*[/\\](.*).lua$")
+LS_ShapesWindow.url = "https://github.com/lost-scripts/" .. LS_ShapesWindow.filename
+--LS_ShapesWindow.url = "https://mohoscripts.com/script/" .. LS_ShapesWindow.filename
+LS_ShapesWindow.dlog = nil
+LS_ShapesWindow.ack = {
 "My sincere thanks to...",
 "    • Stanislav Zuliy (Stan), for all his contributions & generosity.",
 "    • Lukas Krepel, for paving the \"modeless\" way 🙂",
@@ -106,61 +106,61 @@ RL_ShapesWindow.ack = {
 -- Shapes Window dialog
 -- **************************************************
 
-local RL_ShapesWindowDialog = {}
+local LS_ShapesWindowDialog = {}
 
-RL_ShapesWindowDialog.OPTIONS_MENU			= MOHO.MSG_BASE
+LS_ShapesWindowDialog.OPTIONS_MENU			= MOHO.MSG_BASE
 
-RL_ShapesWindowDialog.FILLED				= MOHO.MSG_BASE + 100 --LM_CreateShape.CREATE or MOHO.MSG_BASE (pairs)
-RL_ShapesWindowDialog.FILLED_ALT			= MOHO.MSG_BASE + 101
-RL_ShapesWindowDialog.OUTLINED				= MOHO.MSG_BASE + 102
-RL_ShapesWindowDialog.OUTLINED_ALT			= MOHO.MSG_BASE + 103
-RL_ShapesWindowDialog.FILLEDOUTLINED		= MOHO.MSG_BASE + 104
-RL_ShapesWindowDialog.FILLEDOUTLINED_ALT	= MOHO.MSG_BASE + 105
-RL_ShapesWindowDialog.FILL					= MOHO.MSG_BASE + 106
-RL_ShapesWindowDialog.FILL_ALT				= MOHO.MSG_BASE + 107
-RL_ShapesWindowDialog.FILLCOLOR				= MOHO.MSG_BASE + 108
-RL_ShapesWindowDialog.FILLCOLOR_BEGIN		= MOHO.MSG_BASE + 109
-RL_ShapesWindowDialog.FILLCOLOR_END			= MOHO.MSG_BASE + 110
-RL_ShapesWindowDialog.LINE					= MOHO.MSG_BASE + 111
-RL_ShapesWindowDialog.LINE_ALT				= MOHO.MSG_BASE + 112
-RL_ShapesWindowDialog.LINECOLOR				= MOHO.MSG_BASE + 113
-RL_ShapesWindowDialog.LINECOLOR_BEGIN		= MOHO.MSG_BASE + 114
-RL_ShapesWindowDialog.LINECOLOR_END			= MOHO.MSG_BASE + 115
-RL_ShapesWindowDialog.LINEWIDTH				= MOHO.MSG_BASE + 116
-RL_ShapesWindowDialog.ROUNDCAPS				= MOHO.MSG_BASE + 117
-RL_ShapesWindowDialog.COPY					= MOHO.MSG_BASE + 118
-RL_ShapesWindowDialog.PASTE					= MOHO.MSG_BASE + 119
-RL_ShapesWindowDialog.RESET					= MOHO.MSG_BASE + 120
-RL_ShapesWindowDialog.RESET_ALT				= MOHO.MSG_BASE + 121
+LS_ShapesWindowDialog.FILLED				= MOHO.MSG_BASE + 100 --LM_CreateShape.CREATE or MOHO.MSG_BASE (pairs)
+LS_ShapesWindowDialog.FILLED_ALT			= MOHO.MSG_BASE + 101
+LS_ShapesWindowDialog.OUTLINED				= MOHO.MSG_BASE + 102
+LS_ShapesWindowDialog.OUTLINED_ALT			= MOHO.MSG_BASE + 103
+LS_ShapesWindowDialog.FILLEDOUTLINED		= MOHO.MSG_BASE + 104
+LS_ShapesWindowDialog.FILLEDOUTLINED_ALT	= MOHO.MSG_BASE + 105
+LS_ShapesWindowDialog.FILL					= MOHO.MSG_BASE + 106
+LS_ShapesWindowDialog.FILL_ALT				= MOHO.MSG_BASE + 107
+LS_ShapesWindowDialog.FILLCOLOR				= MOHO.MSG_BASE + 108
+LS_ShapesWindowDialog.FILLCOLOR_BEGIN		= MOHO.MSG_BASE + 109
+LS_ShapesWindowDialog.FILLCOLOR_END			= MOHO.MSG_BASE + 110
+LS_ShapesWindowDialog.LINE					= MOHO.MSG_BASE + 111
+LS_ShapesWindowDialog.LINE_ALT				= MOHO.MSG_BASE + 112
+LS_ShapesWindowDialog.LINECOLOR				= MOHO.MSG_BASE + 113
+LS_ShapesWindowDialog.LINECOLOR_BEGIN		= MOHO.MSG_BASE + 114
+LS_ShapesWindowDialog.LINECOLOR_END			= MOHO.MSG_BASE + 115
+LS_ShapesWindowDialog.LINEWIDTH				= MOHO.MSG_BASE + 116
+LS_ShapesWindowDialog.ROUNDCAPS				= MOHO.MSG_BASE + 117
+LS_ShapesWindowDialog.COPY					= MOHO.MSG_BASE + 118
+LS_ShapesWindowDialog.PASTE					= MOHO.MSG_BASE + 119
+LS_ShapesWindowDialog.RESET					= MOHO.MSG_BASE + 120
+LS_ShapesWindowDialog.RESET_ALT				= MOHO.MSG_BASE + 121
 
-RL_ShapesWindowDialog.NAME					= MOHO.MSG_BASE + 122
-RL_ShapesWindowDialog.COMBINE_NORMAL		= MOHO.MSG_BASE + 123
-RL_ShapesWindowDialog.COMBINE_ADD			= MOHO.MSG_BASE + 124
-RL_ShapesWindowDialog.COMBINE_SUBTRACT		= MOHO.MSG_BASE + 125
-RL_ShapesWindowDialog.COMBINE_INTERSECT		= MOHO.MSG_BASE + 126
-RL_ShapesWindowDialog.COMBINE_BLEND_BUT		= MOHO.MSG_BASE + 127
-RL_ShapesWindowDialog.COMBINE_BLEND_BUT_ALT	= MOHO.MSG_BASE + 128
-RL_ShapesWindowDialog.COMBINE_BLEND			= MOHO.MSG_BASE + 129
-RL_ShapesWindowDialog.BASE_SHAPE			= MOHO.MSG_BASE + 130
-RL_ShapesWindowDialog.BASE_SHAPE_ALT		= MOHO.MSG_BASE + 131
-RL_ShapesWindowDialog.TOP_SHAPE				= MOHO.MSG_BASE + 132
-RL_ShapesWindowDialog.TOP_SHAPE_ALT			= MOHO.MSG_BASE + 133
-RL_ShapesWindowDialog.MERGE					= MOHO.MSG_BASE + 134
-RL_ShapesWindowDialog.RAISE					= MOHO.MSG_BASE + 135
-RL_ShapesWindowDialog.RAISE_ALT				= MOHO.MSG_BASE + 136
-RL_ShapesWindowDialog.LOWER					= MOHO.MSG_BASE + 137
-RL_ShapesWindowDialog.LOWER_ALT				= MOHO.MSG_BASE + 138
-RL_ShapesWindowDialog.DELETE				= MOHO.MSG_BASE + 139
-RL_ShapesWindowDialog.SELECTALL				= MOHO.MSG_BASE + 140
-RL_ShapesWindowDialog.SELECTALL_ALT			= MOHO.MSG_BASE + 141
-RL_ShapesWindowDialog.SELECTSIMILAR			= MOHO.MSG_BASE + 142
-RL_ShapesWindowDialog.SELECTSIMILAR_ALT		= MOHO.MSG_BASE + 143
-RL_ShapesWindowDialog.SELECTBASETOP			= MOHO.MSG_BASE + 144
-RL_ShapesWindowDialog.SELECTBASETOP_ALT		= MOHO.MSG_BASE + 145
-RL_ShapesWindowDialog.CHANGE				= MOHO.MSG_BASE + 146
+LS_ShapesWindowDialog.NAME					= MOHO.MSG_BASE + 122
+LS_ShapesWindowDialog.COMBINE_NORMAL		= MOHO.MSG_BASE + 123
+LS_ShapesWindowDialog.COMBINE_ADD			= MOHO.MSG_BASE + 124
+LS_ShapesWindowDialog.COMBINE_SUBTRACT		= MOHO.MSG_BASE + 125
+LS_ShapesWindowDialog.COMBINE_INTERSECT		= MOHO.MSG_BASE + 126
+LS_ShapesWindowDialog.COMBINE_BLEND_BUT		= MOHO.MSG_BASE + 127
+LS_ShapesWindowDialog.COMBINE_BLEND_BUT_ALT	= MOHO.MSG_BASE + 128
+LS_ShapesWindowDialog.COMBINE_BLEND			= MOHO.MSG_BASE + 129
+LS_ShapesWindowDialog.BASE_SHAPE			= MOHO.MSG_BASE + 130
+LS_ShapesWindowDialog.BASE_SHAPE_ALT		= MOHO.MSG_BASE + 131
+LS_ShapesWindowDialog.TOP_SHAPE				= MOHO.MSG_BASE + 132
+LS_ShapesWindowDialog.TOP_SHAPE_ALT			= MOHO.MSG_BASE + 133
+LS_ShapesWindowDialog.MERGE					= MOHO.MSG_BASE + 134
+LS_ShapesWindowDialog.RAISE					= MOHO.MSG_BASE + 135
+LS_ShapesWindowDialog.RAISE_ALT				= MOHO.MSG_BASE + 136
+LS_ShapesWindowDialog.LOWER					= MOHO.MSG_BASE + 137
+LS_ShapesWindowDialog.LOWER_ALT				= MOHO.MSG_BASE + 138
+LS_ShapesWindowDialog.DELETE				= MOHO.MSG_BASE + 139
+LS_ShapesWindowDialog.SELECTALL				= MOHO.MSG_BASE + 140
+LS_ShapesWindowDialog.SELECTALL_ALT			= MOHO.MSG_BASE + 141
+LS_ShapesWindowDialog.SELECTSIMILAR			= MOHO.MSG_BASE + 142
+LS_ShapesWindowDialog.SELECTSIMILAR_ALT		= MOHO.MSG_BASE + 143
+LS_ShapesWindowDialog.SELECTBASETOP			= MOHO.MSG_BASE + 144
+LS_ShapesWindowDialog.SELECTBASETOP_ALT		= MOHO.MSG_BASE + 145
+LS_ShapesWindowDialog.CHANGE				= MOHO.MSG_BASE + 146
 
-function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock()) -- This print makes the window get closed upon closing the LCW!
-	local d = LM.GUI.SimpleDialog("☰  " .. MOHO.Localize("/Windows/Style/Shapes=Shapes"), RL_ShapesWindowDialog) --RL_ShapesWindow:UILabel()
+function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock()) -- This print makes the window get closed upon closing the LCW!
+	local d = LM.GUI.SimpleDialog("☰  " .. MOHO.Localize("/Windows/Style/Shapes=Shapes"), LS_ShapesWindowDialog) --LS_ShapesWindow:UILabel()
 	local l = d:GetLayout()
 	local wWidth = 132
 
@@ -172,8 +172,8 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 	d.skipBlock = false
 	d.shapeTable = {}
 	d.tempShape = moho:NewShapeProperties()
-	d.vHeight = d.v and math.floor((d.v:Height() / (RL_ShapesWindow.halfDimensions and 2 or 1))) - 214 or 648 --d.vHeight = d.vHeight and d.vHeight - 132 or 726
-	d.showTooltips = RL_ShapesWindow.showTooltips
+	d.vHeight = d.v and math.floor((d.v:Height() / (LS_ShapesWindow.halfDimensions and 2 or 1))) - 214 or 648 --d.vHeight = d.vHeight and d.vHeight - 132 or 726
+	d.showTooltips = LS_ShapesWindow.showTooltips
 	d.editingColor = false
 	--d.shapes = d.shapes and LM.Clamp(d.shapes + 2, 10, 40) or 20
 	l:AddPadding(-12)
@@ -203,7 +203,7 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 		--d.optionsMenu:AddItem(MOHO.Localize("/Menus/Help/Help=Help") ..  "...", 0, self.OPTIONS_MENU + 7)
 		d.optionsMenu:AddItem(MOHO.Localize("/Menus/Help/CheckForUpdates=Check For Updates..."), 0, self.OPTIONS_MENU + 8)
 		--d.optionsMenu:AddItem(MOHO.Localize(""), 0, 0)
-		d.optionsMenu:AddItem(MOHO.Localize("/Menus/Application/About=About") .. " " .. RL_ShapesWindow:UILabel() .. "...", 0, self.OPTIONS_MENU + 9)
+		d.optionsMenu:AddItem(MOHO.Localize("/Menus/Application/About=About") .. " " .. LS_ShapesWindow:UILabel() .. "...", 0, self.OPTIONS_MENU + 9)
 		--d.optionsMenu:AddItem("...", 0, self.OPTIONS_MENU + self:CountRealItems(d.optionsMenu)) --d.optionsMenu:SetEnabled(self.OPTIONS_MENU + self:CountRealItems(d.optionsMenu), false) -- Last (Testground!)
 	
 		l:Indent(6)
@@ -389,7 +389,7 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 					l:AddChild(d.deleteBut, LM.GUI.ALIGN_FILL, 0)
 				l:Pop() --H
 
-				if RL_ShapesWindow.advanced then
+				if LS_ShapesWindow.advanced then
 					l:AddPadding(4)
 					l:PushH(LM.GUI.ALIGN_RIGHT, 8)
 						l:AddPadding(-8)
@@ -438,7 +438,7 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 		--l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0)
 		l:AddPadding(4)
 
-		if RL_ShapesWindow.advanced then
+		if LS_ShapesWindow.advanced then
 			l:PushH(LM.GUI.ALIGN_LEFT, 0)
 				d.shapeCreationLabel = LM.GUI.DynamicText("    ", 18)
 				d.shapeCreationLabel:SetValue(" ©")
@@ -517,8 +517,8 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 			l:Pop() --H
 		end
 
-		if RL_ShapesWindow.showInfobar then
-			if RL_ShapesWindow.advanced then
+		if LS_ShapesWindow.showInfobar then
+			if LS_ShapesWindow.advanced then
 				l:AddPadding(4)
 				d.dummyList2 = LM.GUI.ImageTextList(0, 1, LM.GUI.MSG_CANCEL)
 				l:AddChild(d.dummyList2, LM.GUI.ALIGN_FILL, 0)
@@ -541,11 +541,11 @@ function RL_ShapesWindowDialog:new(moho) --print("RL_ShapesWindowDialog:new(" ..
 	return d
 end
 
---function RL_ShapesWindowDialog:UpdateWidgets(moho) --print("RL_ShapesWindowDialog:UpdateWidgets(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock())
+--function LS_ShapesWindowDialog:UpdateWidgets(moho) --print("LS_ShapesWindowDialog:UpdateWidgets(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock())
 	-- This only run once upon opening the dialog even if its modeless, so using "Update()" function bellow for al purposes instead. 🤔 Not sure if at some point it may have some use...
 --end
 
-function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Update(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock())
+function LS_ShapesWindowDialog:Update(moho) --print("LS_ShapesWindowDialog:Update(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock())
 	--local caller = debug.getinfo(5) and debug.getinfo(5).name or "NULL" print(caller) --0: getinfo, 1: Update, 2: func, 3: NULL/NULL, 4: NULL/UpdateUI, 5: NULL/NULL
 	local helper = MOHO.ScriptInterfaceHelper:new_local()
 	local moho = helper:MohoObject() --moho or helper:MohoObject() -- TBC!
@@ -569,7 +569,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		if shape and shape.MyStyle ~= style then
 			--self.tempShape
 		end
-		if RL_ShapesWindow.advanced then
+		if LS_ShapesWindow.advanced then
 			self.fillCol:SetValue(style.fFillCol.value)
 			self.lineCol:SetValue(style.fLineCol.value)
 			self.lineWidth:SetValue(style.fLineWidth * docH)
@@ -605,7 +605,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	local edges = moho:CountEdges()
 
 	self.itemNameLabel:Enable(true)
-	if RL_ShapesWindow.advanced then
+	if LS_ShapesWindow.advanced then
 		--self.shapeCreationLabel:Enable(not toolsDisabled)
 		for i, but in ipairs(self.shapeButtons) do
 			but:Enable(edges > 0 and not toolsDisabled)
@@ -614,19 +614,19 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 
 	---[[20231014-1955: Try to move all this to DoLayout? They may not need to be updated all the time after all...
 	--if (msg >= self.OPTIONS_MENU and msg <= self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) then -- Do nothing else than update the menu?
-		self.optionsMenu:SetChecked(self.OPTIONS_MENU, RL_ShapesWindow.pointsBasedSel)
-		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 1, RL_ShapesWindow.ignoreNonRegular)
-		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 2, RL_ShapesWindow.showTooltips)
-		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 3, RL_ShapesWindow.linkToStyle)
-		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 4, RL_ShapesWindow.advanced)
-		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 5, RL_ShapesWindow.halfDimensions)
-		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 6, RL_ShapesWindow.showInfobar)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU, LS_ShapesWindow.pointsBasedSel)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 1, LS_ShapesWindow.ignoreNonRegular)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 2, LS_ShapesWindow.showTooltips)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 3, LS_ShapesWindow.linkToStyle)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 4, LS_ShapesWindow.advanced)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 5, LS_ShapesWindow.halfDimensions)
+		self.optionsMenu:SetChecked(self.OPTIONS_MENU + 6, LS_ShapesWindow.showInfobar)
 		--helper:delete()
 		--return
 	--end
 	--]]
 
-	if (mesh == nil) or ((lDrawing and lDrawing:IsCurver()) or (lDrawing:IsWarpLayer() and (lDrawing:ContinuousTriangulation() or RL_ShapesWindow.ignoreNonRegular))) then -- Disable everything irrelevant if no valid/drawing layer is active ("Ignore Non-Regular" makes e.g. non-continuously-triangulated layers be also ignored).
+	if (mesh == nil) or ((lDrawing and lDrawing:IsCurver()) or (lDrawing:IsWarpLayer() and (lDrawing:ContinuousTriangulation() or LS_ShapesWindow.ignoreNonRegular))) then -- Disable everything irrelevant if no valid/drawing layer is active ("Ignore Non-Regular" makes e.g. non-continuously-triangulated layers be also ignored).
 		--l:Enable(false) -- Used classic enable/disable method due to this causes unwanted blinking at frame change and so...
 		self.itemName:Enable(false)
 		self.itemName:SetValue("")
@@ -662,7 +662,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		self.deleteBut:Enable(false)
 
 		self.optionsPopup:Enable(true)
-		if RL_ShapesWindow.advanced then
+		if LS_ShapesWindow.advanced then
 			--self.shapeCreationLabel:Enable(false)
 			self.copyBut:Enable(true)
 			self.pasteBut:Enable(true)
@@ -677,7 +677,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 			self.lineWidth:Enable(true)
 			self.capsBut:Enable(true)
 		end
-		if (RL_ShapesWindow.showInfobar and self.infobar ~= nil) then
+		if (LS_ShapesWindow.showInfobar and self.infobar ~= nil) then
 			self.infobar:SetValue(table.concat(info, " • "))
 		end
 
@@ -688,7 +688,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 			self.itemNameLabel:Enable(false)
 			self.liquidShapesLabel:Enable(false)
 
-			if RL_ShapesWindow.advanced then
+			if LS_ShapesWindow.advanced then
 				self.shapeCreationLabel:Enable(false)
 				self.copyBut:Enable(false)
 				self.pasteBut:Enable(false)
@@ -704,7 +704,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 		self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 5, true) -- Show Infobar
 		self.itemNameLabel:Enable(true)
 		self.liquidShapesLabel:Enable(true)
-		if RL_ShapesWindow.advanced then
+		if LS_ShapesWindow.advanced then
 			self.shapeList:Enable(true)
 			self.shapeList:Redraw()
 			self.shapeCreationLabel:Enable(true) --self.shapeCreationLabel:Enable(not toolsDisabled)
@@ -716,7 +716,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 
 	---[[20231006-1745: Before selecting items in list much bellow, do here the "Points-Based Selection" thing if active (so then you can rely on shape/shapeID/etc. kind of values)
 	if mesh ~= nil and not (lDrawing:IsCurver() or lDrawing:IsWarpLayer()) then
-		if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
+		if (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
 			if styleName == "" and moho:CountSelectedPoints() > 1 then -- Avoid Points-Based Selection select any shape if a style is being edited to allow normal Style workflow. 
 				for i = 0, mesh:CountShapes() - 1 do
 					local shape = mesh:Shape(i)
@@ -809,7 +809,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 
 		self.itemNameLabel:Enable(not shape.fHidden)
 		self.itemName:Enable(true)
-		if RL_ShapesWindow.advanced then
+		if LS_ShapesWindow.advanced then
 			self.fillCheck:SetValue(shape.fHasFill)
 			self.fillCheck:Enable(shape.fFillAllowed)
 			self.fillCol:Enable(shape.fHasFill)
@@ -844,7 +844,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 
 		self.deleteBut:Enable(false)
 		self.itemName:Enable(false)
-		if RL_ShapesWindow.advanced then
+		if LS_ShapesWindow.advanced then
 			self.fillCheck:SetValue(true)
 			self.fillCheck:Enable(false)
 			self.fillCol:Enable(true)
@@ -855,7 +855,7 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	end
 
 	local infoContent = table.concat(info, " • ") --•·∙⸱∣
-	if (RL_ShapesWindow.showInfobar) and self.infobar then
+	if (LS_ShapesWindow.showInfobar) and self.infobar then
 		self.infobar:SetValue(infoContent) --self.infobar:SetValue(#infoContent > 30 and (infoContent):sub(1, 30) .. "…" or infoContent) -- 2023101011-1530: Discarted for now, since string.sub can "destroy" emojis and cause problems! 
 		self.infobar:SetToolTip(#infoContent > 36 and infoContent or "")
 		self.infobar:Enable(false)
@@ -942,23 +942,23 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	self.deleteBut:SetCursor(LM.GUI.Cursor("ScriptResources/../../Support/Scripts/Tool/lm_delete_shape_cursor", 0, 0))
 	--self.selectAllBut:SetCursor(LM.GUI.Cursor("ScriptResources/../../Support/Scripts/Tool/lm_create_shape_cursor", 0, 0)) --lm_select_shape_cursor
 	--self.resetBut:SetCursor(LM.GUI.Cursor("ScriptResources/../../Support/Scripts/Tool/lm_roll_camera_cursor", 0, 0))
-	if RL_ShapesWindow.advanced then 
+	if LS_ShapesWindow.advanced then 
 		for i, but in ipairs(self.shapeButtons) do
 			but:SetCursor(LM.GUI.Cursor("ScriptResources/../../Support/Scripts/Tool/lm_select_shape_cursor", 0, 0))
 		end
 	end
 
-	if (RL_ShapesWindow.showTooltips ~= self.showTooltips) or self.isNewRun then --print("1: " .. tostring(RL_ShapesWindow.showTooltips), ", ", tostring(self.showTooltips))
-		self.optionsPopup:SetToolTip(RL_ShapesWindow.showTooltips and MOHO.Localize("/Dialogs/LayerSettings/GeneralTab/Options=Options") or "")
+	if (LS_ShapesWindow.showTooltips ~= self.showTooltips) or self.isNewRun then --print("1: " .. tostring(LS_ShapesWindow.showTooltips), ", ", tostring(self.showTooltips))
+		self.optionsPopup:SetToolTip(LS_ShapesWindow.showTooltips and MOHO.Localize("/Dialogs/LayerSettings/GeneralTab/Options=Options") or "")
 		--self.itemNameLabel:SetToolTip(MOHO.Localize("/Windows/Style/Name=Name"))
-		self.liquidShapesLabel:SetToolTip(RL_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/LiquidShapes=Liquid Shapes") or "")
-		self.combineBlend:SetToolTip(RL_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/Blend=Blend:"):gsub("[^%w]$", "") .. " (" .. MOHO.Localize("/Dialogs/NudgeDlog/Amount=Amount") ..")" or "") -- Remove any non-alphanumeric ending character
-		self.baseBut:SetToolTip(RL_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/SelectBottomOfCluster=Select bottom of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")" or "")
-		self.topBut:SetToolTip(RL_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/SelectTopOfCluster=Select top of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")" or "")
-		--self.shapePaletteLabel:SetToolTip(RL_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/ShapesWindow/ShapePalette=Shape Palette") or "")
-		--self.shapeCreationLabel:SetToolTip(RL_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/CreateShape/CreateShape=Create Shape") .." (" .. MOHO.Localize("/Windows/Style/Advanced=Advanced") .. ")" or "")
+		self.liquidShapesLabel:SetToolTip(LS_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/LiquidShapes=Liquid Shapes") or "")
+		self.combineBlend:SetToolTip(LS_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/Blend=Blend:"):gsub("[^%w]$", "") .. " (" .. MOHO.Localize("/Dialogs/NudgeDlog/Amount=Amount") ..")" or "") -- Remove any non-alphanumeric ending character
+		self.baseBut:SetToolTip(LS_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/SelectBottomOfCluster=Select bottom of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")" or "")
+		self.topBut:SetToolTip(LS_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/SelectTopOfCluster=Select top of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")" or "")
+		--self.shapePaletteLabel:SetToolTip(LS_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/ShapesWindow/ShapePalette=Shape Palette") or "")
+		--self.shapeCreationLabel:SetToolTip(LS_ShapesWindow.showTooltips and MOHO.Localize("/Scripts/Tool/CreateShape/CreateShape=Create Shape") .." (" .. MOHO.Localize("/Windows/Style/Advanced=Advanced") .. ")" or "")
 
-		self.showTooltips = RL_ShapesWindow.showTooltips
+		self.showTooltips = LS_ShapesWindow.showTooltips
 	end
 	
 	for k, v in ipairs(self.w) do --print(tostring(k), ", ", tostring(v), ", ", type(v))
@@ -988,30 +988,30 @@ function RL_ShapesWindowDialog:Update(moho) --print("RL_ShapesWindowDialog:Updat
 	helper:delete()
 end
 
-function RL_ShapesWindowDialog:OnOK() --print("RL_ShapesWindowDialog:OnOK(): ", " 🕗: " .. os.clock()) LM.Snooze(3000)
+function LS_ShapesWindowDialog:OnOK() --print("LS_ShapesWindowDialog:OnOK(): ", " 🕗: " .. os.clock()) LM.Snooze(3000)
 	local helper = MOHO.ScriptInterfaceHelper:new_local()
 	local moho = helper:MohoObject()
 
-	if RL_ShapesWindow.dlog == nil then -- Reopen the just auto-closed window
-		RL_ShapesWindow:Run(moho)
+	if LS_ShapesWindow.dlog == nil then -- Reopen the just auto-closed window
+		LS_ShapesWindow:Run(moho)
 	else
-		RL_ShapesWindow.dlog = nil -- Mark the window closed
+		LS_ShapesWindow.dlog = nil -- Mark the window closed
 	end
 
 	moho:UpdateUI()
 	helper:delete()
 end
 
-function RL_ShapesWindowDialog_Update(moho) --print("RL_ShapesWindowDialog_Update(" .. moho .."): ", " 🕗: " .. os.clock())
-	if RL_ShapesWindow.dlog then
-		RL_ShapesWindow.dlog:Update(moho)
+function LS_ShapesWindowDialog_Update(moho) --print("LS_ShapesWindowDialog_Update(" .. moho .."): ", " 🕗: " .. os.clock())
+	if LS_ShapesWindow.dlog then
+		LS_ShapesWindow.dlog:Update(moho)
 	end
 end
 
 -- Register the dialog to be updated when changes are made
-table.insert(MOHO.UpdateTable, RL_ShapesWindowDialog_Update)
+table.insert(MOHO.UpdateTable, LS_ShapesWindowDialog_Update)
 
-function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog:HandleMessage(" .. math.floor(msg) .. "): " .. RL_ShapesWindowDialog:WhatMsg(msg), " 🕗: " .. os.clock())
+function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog:HandleMessage(" .. math.floor(msg) .. "): " .. LS_ShapesWindowDialog:WhatMsg(msg), " 🕗: " .. os.clock())
 	--local caller = debug.getinfo(3) and debug.getinfo(3).name or "NULL" print(caller) --0: getinfo, 1: NULL/NULL, 2: SetSelItem/NULL, 3: NULL/Update, 4: NULL/func, 5: NULL/NULL
 	local helper = MOHO.ScriptInterfaceHelper:new_local()
 	local moho = helper:MohoObject()
@@ -1029,45 +1029,45 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			self:Update()
 		end
 		if (msg == self.OPTIONS_MENU) then -- Points-Based Selection
-			RL_ShapesWindow.pointsBasedSel = not RL_ShapesWindow.pointsBasedSel
+			LS_ShapesWindow.pointsBasedSel = not LS_ShapesWindow.pointsBasedSel
 		elseif (msg == self.OPTIONS_MENU + 1) then -- Ignore Non-Regular Vector Layers
-			RL_ShapesWindow.ignoreNonRegular = not RL_ShapesWindow.ignoreNonRegular
+			LS_ShapesWindow.ignoreNonRegular = not LS_ShapesWindow.ignoreNonRegular
 		elseif (msg == self.OPTIONS_MENU + 2) then -- Show Tooltips
-			RL_ShapesWindow.showTooltips = not RL_ShapesWindow.showTooltips
+			LS_ShapesWindow.showTooltips = not LS_ShapesWindow.showTooltips
 		elseif (msg == self.OPTIONS_MENU + 3) then -- Link To Style Window
-			RL_ShapesWindow.linkToStyle = not RL_ShapesWindow.linkToStyle
+			LS_ShapesWindow.linkToStyle = not LS_ShapesWindow.linkToStyle
 		elseif (msg >= self.OPTIONS_MENU + 4 and msg <= self.OPTIONS_MENU + 6) then -- Try to encompass here options which require auto-reopening.
 			if (msg == self.OPTIONS_MENU + 4) and doc ~= nil then -- Advanced (Create)
-				RL_ShapesWindow.advanced = not RL_ShapesWindow.advanced
-				--self.optionsMenu:SetChecked(msg, RL_ShapesWindow.advanced) -- Not necessary in this case, but another possibility of update entries' checkmarks...
+				LS_ShapesWindow.advanced = not LS_ShapesWindow.advanced
+				--self.optionsMenu:SetChecked(msg, LS_ShapesWindow.advanced) -- Not necessary in this case, but another possibility of update entries' checkmarks...
 			elseif (msg == self.OPTIONS_MENU + 5) and doc ~= nil then -- Half Dimensions
-				RL_ShapesWindow.halfDimensions = not RL_ShapesWindow.halfDimensions
+				LS_ShapesWindow.halfDimensions = not LS_ShapesWindow.halfDimensions
 			elseif (msg == self.OPTIONS_MENU + 6) and doc ~= nil then -- Show Infobar
-				RL_ShapesWindow.showInfobar = not RL_ShapesWindow.showInfobar
+				LS_ShapesWindow.showInfobar = not LS_ShapesWindow.showInfobar
 			end
 			if doc ~= nil then
 				--print("1: (msg >= self.OPTIONS_MENU + 3 and msg <= self.OPTIONS_MENU + 5)")
 				self.dummyList:SetSelItem(self.dummyList:GetItem(0), false)
 				--print("2: (msg >= self.OPTIONS_MENU + 3 and msg <= self.OPTIONS_MENU + 5)")
-				if (RL_ShapesWindow.dlog) then
-					RL_ShapesWindow.dlog = nil
+				if (LS_ShapesWindow.dlog) then
+					LS_ShapesWindow.dlog = nil
 				end
 			end
 			helper:delete()
 			return
 		elseif (msg == self.OPTIONS_MENU + 7) then -- Restore Defaults [?]
 			local alert = LM.GUI.Alert(LM.GUI.ALERT_QUESTION,
-			RL_ShapesWindow:UILabel() .. ": " .. MOHO.Localize("/Dialogs/Preferences/ToolPrefs/RestoreDefaults=Restore Factory Defaults") .. "?",
+			LS_ShapesWindow:UILabel() .. ": " .. MOHO.Localize("/Dialogs/Preferences/ToolPrefs/RestoreDefaults=Restore Factory Defaults") .. "?",
 			MOHO.Localize(doc ~= nil and "/Scripts/Tool/ShapesWindow/TheWindowWillReopen=The window will reopen if necessary." or "/Scripts/Tool/ShapesWindow/TheWindowWillClose=The window will close if necessary."), nil,
 			MOHO.Localize("/Dialogs/ProjectSettings/RestoreDefaults=Restore Defaults"):gmatch("%w+")(), MOHO.Localize("/Strings/Cancel=Cancel")) --Restore: 0, Cancel: 1
 			if alert == 0 then
-				RL_ShapesWindow:ResetPrefs()
-				if RL_ShapesWindow.advanced ~= self.optionsMenu:IsChecked(self.OPTIONS_MENU + 3) or RL_ShapesWindow.halfDimensions ~= self.optionsMenu:IsChecked(self.OPTIONS_MENU + 4) or RL_ShapesWindow.showInfobar ~= self.optionsMenu:IsChecked(self.OPTIONS_MENU + 5) then -- Only Reopen window if necessary.
+				LS_ShapesWindow:ResetPrefs()
+				if LS_ShapesWindow.advanced ~= self.optionsMenu:IsChecked(self.OPTIONS_MENU + 3) or LS_ShapesWindow.halfDimensions ~= self.optionsMenu:IsChecked(self.OPTIONS_MENU + 4) or LS_ShapesWindow.showInfobar ~= self.optionsMenu:IsChecked(self.OPTIONS_MENU + 5) then -- Only Reopen window if necessary.
 					--print("1: (msg == self.OPTIONS_MENU + 6)")
 					self.dummyList:SetSelItem(self.dummyList:GetItem(0), false)
 					--print("2: (msg == self.OPTIONS_MENU + 6)")
-					if (RL_ShapesWindow.dlog) and doc ~= nil then -- It may be better not try to reopen without an open document, otherwise the lack of view (among other things) will make it open weirdly.
-						RL_ShapesWindow.dlog = nil
+					if (LS_ShapesWindow.dlog) and doc ~= nil then -- It may be better not try to reopen without an open document, otherwise the lack of view (among other things) will make it open weirdly.
+						LS_ShapesWindow.dlog = nil
 					end
 					helper:delete()
 					return
@@ -1077,19 +1077,19 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 				return
 			end
 		elseif (msg == self.OPTIONS_MENU + 8) then -- Check For Updates...
-			os.execute('start "" ' .. RL_ShapesWindow.url) --os.execute('start "" "https://mohoscripts.com/script/"' .. (info.source):match("^.*[/\\](.*).lua$"))
+			os.execute('start "" ' .. LS_ShapesWindow.url) --os.execute('start "" "https://mohoscripts.com/script/"' .. (info.source):match("^.*[/\\](.*).lua$"))
 		elseif (msg == self.OPTIONS_MENU + 9) then -- About...
 			local years = ScriptBirth:sub(1,4) .. (tonumber(ScriptBuild:sub(1, 4)) > tonumber(ScriptBirth:sub(1, 4)) and "-" .. ScriptBuild:sub(1,4) or "")
-			local block1a = RL_ShapesWindow:UILabel() .. " " .. RL_ShapesWindow:Version()
-			local block1b = "\n" ..  RL_ShapesWindow:Creator()
+			local block1a = LS_ShapesWindow:UILabel() .. " " .. LS_ShapesWindow:Version()
+			local block1b = "\n" ..  LS_ShapesWindow:Creator()
 			--local blockSep = "\n" ..  ("_"):rep(math.max(block1a and #block1a or 0, block1b and #block1b or 0))
-			local block2 = RL_ShapesWindow:Description() .. "\n\n"
+			local block2 = LS_ShapesWindow:Description() .. "\n\n"
 			local block3 = "Licensed under the Apache License, Version 2.0"
 			local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, block1a .. block1b, block2, block3, MOHO.Localize("/Scripts/Tool/ShapesWindow/Acknowledgements=Acknowledgements"), MOHO.Localize("/Dialogs/SLAPanel/ReadLicense=Read License"), MOHO.Localize("/Menus/File/CloseRender=Close")) --This script is freeware and released under the GNU General Public License. --Licensed under the MIT License.
 			if alert == 0 then
-				local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, RL_ShapesWindow.ack[1], table.concat(RL_ShapesWindow.ack, "    \n\n", 2, #RL_ShapesWindow.ack - 1) , RL_ShapesWindow.ack[#RL_ShapesWindow.ack], MOHO.Localize("/Menus/File/CloseRender=Close"))
+				local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, LS_ShapesWindow.ack[1], table.concat(LS_ShapesWindow.ack, "    \n\n", 2, #LS_ShapesWindow.ack - 1) , LS_ShapesWindow.ack[#LS_ShapesWindow.ack], MOHO.Localize("/Menus/File/CloseRender=Close"))
 			elseif alert == 1 then
-				local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, "Licence & Warranty", RL_ShapesWindow:License(years), nil, MOHO.Localize("/Menus/File/CloseRender=Close"))
+				local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, "Licence & Warranty", LS_ShapesWindow:License(years), nil, MOHO.Localize("/Menus/File/CloseRender=Close"))
 			end
 		elseif (msg == self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) then -- Last (Testground!)
 			--print("...")
@@ -1120,7 +1120,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 	local shapes = mesh and mesh:CountShapes() or 0
 	local shapesSel = moho:CountSelectedShapes(true) -- Use this instead LM_SelectShape:CountSelectedShapes??
 
-	if (style == nil and mesh == nil) then print(RL_ShapesWindowDialog:WhatMsg(msg))
+	if (style == nil and mesh == nil) then print(LS_ShapesWindowDialog:WhatMsg(msg))
 		if msg < self.FILL and msg > self.RESET_ALT and msg ~= self.CHANGE then --print(msg, ", ", self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) -- If doc but not object, exit should msg was other than options menu's
 			helper:delete()
 			return
@@ -1143,7 +1143,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			return 
 		end
 		if self.skipBlock == true then -- Try to avoid unwanted call to Update/UpdateWidgets bellow upon selecting, no matter how, a list item!
-			if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then --if (RL_ShapesWindow.pointsBasedSel and tool:find("SelectPoints")) then
+			if (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then --if (LS_ShapesWindow.pointsBasedSel and tool:find("SelectPoints")) then
 				if shapesSel == 0 then
 					self.count = 0
 				end
@@ -1176,7 +1176,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 				end
 			end
 			---[=[Experimental Points-Based Selection Mode...
-			if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
+			if (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
 				for i = 0, mesh:CountShapes() - 1 do
 					local shape = mesh:Shape(i)
 					if shape.fSelected == true then -- Select selected shape's points
@@ -1197,7 +1197,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			self.lower:Enable(self.shapeList:SelItem() > 0 and self.shapeList:SelItem() < self.shapeList:CountItems() - 1)
 			--]=]
 			MOHO.Redraw()
-			if RL_ShapesWindow.linkToStyle then
+			if LS_ShapesWindow.linkToStyle then
 				moho:UpdateUI()
 			else
 				--style.fFillCol:SetValue(lDrawingFrame, self.fillCol:Value())
@@ -1332,7 +1332,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			local clusterBaseShape = shape:BottomOfCluster()
 			mesh:SelectNone()
 			clusterBaseShape.fSelected = true
-			if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
+			if (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
 				clusterBaseShape:SelectAllPoints()
 			end
 		end
@@ -1344,7 +1344,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			local clusterBaseShape = shape:TopOfCluster()
 			mesh:SelectNone()
 			clusterBaseShape.fSelected = true
-			if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
+			if (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
 				clusterBaseShape:SelectAllPoints()
 			end
 		end
@@ -1355,7 +1355,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			local clusterShape = shape:BottomOfCluster()
 			while (clusterShape ~= nil) do
 				clusterShape.fSelected = true
-				if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
+				if (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
 					clusterShape:SelectAllPoints()
 				end
 				clusterShape = clusterShape:NextInCluster()
@@ -1394,7 +1394,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 		for i = 0, shapes - 1 do
 			local shape = mesh:Shape(i)
 			shape.fSelected = (msg == self.SELECTALL and true) or not shape.fSelected
-			if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
+			if (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
 				if shape.fSelected then
 					shape:SelectAllPoints()
 				else
@@ -1413,7 +1413,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 			local iShape = mesh:Shape(i)
 			if (mesh:ShapeID(iShape) ~= shapeID) and iShape:ArePropertiesEqual(shape) then
 				iShape.fSelected = true
-				if (RL_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
+				if (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
 					iShape:SelectAllPoints()
 				end
 				count = count + 1
@@ -1709,7 +1709,7 @@ function RL_ShapesWindowDialog:HandleMessage(msg) --print("RL_ShapesWindowDialog
 	helper:delete()
 end
 
-function RL_ShapesWindowDialog:WhatMsg(msg, t)
+function LS_ShapesWindowDialog:WhatMsg(msg, t)
 	t = t or self
 	local what = "<NONE>"
 	for k, v in pairs(t) do
@@ -1720,7 +1720,7 @@ function RL_ShapesWindowDialog:WhatMsg(msg, t)
 	return what
 end
 
-function RL_ShapesWindowDialog:CountRealItems(w, msg)
+function LS_ShapesWindowDialog:CountRealItems(w, msg)
 	msg = msg or MOHO.MSG_BASE
 	local n = 0
 	if tostring(w):find("Menu") and msg ~= nil then
@@ -1737,21 +1737,21 @@ end
 -- The guts of this script
 -- **************************************************
 
-function RL_ShapesWindow:IsEnabled(moho) --print("RL_ShapesWindow:IsEnabled(" .. tostring(moho.document) .. ")", " 🕗: " .. os.clock())
-	if (RL_ShapesWindow.dlog == nil) then
+function LS_ShapesWindow:IsEnabled(moho) --print("LS_ShapesWindow:IsEnabled(" .. tostring(moho.document) .. ")", " 🕗: " .. os.clock())
+	if (LS_ShapesWindow.dlog == nil) then
 		return true
 	end
 	return false
 end
 
-function RL_ShapesWindow:IsRelevant(moho) --print("RL_ShapesWindow:IsRelevant(" .. tostring(moho.document) .. ")", " 🕗: " .. os.clock())
+function LS_ShapesWindow:IsRelevant(moho) --print("LS_ShapesWindow:IsRelevant(" .. tostring(moho.document) .. ")", " 🕗: " .. os.clock())
 	if self:CompareVersion(moho:AppVersion(), 14.0) < 0 then
 		return false
 	end
 	return true
 end
 
-function RL_ShapesWindow:Run(moho)
+function LS_ShapesWindow:Run(moho)
 	if self.dlog == nil then
 		--[[20230929-2230: Throw a warning, for now, if current tool has a dialog to avoid both get messed up... 20231004-1430: See dlogBypass patch bellow! :D
 		local reminder = ""
@@ -1762,7 +1762,7 @@ function RL_ShapesWindow:Run(moho)
 		for _, v in pairs(_G[tool]) do --if _G[moho:CurrentTool()].dlog then
 			if type(v) == "userdata" and tostring(v):find("SimpleDialog") then -- Throw a warning...
 				if self.alertCantOpen ~= 1 or reminder ~= "" then 
-					self.alertCantOpen = LM.GUI.Alert(LM.GUI.ALERT_INFO, reminder .. "The \"" .. RL_ShapesWindow:UILabel() .. "\" couldn't be opened due to currently active tool (\"" .. _G[tool]:UILabel() .. "\" in this case) has a dialog and that may cause problems.", "Please, select a different one in \"Tools\" palette with that in mind and try again... Once \"" .. RL_ShapesWindow:UILabel() .. "\" is open, you are free to activate and work breezily with any tool.", nil, "OK", (reminder == "" and "Got it!" or nil), nil) --OK: 0, Got it: 1
+					self.alertCantOpen = LM.GUI.Alert(LM.GUI.ALERT_INFO, reminder .. "The \"" .. LS_ShapesWindow:UILabel() .. "\" couldn't be opened due to currently active tool (\"" .. _G[tool]:UILabel() .. "\" in this case) has a dialog and that may cause problems.", "Please, select a different one in \"Tools\" palette with that in mind and try again... Once \"" .. LS_ShapesWindow:UILabel() .. "\" is open, you are free to activate and work breezily with any tool.", nil, "OK", (reminder == "" and "Got it!" or nil), nil) --OK: 0, Got it: 1
 					self.alertCantOpen = reminder ~= "" and 1 or self.alertCantOpen
 				else
 					LM.Beep()
@@ -1773,8 +1773,8 @@ function RL_ShapesWindow:Run(moho)
 		end
 		--]]
 
-		self.dlog = RL_ShapesWindowDialog:new(moho)
-		self.dlogBypass = RL_ShapesWindowDialog:new(moho) self.dlogBypass = nil -- dlogGuard, dlogShield, dlogBait, dlogTrap, dlogPatch...
+		self.dlog = LS_ShapesWindowDialog:new(moho)
+		self.dlogBypass = LS_ShapesWindowDialog:new(moho) self.dlogBypass = nil -- dlogGuard, dlogShield, dlogBait, dlogTrap, dlogPatch...
 		self.dlog:DoModeless()
 	else
 		--print(self.dlog.itemNameLabel:Height())
@@ -1783,7 +1783,7 @@ function RL_ShapesWindow:Run(moho)
 
 end
 
-function RL_ShapesWindow:CompareVersion(a, b) -- Sorting an array of semantic versions or SemVer (https://medium.com/geekculture/sorting-an-array-of-semantic-versions-in-typescript-55d65d411df2)
+function LS_ShapesWindow:CompareVersion(a, b) -- Sorting an array of semantic versions or SemVer (https://medium.com/geekculture/sorting-an-array-of-semantic-versions-in-typescript-55d65d411df2)
 	local a1, b1 = {}, {}
 	for part in tostring(a):gmatch("[^.]+") do table.insert(a1, part) end
 	for part in tostring(b):gmatch("[^.]+") do table.insert(b1, part) end
@@ -1795,9 +1795,9 @@ function RL_ShapesWindow:CompareVersion(a, b) -- Sorting an array of semantic ve
 		end
 	end
 	return #b1 - #a1 -- 3. We hit this if the all checked versions so far are equal (0 = equal version, + = 1st > 2nd, - = 1st < 2nd)
-end --print(tostring(RL_ShapesWindow:CompareVersion("13.5.6", "14.0")))
+end --print(tostring(LS_ShapesWindow:CompareVersion("13.5.6", "14.0")))
 
-function RL_ShapesWindow.LineBreaker(s, numSpaces, sep)
+function LS_ShapesWindow.LineBreaker(s, numSpaces, sep)
 	s, numSpaces, sep = s or "", numSpaces or 1, sep or " "
 	local result, currentPart, sepCount = "", "", 0
 	for char in s:gmatch(".") do
@@ -1812,13 +1812,13 @@ function RL_ShapesWindow.LineBreaker(s, numSpaces, sep)
 	return #currentPart > 0 and result .. currentPart or result
 end
 
-function RL_ShapesWindow.Abbreviator(s)
+function LS_ShapesWindow.Abbreviator(s)
 	local num = 0
 	local abrev = string.gsub(s, "%a+", function(w) if #w > 4 then num = num + 1 return string.sub(w, 1, 3) .. "." else return w end end)
 	return abrev, num
 end
 
-function RL_ShapesWindow:License(years, name, company)
+function LS_ShapesWindow:License(years, name, company)
 	years = years or self.ScriptBirth or os.date("%Y")
 	name = name or "Rai López"
 	company = company or "Lost Scripts™"
@@ -1866,4 +1866,4 @@ function RL_ShapesWindow:License(years, name, company)
 	]]
 	--                                                                                                                                                      
 	return string.format(license, tostring(years), name, company, name)
-end --print(RL_ShapesWindow:License())
+end --print(LS_ShapesWindow:License())
