@@ -4,7 +4,7 @@
 
 ScriptName = "LS_ShapesWindow"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20231018-1959"
+ScriptBuild = "20231020-1717"
 
 -- **************************************************
 -- General information about this script
@@ -19,7 +19,7 @@ function LS_ShapesWindow:Name()
 end
 
 function LS_ShapesWindow:Version()
-	return "0.0.1" .. " (Build " ..  ScriptBuild .. ") for Moho® 14.0+" -- "0.0.1-20231005.1731"
+	return "0.1.0" .. " (Build " ..  ScriptBuild .. ") for Moho® 14.0+" -- "0.0.1-20231005.1731"
 end
 
 function LS_ShapesWindow:Description()
@@ -85,9 +85,11 @@ end
 LS_ShapesWindow.name = ScriptName
 LS_ShapesWindow.birth = ScriptBirth
 LS_ShapesWindow.build = ScriptBuild
+LS_ShapesWindow.UUID = "f5350aae-a7ad-4080-9685-a5ef32bd6faa"
 LS_ShapesWindow.path = debug.getinfo(1,'S')
 LS_ShapesWindow.filename = (LS_ShapesWindow.path.source):match("^.*[/\\](.*).lua$")
-LS_ShapesWindow.url = "https://github.com/lost-scripts/" .. LS_ShapesWindow.filename
+LS_ShapesWindow.url = "https://bitbucket.org/lostscripts/" .. LS_ShapesWindow.filename
+--LS_ShapesWindow.url = "https://github.com/lost-scripts/" .. LS_ShapesWindow.filename
 --LS_ShapesWindow.url = "https://mohoscripts.com/script/" .. LS_ShapesWindow.filename
 LS_ShapesWindow.dlog = nil
 LS_ShapesWindow.ack = {
@@ -162,7 +164,11 @@ LS_ShapesWindowDialog.CHANGE				= MOHO.MSG_BASE + 146
 function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock()) -- This print makes the window get closed upon closing the LCW!
 	local d = LM.GUI.SimpleDialog("☰  " .. MOHO.Localize("/Windows/Style/Shapes=Shapes"), LS_ShapesWindowDialog) --LS_ShapesWindow:UILabel()
 	local l = d:GetLayout()
+	local doc = moho.document
+	local docH = doc and doc:Height() or 240
+	local mohoLineWidth = 0.005556 * 2
 	local wWidth = 132
+	local style = moho:CurrentEditStyle()
 
 	d.v = moho.view
 	d.w = {} -- widgets, wTable?
@@ -171,11 +177,12 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 	d.count = 0
 	d.skipBlock = false
 	d.shapeTable = {}
-	d.tempShape = moho:NewShapeProperties()
+	--d.shapes = d.shapes and LM.Clamp(d.shapes + 2, 10, 40) or 20
 	d.vHeight = d.v and math.floor((d.v:Height() / (LS_ShapesWindow.halfDimensions and 2 or 1))) - 214 or 648 --d.vHeight = d.vHeight and d.vHeight - 132 or 726
 	d.showTooltips = LS_ShapesWindow.showTooltips
 	d.editingColor = false
-	--d.shapes = d.shapes and LM.Clamp(d.shapes + 2, 10, 40) or 20
+	d.tempShape = moho:NewShapeProperties() --MOHO.MohoGlobals.NewShapeProperties
+
 	l:AddPadding(-12)
 	l:Unindent(6)
 
@@ -455,6 +462,7 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 							d.fillCol = LM.GUI.ShortColorSwatch(true, self.FILLCOLOR)
 							d.fillCol:SetConstantMessages(true)
 							d.fillCol:SetModalMessages(self.FILLCOLOR_BEGIN, self.FILLCOLOR_END)
+							d.fillCol:SetValue(style ~= nil and style.fFillCol or MOHO.MohoGlobals.FillCol)
 							l:AddChild(d.fillCol)
 						l:Pop() --H
 
@@ -485,6 +493,7 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 							d.lineCol = LM.GUI.ShortColorSwatch(true, self.LINECOLOR)
 							d.lineCol:SetConstantMessages(true)
 							d.lineCol:SetModalMessages(self.LINECOLOR_BEGIN, self.LINECOLOR_END)
+							d.lineCol:SetValue(style ~= nil and style.fLineCol or MOHO.MohoGlobals.LineCol)
 							l:AddChild(d.lineCol)
 						l:Pop() --H
 
@@ -496,12 +505,14 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 						d.lineWidth:SetUnits(LM.GUI.UNIT_PIXELS)
 						d.lineWidth:SetWheelInc(1.0)
 						d.lineWidth:SetWheelInteger(true)
+						d.lineWidth:SetValue(style ~= nil and style.fLineWidth or mohoLineWidth * docH)
 						l:AddChild(d.lineWidth)
 						l:AddPadding(0)
 						d.capsBut = LM.GUI.ImageButton("ScriptResources/../timeline/mute_channel_on@2x", MOHO.Localize("/Windows/Style/RoundCaps=Round caps"), true, self.ROUNDCAPS, true)
+						d.capsBut:SetValue(style == nil or style.fLineCaps == 1)
 						l:AddChild(d.capsBut, LM.GUI.ALIGN_FILL)
 						l:AddPadding(1)
-
+						
 						--[[
 						l:AddPadding(4)
 						l:AddChild(LM.GUI.Divider(true), LM.GUI.ALIGN_FILL, 0)
@@ -559,23 +570,24 @@ function LS_ShapesWindowDialog:Update(moho) --print("LS_ShapesWindowDialog:Updat
 	local info = {} --[1] = "ℹ ", [2] = "🆔 ", [3] = "#️⃣ ", [4] = "♒ "
 	local itemsSel = math.floor(self.shapeList:NumSelectedItems())
 
-	local style = moho:CurrentEditStyle() --print(tostring(style) .. ": ", tostring(style.fFillCol.value.r), ", ", tostring(style.fFillCol.value.g), ", ", tostring(style.fFillCol.value.b))
+	local styleName = moho:CurrentEditStyle() and tostring(moho:CurrentEditStyle().fName:Buffer()) or ""
+	local style = moho:CurrentEditStyle() -- 20231010-0554: For some reason, "styleName" must be gathered before this assignment, otherwise then it won't be possible to access "style" properties!
 	local styleID = -1
 	local styleUUID = style and style.fUUID:Buffer() or "?" --doc:StyleByID(i) print(iStyle.fUUID:Buffer())
 	local styles = doc and math.floor(doc:CountStyles()) or 0
-	local styleName = ""
+	--print(tostring(style) .. ": ", tostring(style.fFillCol.value.r), ", ", tostring(style.fFillCol.value.g), ", ", tostring(style.fFillCol.value.b))
 
 	if (style ~= nil) then
 		if shape and shape.MyStyle ~= style then
 			--self.tempShape
 		end
 		if LS_ShapesWindow.advanced then
-			self.fillCol:SetValue(style.fFillCol.value)
-			self.lineCol:SetValue(style.fLineCol.value)
-			self.lineWidth:SetValue(style.fLineWidth * docH)
-			self.capsBut:SetValue(style.fLineCaps == 1 and true or false)
+			self.fillCol:SetValue(style.fFillCol and style.fFillCol.value or MOHO.MohoGlobals.FillCol)
+			self.lineCol:SetValue(style.fLineCol and style.fLineCol.value or MOHO.MohoGlobals.LineCol)
+			self.lineWidth:SetValue((style.fLineWidth ~= nil and style.fLineWidth or moho:NewShapeLineWidth()) * docH)
+			self.capsBut:SetValue(style.fLineCaps == nil or style.fLineCaps == 1) --style.fLineCaps ~= nil and (style.fLineCaps == 1 and true or false)
+			--self.capsBut:SetValue(style.fLineCaps == 1 and true or false)
 		end
-		styleName = style.fName:Buffer()
 		if styleName == "" then
 			--self.modeBut:SetLabel(MOHO.Localize("/Windows/Style/DefaultsForNewShapes=DEFAULTS (For new shapes)"):gsub("%s+%b()", "")) self.modeBut:Redraw() --:match("%w+"))
 			self.itemName:SetValue("")
@@ -704,9 +716,9 @@ function LS_ShapesWindowDialog:Update(moho) --print("LS_ShapesWindowDialog:Updat
 		self.optionsMenu:SetEnabled(self.OPTIONS_MENU + 5, true) -- Show Infobar
 		self.itemNameLabel:Enable(true)
 		self.liquidShapesLabel:Enable(true)
+		self.shapeList:Enable(true)
+		self.shapeList:Redraw()
 		if LS_ShapesWindow.advanced then
-			self.shapeList:Enable(true)
-			self.shapeList:Redraw()
 			self.shapeCreationLabel:Enable(true) --self.shapeCreationLabel:Enable(not toolsDisabled)
 			for i, but in ipairs(self.shapeButtons) do
 				but:Enable(edges > 0 and not toolsDisabled)
@@ -1015,13 +1027,13 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	--local caller = debug.getinfo(3) and debug.getinfo(3).name or "NULL" print(caller) --0: getinfo, 1: NULL/NULL, 2: SetSelItem/NULL, 3: NULL/Update, 4: NULL/func, 5: NULL/NULL
 	local helper = MOHO.ScriptInterfaceHelper:new_local()
 	local moho = helper:MohoObject()
-	local styleName = moho:CurrentEditStyle() and moho:CurrentEditStyle().fName:Buffer() or ""
-	local style = moho:CurrentEditStyle() -- 20231010-0554: For some reason, "styleName" must be gathered before this assignment, otherwise won't be possible to access "style" properties!
-	--local vHeight, vWidth = moho.view:Height(), moho.view:Width()
+	local styleName = moho:CurrentEditStyle() and tostring(moho:CurrentEditStyle().fName:Buffer()) or ""
+	local style = moho:CurrentEditStyle()  -- 20231010-0554: For some reason, "styleName" must be gathered before this assignment, otherwise then it won't be possible to access "style" properties!
 	local doc = moho.document
 	local docH = doc and doc:Height() or 240
 	local tool = moho:CurrentTool()
 	local l = self:GetLayout()
+	--local vHeight, vWidth = moho.view:Height(), moho.view:Width()
 	self.msg = msg or MOHO.MSG_BASE
 
 	if (msg >= self.OPTIONS_MENU and msg <= self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) then -- Process first of all stuff that can be accesed even without an open document.
@@ -1120,7 +1132,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	local shapes = mesh and mesh:CountShapes() or 0
 	local shapesSel = moho:CountSelectedShapes(true) -- Use this instead LM_SelectShape:CountSelectedShapes??
 
-	if (style == nil and mesh == nil) then print(LS_ShapesWindowDialog:WhatMsg(msg))
+	if (style == nil and mesh == nil) then --print(LS_ShapesWindowDialog:WhatMsg(msg))
 		if msg < self.FILL and msg > self.RESET_ALT and msg ~= self.CHANGE then --print(msg, ", ", self.OPTIONS_MENU + self:CountRealItems(self.optionsMenu) - 1) -- If doc but not object, exit should msg was other than options menu's
 			helper:delete()
 			return
@@ -1642,13 +1654,18 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 		self:Update()
 		moho:UpdateUI()
 	elseif (msg == self.RESET) or (msg == self.RESET_ALT) then
-		local MohoLineWidth = 0.005556 -- Factory default value * 2 = 8px (No MohoGlobal??)
+		local mohoLineWidth = 0.005556 * 2 -- Factory default value * 2 = 8px (No MohoGlobal??)
 		if (style ~= nil) then
 			style.fFillCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.FillCol)
 			style.fLineCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.LineCol)
-			style.fLineWidth = MohoLineWidth * 2
+			style.fLineWidth = mohoLineWidth
 			style.fLineCaps = 1
 			MOHO.Redraw()
+		else
+			self.fillCol:SetValue(MOHO.MohoGlobals.FillCol)
+			self.lineCol:SetValue(MOHO.MohoGlobals.LineCol)
+			self.lineWidth:SetValue(mohoLineWidth * docH)
+			self.capsBut:SetValue(true)
 		end
 		if (mesh ~= nil) then
 			for i = 0, shapes - 1 do
@@ -1657,7 +1674,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 					if lDrawingFrame == 0 then
 						shape.fMyStyle.fFillCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.FillCol)
 						shape.fMyStyle.fLineCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.LineCol)
-						shape.fMyStyle.fLineWidth = MohoLineWidth * 2
+						shape.fMyStyle.fLineWidth = mohoLineWidth
 						shape.fMyStyle.fLineCaps = 1
 						shape.f3DThickness:SetValue(lDrawingFrame, 0.1250)
 						if msg == self.RESET_ALT then
