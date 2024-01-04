@@ -4,7 +4,7 @@
 
 ScriptName = "LS_ShapesWindow"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20240103-0453"
+ScriptBuild = "20240104-0230"
 
 -- **************************************************
 -- General information about this script
@@ -404,6 +404,8 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 				l:AddPadding(3)
 
 				d.resetBut = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_reset" , MOHO.Localize("/Windows/Style/Reset=Reset"), false, self.RESET, true) --"ScriptResources/../../Support/Scripts/Tool_pro/lm_orbit_workspace_cursor" --ScriptResources/rotate_cursor
+				d.resetBut:SetAlternateMessage(self.RESET_ALT)
+				d.resetBut:SetToolTip(MOHO.Localize("/Windows/Style/Reset=Reset") .. " (<alt> " .. MOHO.Localize("/LS/ShapesWindow/Full=Full") .. ")")
 				l:AddChild(d.resetBut, LM.GUI.ALIGN_FILL, 0)
 				l:AddPadding(3)
 			l:Pop() --V
@@ -696,7 +698,8 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 	local helper = MOHO.ScriptInterfaceHelper:new_local()
 	local moho = helper:MohoObject()
 	local pro = MOHO.IsMohoPro()
-	local doc = (LS_ShapesWindow.defDoc and LS_ShapesWindow.defDoc ~= moho.document) and LS_ShapesWindow.defDoc or moho.document --print("UP: " .. (doc and doc:Name()) or "No Doc") --20240102-1638: A try to fix/patch the new opening document mess for now... (TBO!)
+	local doc = moho.document --print("UP: " .. (doc and doc:Name()) or "No Doc") --20240103-1809: Back to normality after fixing the casue of opening document mess? (TBO!)
+	--local doc = (LS_ShapesWindow.defDoc and LS_ShapesWindow.defDoc ~= moho.document) and LS_ShapesWindow.defDoc or moho.document --print("UP: " .. (doc and doc:Name()) or "No Doc") --20240102-1638: A try to fix/patch the new opening document mess for now... (TBO!)
 	local docName = doc and doc:Name() or nil
 	local docH = doc and doc:Height() or 240
 	local tool = (doc ~= nil and doc:Name() ~= "-") and moho:CurrentTool() or "" --20231223-2350: Extra-checking is for avoiding crashes upon auto-opening
@@ -1283,13 +1286,13 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 				end
 			end
 			--if self.itemList:NumSelectedItems() > 1 then
-				--self.itemList:SetSelItem(self.itemList:GetItem(0), false, false)
+				--self.itemList:SetSelItem(self.itemList:GetItem(0), false, false) -- Select None before if current selItem is part of a multi-selection
 			--end
 			--if not self.itemList:IsItemSelected(self.selItem) then
 				self.itemList:SetSelItem(self.itemList:GetItem(self.selItem), false, false)
 				self.itemList:ScrollItemIntoView(self.selItem, true)
 			--end
-		else
+		else -- 202401040525: Ensure <None> is selected when entering manually to STYLE Mode? (TBC/TODO)
 			for i = 0, styles - 1 do
 				local iStyle = doc:StyleByID(i) --print(iStyle.fName:Buffer(), ", ", tostring(iStyle.fSelected))
 				if iStyle.fSelected == true then --and not self.itemList:IsItemSelected(i + 1)
@@ -1302,7 +1305,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 			end
 			self.itemName:SetValue(self.itemList:SelItem() > 0 and self.itemList:SelItemLabel() or "  " .. MOHO.Localize("/LS/ShapesWindow/StyleManagement=Style Management") .. "  ")
 			if styleID and styleID >= 0 then
-
+				--?
 			elseif styleID < 0 then
 				if not self.itemList:IsItemSelected(0) then
 					self.itemList:SetSelItem(self.itemList:GetItem(0), true, false)
@@ -1323,7 +1326,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 	self.selectAllBut:Enable((LS_ShapesWindow.mode < 2 and shapes > 0) or (LS_ShapesWindow.mode == 2 and style ~= nil and styles > 0))
 	--self.selectAllBut:SetLabel(LM_SelectShape:CountSelectedShapes(moho) == mesh:CountShapes() and "✅" or "☑", false) -- 20230922: It seems to tail some text??
 	--self.selectAllBut:Redraw()
-	self.deleteBut:SetToolTip((LS_ShapesWindow.mode < 2) and MOHO.Localize("/Scripts/Tool/DeleteShape/DeleteShapes=Delete Shape") .. "/s" or MOHO.Localize("/LS/ShapesWindow/DeleteStyles=Delete sStyle/s"))
+	self.deleteBut:SetToolTip((LS_ShapesWindow.mode < 2) and MOHO.Localize("/Scripts/Tool/DeleteShape/DeleteShapes=Delete Shape") .. "/s" or MOHO.Localize("/LS/ShapesWindow/DeleteStyles=Delete Style/s"))
 	self.selectSimilarBut:Enable((LS_ShapesWindow.mode < 2 and shape ~= nil and shapesSel == 1 and shapes > 1) or (LS_ShapesWindow.mode == 2 and style ~= nil and stylesSel == 1 and styles > 1)) 
 	self.selectSimilarBut:SetToolTip(MOHO.Localize("/LS/ShapesWindow/SelectSimilar=Select Similar") .. (LS_ShapesWindow.mode < 2 and " (<alt> " .. MOHO.Localize("/LS/ShapesWindow/IncludingStyles=Including styles") .. ")" or ""))
 	self.checkerSelBut:SetValue(MOHO.MohoGlobals.SelectedShapeCheckerboard)
@@ -1737,7 +1740,8 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	local helper = MOHO.ScriptInterfaceHelper:new_local()
 	local moho = helper:MohoObject()
 	local frame = moho.frame
-	local doc = (LS_ShapesWindow.defDoc and LS_ShapesWindow.defDoc ~= moho.document) and LS_ShapesWindow.defDoc or moho.document --print("HM: " .. (doc and doc:Name()) or "No Doc") --20240102-1638: A try to fix/patch the new opening document mess for now... (TBO!)
+	local doc = moho.document --print("HM: " .. (doc and doc:Name()) or "No Doc") --20240103-1809: Back to normality after fixing the casue of opening document mess? (TBO!)
+	--local doc = (LS_ShapesWindow.defDoc and LS_ShapesWindow.defDoc ~= moho.document) and LS_ShapesWindow.defDoc or moho.document --print("HM: " .. (doc and doc:Name()) or "No Doc") --20240102-1638: A try to fix/patch the new opening document mess for now... (TBO!)
 	local docH = doc and doc:Height() or 240
 	local tool = moho:CurrentTool()
 	local l = self:GetLayout()
@@ -1747,7 +1751,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	local styleID = -1
 	local styles = doc and math.floor(doc:CountStyles()) or 0
 	local styleSelID = LS_ShapesWindow.mode == 2 and math.floor(self.itemList:SelItem()) - 1 or -1
-	local styleSel = doc and doc:StyleByID(styleSelID) or nil
+	local styleSel = doc and doc:StyleByID(styleSelID) or style
 	local stylesSel = math.floor(self.itemList:NumSelectedItems() + (self.itemList:IsItemSelected(0) == true and -1 or 0))
 	self.msg = msg or MOHO.MSG_BASE
 
@@ -1780,7 +1784,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 			elseif (msg == self.MENU1 + 9) and doc ~= nil then -- Show Infobar
 				LS_ShapesWindow.showInfobar = not LS_ShapesWindow.showInfobar
 			end
-			if doc ~= nil then
+			if (doc ~= nil) then
 				--print("1: (msg >= self.MENU1 + 3 and msg <= self.MENU1 + 6)")
 				self.dummyList:SetSelItem(self.dummyList:GetItem(0), false)
 				--print("2: (msg >= self.MENU1 + 3 and msg <= self.MENU1 + 6)")
@@ -2003,7 +2007,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	end
 
 	local undoable = true
-	if ((msg >= self.MENU1 and msg < self.FILLED) or msg == self.CHANGE or msg == self.BASE_SHAPE or msg == self.BASE_SHAPE_ALT or msg == self.TOP_SHAPE or msg == self.TOP_SHAPE_ALT or msg == self.SELECTALL or msg == self.SELECTALL_ALT or msg == self.SELECTSIMILAR or msg == self.SELECTSIMILAR_ALT or msg == self.COPY or (msg >= self.FILLCOLOR and msg <= self.FILLCOLOR_END) or (msg >= self.LINECOLOR and msg <= self.LINECOLOR_END)) then
+	if ((msg >= self.MENU1 and msg < self.FILLED) or msg == self.MODE or msg == self.CHANGE or msg == self.BASE_SHAPE or msg == self.BASE_SHAPE_ALT or msg == self.TOP_SHAPE or msg == self.TOP_SHAPE_ALT or msg == self.SELECTALL or msg == self.SELECTALL_ALT or msg == self.SELECTSIMILAR or msg == self.SELECTSIMILAR_ALT or msg == self.CHECKERSEL or msg == self.COPY or msg == self.COLORSLIDER or (msg >= self.FILLCOLOR and msg <= self.FILLCOLOR_END) or (msg >= self.LINECOLOR and msg <= self.LINECOLOR_END)) then
 		undoable = false
 	end
 	if (doc ~= nil and undoable) then
@@ -2441,9 +2445,10 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 		end
 	elseif (msg == self.CHECKERSEL) then
 		MOHO.MohoGlobals.SelectedShapeCheckerboard = not (MOHO.MohoGlobals.SelectedShapeCheckerboard)
-		if moho ~= nil then
+		if (moho ~= nil) and (doc ~= nil) then
 			MOHO.Redraw()
 		end
+		self:Update()
 		moho:UpdateUI()
 	elseif (msg == self.COLORSLIDER) then --print(self.colorSlider:Value())
 		local layer, mesh
@@ -2523,28 +2528,35 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 		--]]
 	elseif (msg == self.DELETE) then
 		if (doc ~= nil) then
+			local redraw
 			local i = 0
 			if LS_ShapesWindow.mode < 2 then
 				if (mesh ~= nil) then
 					while i < mesh:CountShapes() do
 						if (mesh:Shape(i).fSelected) then
 							mesh:DeleteShape(i)
+							redraw = redraw == nil and true or redraw
 						else
 							i = i + 1
 						end
 					end
 				end
-				--moho.view:DrawMe()
-				MOHO.Redraw()
 			else
+				local host = layer
 				while i < doc:CountStyles() do
 					local style = doc:StyleByID(i)
 					if (style.fSelected) then
+						redraw = redraw == nil and doc:IsStyleUsed(style, host) or redraw
 						doc:RemoveStyle(style, nil)
 					else
 						i = i + 1
 					end
 				end
+			end
+
+			if redraw == true then
+				--moho.view:DrawMe()
+				MOHO.Redraw()
 			end
 			moho:UpdateUI() -- Contrary to self:Update(), it correctly updates infobar e.g. upon deleting shapes while Select Shape tool is active, but does it worth? 🤔
 			self:Update() -- 20231222-1430: Moved bellow UpdateUI(), otherwise it made window switch to STYLE mode after shape deletion for no (known) reason... It may not be necessary anyway?
@@ -2710,6 +2722,10 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 				end
 			end
 			MOHO.Redraw()
+		else
+			if (doc == nil and (self.itemList and self.itemList:IsEnabled() == true)) then
+				self:Update()
+			end
 		end
 		moho:UpdateUI()
 	elseif (msg == self.LINEWIDTHOVER) then
@@ -2732,6 +2748,10 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 				end
 			end
 			MOHO.Redraw()
+		else
+			if (doc == nil) then
+				self:Update()
+			end
 		end
 		moho:UpdateUI()
 	elseif (msg >= self.FILLED and msg <= self.FILLEDOUTLINED_ALT) then
@@ -2785,6 +2805,8 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 			self.lineCol:SetValue(MOHO.MohoGlobals.LineCol)
 			self.lineWidth:SetValue(mohoLineWidth * docH)
 			self.capsBut:SetValue(true)
+			--helper:delete()
+			--return
 		end
 		if (mesh ~= nil) then
 			for i = 0, shapes - 1 do
