@@ -4,7 +4,7 @@
 
 ScriptName = "LS_ShapesWindow"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20240104-0230"
+ScriptBuild = "20240106-1805"
 
 -- **************************************************
 -- General information about this script
@@ -19,7 +19,7 @@ function LS_ShapesWindow:Name()
 end
 
 function LS_ShapesWindow:Version()
-	return "0.2.0" .. " BETA (Build " ..  ScriptBuild .. ") for Moho® 14.1+ Pro" -- "0.0.1.20231005.1731"
+	return "0.2.1" .. " BETA (Build " ..  self.build .. ") for Moho® 14.1+ Pro" -- "0.0.1.20231005.1731"
 end
 
 function LS_ShapesWindow:Description()
@@ -27,7 +27,7 @@ function LS_ShapesWindow:Description()
 end
 
 function LS_ShapesWindow:Creator()
-	return "Copyright © " .. ScriptBirth:sub(1,4) .. (tonumber(ScriptBuild:sub(1, 4)) > tonumber(ScriptBirth:sub(1, 4)) and "-" .. ScriptBuild:sub(1,4) or "") .. " Rai López (Lost Scripts™)"
+	return "Copyright © " .. self.birth:sub(1,4) .. (tonumber(self.build:sub(1, 4)) > tonumber(self.birth:sub(1, 4)) and "-" .. self.build:sub(1,4) or "") .. " Rai López (Lost Scripts™)"
 end
 
 function LS_ShapesWindow:UILabel() -- Note: Runs upon window opening
@@ -242,7 +242,7 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 	d.styleTable = {}
 	d.selItem = 0
 	--d.shapes = d.shapes and LM.Clamp(d.shapes + 2, 10, 40) or 20
-	d.vHeight = d.v and math.floor((d.v:Height() / (LS_ShapesWindow.largePalette and 1 or 2))) - 214 or 648 --d.vHeight = d.vHeight and d.vHeight - 132 or 726
+	d.vHeight = d.v and math.floor((d.v:Height() / (LS_ShapesWindow.largePalette and 1 or 2))) - 214 or (LS_ShapesWindow.largePalette and 648 or 324) --d.vHeight = d.vHeight and d.vHeight - 132 or 726
 	d.showAllTooltips = LS_ShapesWindow.showAllTooltips
 	d.editingColor = false
 	d.tempShape = moho:NewShapeProperties() --MOHO.MohoGlobals.NewShapeProperties
@@ -529,19 +529,19 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 				l:AddChild(LM.GUI.Divider(true), LM.GUI.ALIGN_FILL, 0)
 				l:AddPadding(2)
 
-				d.shapeButtons = {}
-				table.insert(d.shapeButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_fill", MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. " " .. MOHO.Localize("/Scripts/Tool/CreateShape/Fill=Fill") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")", false, self.FILLED, true))
-				table.insert(d.shapeButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_line", MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. " " .. MOHO.Localize("/Scripts/Tool/CreateShape/Stroke=Stroke") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")", false, self.OUTLINED, true))
-				table.insert(d.shapeButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_both", MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. " " .. MOHO.Localize("/Scripts/Tool/CreateShape/Both=Both") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")", false, self.FILLEDOUTLINED, true))
+				d.createButtons = {}
+				table.insert(d.createButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_fill", MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. " " .. MOHO.Localize("/Scripts/Tool/CreateShape/Fill=Fill") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")", false, self.FILLED, true))
+				table.insert(d.createButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_line", MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. " " .. MOHO.Localize("/Scripts/Tool/CreateShape/Stroke=Stroke") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")", false, self.OUTLINED, true))
+				table.insert(d.createButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_both", MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. " " .. MOHO.Localize("/Scripts/Tool/CreateShape/Both=Both") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")", false, self.FILLEDOUTLINED, true))
 				l:AddPadding(0)
 
-				for i, but in ipairs(d.shapeButtons) do
+				for i, but in ipairs(d.createButtons) do
 					l:PushV(LM.GUI.ALIGN_CENTER, 0)
 						l:AddChild(but, LM.GUI.ALIGN_FILL, 0)
 						if LS_ShapesWindow.largeButtons then l:AddChild(LM.GUI.TextList(butW + butW1, 0, 0), LM.GUI.ALIGN_CENTER, 0) end
 					l:Pop() --V
 					but:SetAlternateMessage(self.FILLED + (i * 2 - 1))
-					l:AddPadding(i < #d.shapeButtons and 1 or 0)
+					l:AddPadding(i < #d.createButtons and 1 or 0)
 				end
 				--[[
 				l:AddPadding(4)
@@ -847,8 +847,8 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 				end
 			end
 			self.menu2:AddItem("", 0, 0)
-			self.menu2:AddItem(MOHO.Localize("/LS/ShapesWindow/CutomSwatches=Custom Swatches..."), 0, count + 1) --"/Menus/Interval/Custom=Custom...
-			self.menu2:AddItem(MOHO.Localize("/LS/ShapesWindow/UseSelection=Use Selection"), 0,  count + 2) --USE SELECTION (TEMP)
+			self.menu2:AddItem(MOHO.Localize("/LS/ShapesWindow/CutomSwatches=Custom Swatches..."), 0, count + 1) self.menu2:SetEnabled(count + 1, false) --"/Menus/Interval/Custom=Custom...
+			self.menu2:AddItem(MOHO.Localize("/LS/ShapesWindow/UseSelection=Use Selection"), 0,  count + 2) self.menu2:SetEnabled(count + 2, false) --USE SELECTION (TEMP)
 			self.menu2:AddItem(MOHO.Localize("/LS/ShapesWindow/EditCurrentSwatch=Edit Current Swatch"), 0,  count + 3)
 			self.menu2:AddItem(MOHO.Localize("/LS/ShapesWindow/ReloadSwatches=Reload Swatches"), 0, count + 4)
 		end
@@ -871,7 +871,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		LS_ShapesWindow:BuildStyleChoiceMenu(self.menuStyle2, doc, self.SELECTSTYLE2, self.DUMMY)
 	
 		--self.shapeCreationLabel:Enable(not toolsDisabled)
-		for i, but in ipairs(self.shapeButtons) do
+		for i, but in ipairs(self.createButtons) do
 			but:Enable(edges > 0 and not toolsDisabled)
 		end
 	end
@@ -910,7 +910,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		self.selectSimilarBut:Enable(false)
 		self.deleteBut:Enable(false)
 		self.copyBut:Enable(true)
-		self.pasteBut:Enable(true)
+		self.pasteBut:Enable(self.copiedStyle and true or false)
 		self.resetBut:Enable(true)
 		
 		self.skipBlock = true
@@ -982,6 +982,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		self.menu1:SetEnabled(self.MENU1 + 7, true) -- Use Large Palette
 		self.menu1:SetEnabled(self.MENU1 + 8, true) -- Show Infobar
 		self.modeBut:Enable(true)
+		self.pasteBut:Enable(self.copiedStyle and true or false)
 		--[[20231208-0555: Here seems to be the problem with the unnecesary shape list refreshing upon frame change... STUDY!
 		if (LS_ShapesWindow.mode ~= self.mode) then
 			self.skipBlock = true
@@ -996,8 +997,8 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 
 		if LS_ShapesWindow.advanced then
 			--self.shapeCreationLabel:Enable(true) --self.shapeCreationLabel:Enable(not toolsDisabled)
-			for i, but in ipairs(self.shapeButtons) do
-				but:Enable(edges > 0 and not toolsDisabled)
+			for i, but in ipairs(self.createButtons) do
+				but:Enable(edges > 0 and not toolsDisabled and LS_ShapesWindow.mode < 2)
 			end
 		end
 	end
@@ -1124,6 +1125,9 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		info[1] = "🦠" --"" .. MOHO.Localize("/Windows/Style/SHAPE=SHAPE")
 		info[2] = shapeLUID > -1 and "🆔 " .. shapeLUID or "🆔 " .. "?" --string.format("%d", shape:ShapeID())
 		info[3] = shapes > 0 and "#️⃣ " .. shapesSel .. "/" .. shapes or shapes
+		if not self.shape or self.shape ~= shape then
+			self:UpdateItem(moho, shape, false) --20240103-0448: Had to avoid draw fills due to a last minute weird behavior upon undoing after modifyig shapes! (TODO & TBO!)
+		end
 	else
 		LS_ShapesWindow.mode = LS_ShapesWindow.mode == 2 and LS_ShapesWindow.mode or 0
 		if (MOHO.IsMohoPro()) then
@@ -1173,7 +1177,6 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		end
 	end
 
-	self:UpdateItem(moho, shape, false) --20240103-0448: Had to avoid draw fills due to a last minute weird behavior upon undoing after modifyig shapes! (TODO & TBO!)
 	local infoContent = table.concat(info, info.sep or " • "):gsub("^" .. info.sep .. " *", "")
 	if (LS_ShapesWindow.showInfobar) and self.infobar then
 		self.infobar:SetValue(infoContent) --self.infobar:SetValue(#infoContent > 30 and (infoContent):sub(1, 30) .. "…" or infoContent) -- 2023101011-1530: Discarted for now, since string.sub can "destroy" emojis and cause problems! 
@@ -1333,7 +1336,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 
 	if LS_ShapesWindow.advanced then 
 		local createCursor = LS_ShapesWindow.mode < 2 and "ScriptResources/../../Support/Scripts/Tool/lm_select_shape_cursor" or "ScriptResources/../../Support/Scripts/Tool/lm_colorpoints_cursor"
-		for i, but in ipairs(self.shapeButtons) do
+		for i, but in ipairs(self.createButtons) do
 			but:SetCursor(LM.GUI.Cursor(createCursor, 0, 0)) --ScriptResources/../../Support/Scripts/Tool/lm_colorpoints_cursor
 		end
 		self.menuStyle1Popup:Enable(styleName == "") self.menuStyle1Popup:Redraw()
@@ -1404,6 +1407,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 
 	self.mode = LS_ShapesWindow.mode
 	self.style = moho:CurrentEditStyle()
+	self.shape = moho:SelectedShape()
 	self.swatch = LS_ShapesWindow.swatch
 	self.colorSliderVal = self.colorSlider and self.colorSlider:Value() or 1
 	self.isNewRun = false
@@ -1818,7 +1822,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 		elseif (msg == self.MENU1 + 11) then -- Check For Updates...
 			os.execute('start "" ' .. LS_ShapesWindow.url) --os.execute('start "" "https://mohoscripts.com/script/"' .. (info.source):match("^.*[/\\](.*).lua$"))
 		elseif (msg == self.MENU1 + 12) then -- About...
-			local years = ScriptBirth:sub(1,4) .. (tonumber(ScriptBuild:sub(1, 4)) > tonumber(ScriptBirth:sub(1, 4)) and "-" .. ScriptBuild:sub(1,4) or "")
+			local years = LS_ShapesWindow.birth:sub(1,4) .. (tonumber(LS_ShapesWindow.build:sub(1, 4)) > tonumber(LS_ShapesWindow.birth:sub(1, 4)) and "-" .. LS_ShapesWindow.build:sub(1,4) or "")
 			local block1a = LS_ShapesWindow:UILabel() .. " " .. LS_ShapesWindow:Version()
 			local block1b = "\n" ..  LS_ShapesWindow:Creator()
 			--local blockSep = "\n" ..  ("_"):rep(math.max(block1a and #block1a or 0, block1b and #block1b or 0))
@@ -1945,7 +1949,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 					LS_ShapesWindow.swatchLayer = LS_ShapesWindow.swatchLayer > moho.document:CountLayers() - 1 and moho.document:CountLayers() - 1 or LS_ShapesWindow.swatchLayer --LM.Clamp(LS_ShapesWindow.swatchLayer, 0, moho.document:CountLayers() - 1) --print(doc:Name(), ", ", moho.document:Name())
 					layer = moho.document:Layer(LS_ShapesWindow.swatchLayer)
 					moho:SetSelLayer(layer, false, true)
-					if not (moho.layer:HasAction("SLIDER") and moho.layer:HasAction("SLIDER 2")) then --20231231-0545: MohoDoc:Layer - out of range | attempt to index a nil value (field 'layer') - Upon clicking 'Edit Current Swatch' (TODO)
+					if not (moho.layer:HasAction("SLIDER") and moho.layer:HasAction("SLIDER 2")) then
 						--MOHO.MohoGlobals.GridOn = moho.gridOn == false and true or moho.gridOn
 						--MOHO.MohoGlobals.GridSize = moho.gridSize ~= 11 and 11 or moho.gridSize
 					end
@@ -2055,7 +2059,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 						local shape = mesh:Shape(i)
 						if shape.fSelected == true then -- Select selected shape's points
 							shape:SelectAllPoints()
-						else -- 20231018-1645 TODO: There's an issue arround all this and different shapes sharing points (e.g. if you select all shapes of a Grid WITH stroke).
+						else -- 20231018-1645 TODO: There's an issue around all this and different shapes sharing points (e.g. if you select all shapes of a Grid WITH stroke).
 							for pID = shape:CountPoints() - 1, 0, -1 do -- De-select unselected shape's points
 								local point = mesh:Point(shape:GetPoint(pID))
 								point.fSelected = false
@@ -2393,7 +2397,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 			end
 			for i = 0, styles - 1 do
 				local iStyle = doc:StyleByID(i)
-				iStyle.fSelected = (msg == self.SELECTALL) and true or not iStyle.fSelected --20240102-2224: It seems to fail if only first item in list is selected... But why? (TODO)
+				iStyle.fSelected = (msg == self.SELECTALL) and true or not iStyle.fSelected --20240102-2224: It seems to fail if only first item in list is selected... But why?
 			end
 		end
 		moho:UpdateUI() -- It seems necessary in order to activate buttons accordingly list selection, plus it seems to solve the above note!
@@ -2426,15 +2430,6 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 				LS_ShapesWindow.mode = LS_ShapesWindow:StyleLeaver(moho, mesh, 2)
 				moho:UpdateUI()
 			end
-			--[[20231218-1800: First attempt (TODO)
-			for i = 0, styles - 1 do
-				local iStyle = doc:StyleByID(i)
-				if (i ~= styleID) and iStyle:ArePropertiesEqual(style) then
-					iStyle.fSelected = true
-					count = count + 1
-				end
-			end
-			--]]
 		end
 		if count < 1 then
 			LM.Beep()
@@ -2758,21 +2753,21 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 		local m = msg - self.FILLED
 		local creationMode = LM_CreateShape.creationMode
 		if (mesh ~= nil) then
-			LM_CreateShape.creationMode = math.floor(m / 2) --- #self.shapeButtons
+			LM_CreateShape.creationMode = math.floor(m / 2) --- #self.createButtons
 			LM_CreateShape:HandleMessage(moho, moho.view, msg % 2 == 0 and LM_CreateShape.CREATE or LM_CreateShape.CREATE_CONNECTED)
 			LM_CreateShape.creationMode = creationMode
 		end
 		moho:UpdateUI()
-	elseif (msg == self.COPY or msg == self.PASTE) then --20240102-2030: This doesn't work as expected, will have to figure out how to store the copied properties in a way they are not overwriten upon selecting another shape...
+	elseif (msg == self.COPY or msg == self.PASTE) then
 		if shape ~= nil then
 			if msg == self.COPY then
-				self.tempShape = moho:NewShapeProperties()
+				self.copiedStyle = moho:NewShapeProperties()
 			else -- PASTE
-				if mesh ~= nil and self.tempShape then
+				if mesh ~= nil and self.copiedStyle then
 					for i = 0, shapes - 1 do
 						local shape = mesh:Shape(i)
 						if (shape.fSelected) then
-							shape:CopyStyleProperties(self.tempShape, false, false)
+							shape:CopyStyleProperties(self.copiedStyle, false, false)
 						end
 					end
 				end
@@ -2781,10 +2776,10 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 		else
 			if style ~= nil then
 				if msg == self.COPY then
-					self.tempShape = moho:NewShapeProperties()
+					self.copiedStyle = moho:NewShapeProperties()
 				else -- PASTE
-					if mesh ~= nil and self.tempShape then
-						moho:PickStyleProperties(self.tempShape)
+					if mesh ~= nil and self.copiedStyle then
+						moho:PickStyleProperties(self.copiedStyle)
 					end
 				end
 				MOHO.Redraw()
@@ -2985,7 +2980,7 @@ function LS_ShapesWindow:IsRelevant(moho) --print("LS_ShapesWindow:IsRelevant(" 
 	self.defMesh = self.defVecLayer and self.defVecLayer:Mesh() or nil
 
 	if self.defDoc ~= nil and self.defDoc:Name() ~= "-" then
-		if self.openOnStartup and self.shouldOpen and self.lastMOHO ~= tostring(MOHO) then
+		if self.dlog == nil and self.openOnStartup and self.shouldOpen and self.lastMOHO ~= tostring(MOHO) then
 			self:Run(moho) --LS_ShapesWindowDialog:Update(moho)
 		end
 	end
@@ -3231,7 +3226,7 @@ function LS_ShapesWindow.BiasedRandom (p, r, n)
 end
 
 function LS_ShapesWindow:License(years, name, company)
-	years = years or self.ScriptBirth or os.date("%Y")
+	years = years or self.birth or os.date("%Y")
 	name = name or "Rai López"
 	company = company or "Lost Scripts™"
 
