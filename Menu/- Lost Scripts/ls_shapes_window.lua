@@ -4,7 +4,7 @@
 
 ScriptName = "LS_ShapesWindow"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20240106-1805"
+ScriptBuild = "20240110-0149"
 
 -- **************************************************
 -- General information about this script
@@ -46,7 +46,7 @@ function LS_ShapesWindow:LoadPrefs(prefs) --print("LS_ShapesWindow:LoadPrefs(" .
 	self.openOnStartup = prefs:GetBool("LS_ShapesWindow.openOnStartup", false)
 	self.shouldOpen = prefs:GetBool("LS_ShapesWindow.shouldOpen", true)
 	self.showInTools = prefs:GetBool("LS_ShapesWindow.showInTools", true)
-	self.showAllTooltips = prefs:GetBool("LS_ShapesWindow.showAllTooltips", true) -- Basic Tooltips Only
+	self.beginnerMode = prefs:GetBool("LS_ShapesWindow.beginnerMode", true)
 	self.advanced = prefs:GetBool("LS_ShapesWindow.advanced", true)
 	self.largeButtons = prefs:GetBool("LS_ShapesWindow.largeButtons", false)
 	self.largePalette = prefs:GetBool("LS_ShapesWindow.largePalette", false)
@@ -64,7 +64,7 @@ function LS_ShapesWindow:LoadPrefs(prefs) --print("LS_ShapesWindow:LoadPrefs(" .
 	self.FirstRun2 = prefs:GetInt("FirstRun2", 0)
 	self.HighlightColor = prefs:GetString("HighlightColor", "34 124 175 255") --224 160 0 255?
 	self.LightHighlight = prefs:GetString("LightHighlight", "34 124 175 255") --34 124 175 255
-	self.MohoLineWidth = prefs:GetFloat("MohoLineWidth", 0.005556) --0.011111
+	self.MohoLineWidth = prefs:GetFloat("MohoLineWidth", 0.005556 * 2) --0.011111
 	self.UILightness_v12beta = prefs:GetFloat("UILightness_v12beta", 0.088000) --0.207000
 end
 
@@ -76,7 +76,7 @@ function LS_ShapesWindow:SavePrefs(prefs) --print("LS_ShapesWindow:SavePrefs(" .
 	prefs:SetBool("LS_ShapesWindow.openOnStartup", self.openOnStartup)
 	prefs:SetBool("LS_ShapesWindow.shouldOpen", true)
 	prefs:SetBool("LS_ShapesWindow.showInTools", self.showInTools)
-	prefs:SetBool("LS_ShapesWindow.showAllTooltips", self.showAllTooltips)
+	prefs:SetBool("LS_ShapesWindow.beginnerMode", self.beginnerMode)
 	prefs:SetBool("LS_ShapesWindow.advanced", self.advanced)
 	prefs:SetBool("LS_ShapesWindow.largeButtons", self.largeButtons)
 	prefs:SetBool("LS_ShapesWindow.largePalette", self.largePalette)
@@ -98,7 +98,7 @@ function LS_ShapesWindow:ResetPrefs()
 	LS_ShapesWindow.linkToStyle = true
 	LS_ShapesWindow.openOnStartup = false
 	LS_ShapesWindow.showInTools = true
-	LS_ShapesWindow.showAllTooltips = true
+	LS_ShapesWindow.beginnerMode = true
 	LS_ShapesWindow.advanced = true
 	LS_ShapesWindow.largeButtons = false
 	LS_ShapesWindow.largePalette = false -- 0: Max, 1: Full, 2: Half, 3: Third?
@@ -203,14 +203,15 @@ LS_ShapesWindowDialog.RAISE_ALT				= MOHO.MSG_BASE + 141
 LS_ShapesWindowDialog.LOWER					= MOHO.MSG_BASE + 142
 LS_ShapesWindowDialog.LOWER_ALT				= MOHO.MSG_BASE + 143
 LS_ShapesWindowDialog.DELETE				= MOHO.MSG_BASE + 144
-LS_ShapesWindowDialog.SELECTALL				= MOHO.MSG_BASE + 145
-LS_ShapesWindowDialog.SELECTALL_ALT			= MOHO.MSG_BASE + 146
-LS_ShapesWindowDialog.SELECTSIMILAR			= MOHO.MSG_BASE + 147
-LS_ShapesWindowDialog.SELECTSIMILAR_ALT		= MOHO.MSG_BASE + 148
-LS_ShapesWindowDialog.CHECKERSEL			= MOHO.MSG_BASE + 149
-LS_ShapesWindowDialog.COLORSLIDER			= MOHO.MSG_BASE + 150
-LS_ShapesWindowDialog.CHANGE				= MOHO.MSG_BASE + 151
-LS_ShapesWindowDialog.DUMMY					= MOHO.MSG_BASE + 152
+LS_ShapesWindowDialog.DELETE_ALT			= MOHO.MSG_BASE + 145
+LS_ShapesWindowDialog.SELECTALL				= MOHO.MSG_BASE + 146
+LS_ShapesWindowDialog.SELECTALL_ALT			= MOHO.MSG_BASE + 147
+LS_ShapesWindowDialog.SELECTMATCHING		= MOHO.MSG_BASE + 148
+LS_ShapesWindowDialog.SELECTMATCHING_ALT	= MOHO.MSG_BASE + 149
+LS_ShapesWindowDialog.CHECKERSEL			= MOHO.MSG_BASE + 150
+LS_ShapesWindowDialog.COLORSLIDER			= MOHO.MSG_BASE + 151
+LS_ShapesWindowDialog.CHANGE				= MOHO.MSG_BASE + 152
+LS_ShapesWindowDialog.DUMMY					= MOHO.MSG_BASE + 153
 LS_ShapesWindowDialog.SELECTSTYLE1			= MOHO.MSG_BASE + 250
 LS_ShapesWindowDialog.SELECTSTYLE2			= MOHO.MSG_BASE + 1250 -- extremely unlikely to have anything close to 1000 styles
 LS_ShapesWindowDialog.MSG_LIMIT				= MOHO.MSG_BASE + 2250 -- extremely unlikely to have anything close to 1000 styles
@@ -220,7 +221,6 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 	local l = d:GetLayout()
 	local doc = moho.document
 	local docH = doc and doc:Height() or 240
-	local mohoLineWidth = 0.005556 * 2
 	local style = moho:CurrentEditStyle()
 
 	local mainW = 140 --132
@@ -243,9 +243,9 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 	d.selItem = 0
 	--d.shapes = d.shapes and LM.Clamp(d.shapes + 2, 10, 40) or 20
 	d.vHeight = d.v and math.floor((d.v:Height() / (LS_ShapesWindow.largePalette and 1 or 2))) - 214 or (LS_ShapesWindow.largePalette and 648 or 324) --d.vHeight = d.vHeight and d.vHeight - 132 or 726
-	d.showAllTooltips = LS_ShapesWindow.showAllTooltips
+	d.beginnerMode = LS_ShapesWindow.beginnerMode
 	d.editingColor = false
-	d.tempShape = moho:NewShapeProperties() --MOHO.MohoGlobals.NewShapeProperties
+	d.tempShape = moho:NewShapeProperties() or MOHO.MohoGlobals.NewShapeProperties
 
 	l:AddPadding(-12)
 	l:Unindent(8)
@@ -266,11 +266,11 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 			d.menu1:AddItem("", 0, 0)
 			d.menu1:AddItem(MOHO.Localize("/LS/ShapesWindow/OpenOnStartup=Open On Startup"), 0, self.MENU1 + 3)
 			d.menu1:AddItem(MOHO.Localize("/LS/ShapesWindow/ShowInTools=Show In \"Tools\" Palette"), 0, self.MENU1 + 4)
-			d.menu1:AddItem(MOHO.Localize("/Windows/LayerComps/ShowComp=Show") .. " " .. "All Tooltips", 0, self.MENU1 + 5)
+			d.menu1:AddItem(MOHO.Localize("/Windows/MainLayer/BeginnersMode=Beginner's Mode"), 0, self.MENU1 + 5)
 			d.menu1:AddItem("", 0, 0)
-			d.menu1:AddItem(MOHO.Localize("/Windows/Style/Advanced=Advanced") .. " (" .. MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. ")", 0, self.MENU1 + 6) d.menu1:SetEnabled(self.MENU1 + 6, true)
-			d.menu1:AddItem(MOHO.Localize("/LS/ShapesWindow/UseLargeButtons=Use Large Buttons"), 0, self.MENU1 + 7)
-			d.menu1:AddItem(MOHO.Localize("/LS/ShapesWindow/UseLargePalette=Use Large Palette (%d Items)"):match("[^%(]+"), 0, self.MENU1 + 8) --MOHO.Localize("/Dialogs/ExportSettings/HalfDimensions=Use Large Palette (%dx%d)"):match("[^%(]+")
+			d.menu1:AddItem(MOHO.Localize("/LS/ShapesWindow/UseLargeButtons=Use Large Buttons"), 0, self.MENU1 + 6)
+			d.menu1:AddItem(MOHO.Localize("/LS/ShapesWindow/UseLargePalette=Use Large Palette (%d Items)"):match("[^%(]+"), 0, self.MENU1 + 7) --MOHO.Localize("/Dialogs/ExportSettings/HalfDimensions=Use Large Palette (%dx%d)"):match("[^%(]+")
+			d.menu1:AddItem(MOHO.Localize("/LS/ShapesWindow/ShowCreationControls=Show Creation Controls") .. " (" .. MOHO.Localize("/Windows/Style/Advanced=Advanced") .. ")", 0, self.MENU1 + 8) d.menu1:SetEnabled(self.MENU1 + 8, true)
 			d.menu1:AddItem(MOHO.Localize("/Windows/LayerComps/ShowComp=Show") .. " " .. "Infobar", 0, self.MENU1 + 9)
 			--d.menu1:AddItem(MOHO.Localize("/LS/ShapesWindow/ResizeAndReopen=Resize & Reopen"), 0, self.MENU1 + 9)
 			d.menu1:AddItem("", 0, 0)
@@ -309,7 +309,7 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 		l:AddPadding(-22)
 		l:PushH(LM.GUI.ALIGN_CENTER, 0)
 			l:AddPadding(9)
-			d.modeBut = LM.GUI.ShortButton("Room 4 Label", self.MODE)
+			d.modeBut = LM.GUI.ShortButton("    MODE    ", self.MODE) --"Room 4 Label"
 			l:AddChild(d.modeBut)
 		l:Pop() --H
 		l:AddPadding(4)
@@ -324,7 +324,7 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 			l:AddChild(d.itemPreview)
 
 			d.itemVisCheck = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_vis_" .. (math.random() < 0.5 and 0 or math.random(1, 5)), MOHO.Localize("/LS/ShapesWindow/ShapeVisibility=Shape Visibility (Hide/Unhide)"), true, self.VIS, false)
-			d.itemName = LM.GUI.TextControl(mainW - d.itemVisCheck:Width() - 3, "Room For Name", self.NAME, LM.GUI.FIELD_TEXT)
+			d.itemName = LM.GUI.TextControl(mainW - d.itemVisCheck:Width() - 3, "Sel. Item Name", self.NAME, LM.GUI.FIELD_TEXT) --"Room For Name"
 			d.itemName:SetValue("")
 			l:AddChild(d.itemName, LM.GUI.ALIGN_FILL, 0)
 			l:AddChild(d.itemVisCheck, LM.GUI.ALIGN_FILL, 0)
@@ -345,12 +345,6 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 			l:Indent(8)
 			l:AddPadding(3)
 			l:PushV(LM.GUI.ALIGN_TOP, 0)
-				--[[
-				l:AddPadding(-2)
-				d.shapePaletteLabel = LM.GUI.DynamicText(" ≡", 0)
-				d.shapePaletteLabel:SetToolTip(MOHO.Localize("/Scripts/Tool/SelectShape/ShapePalette=Shape Palette"))
-				l:AddChild(d.shapePaletteLabel, LM.GUI.ALIGN_CENTER, 4)
-				--]]
 				l:AddPadding(3)
 				d.raise = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_raise", "", false, self.RAISE, true)
 				d.raise:SetAlternateMessage(self.RAISE_ALT)
@@ -371,9 +365,9 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 				l:AddChild(d.selectAllBut, LM.GUI.ALIGN_FILL)
 				l:AddPadding(3)
 
-				d.selectSimilarBut = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_sel_similar", "", false, self.SELECTSIMILAR, true)
-				d.selectSimilarBut:SetAlternateMessage(self.SELECTSIMILAR_ALT)
-				l:AddChild(d.selectSimilarBut, LM.GUI.ALIGN_FILL)
+				d.selectMatchingBut = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_sel_similar", "", false, self.SELECTMATCHING, true)
+				d.selectMatchingBut:SetAlternateMessage(self.SELECTMATCHING_ALT)
+				l:AddChild(d.selectMatchingBut, LM.GUI.ALIGN_FILL)
 				l:AddPadding(3)
 
 				d.checkerSelBut = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_checker_sel", MOHO.Localize("/Windows/Style/CheckerSelection=Checker selection"), true, self.CHECKERSEL, true)
@@ -388,7 +382,8 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 				l:AddChild(d.mergeBut, LM.GUI.ALIGN_FILL, 0)
 				l:AddPadding(3)
 
-				d.deleteBut = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_delete", MOHO.Localize("/Scripts/Tool/DeleteShape/DeleteShape=Delete Shape") .. "/s", false, self.DELETE, true) --"<alt> Delete entire Liquid Shape"? --"ScriptResources/../channel_off" --"ScriptResources/../action_del" 
+				d.deleteBut = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_delete", MOHO.Localize("/Scripts/Tool/DeleteShape/DeleteShape=Delete Selected Shape") .. "/s", false, self.DELETE, true) --"<alt> Delete entire Liquid Shape"? --"ScriptResources/../channel_off" --"ScriptResources/../action_del" 
+				d.deleteBut:SetAlternateMessage(self.DELETE_ALT)
 				l:AddChild(d.deleteBut, LM.GUI.ALIGN_FILL, 0)
 
 				l:AddPadding(4)
@@ -504,16 +499,12 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 		l:AddPadding(LS_ShapesWindow.advanced and 4 or 0)
 
 		if LS_ShapesWindow.advanced then
-			--d.shapeCreationLabel = LM.GUI.DynamicText("    ", 18 + (math.abs(butW + butW1 - 18)))
-			--d.shapeCreationLabel:SetValue(" ©")
-			--d.shapeCreationLabel:SetToolTip(MOHO.Localize("/Scripts/Tool/CreateShape/CreateShape=Create Shape") .." (" .. MOHO.Localize("/Windows/Style/Advanced=Advanced") .. ")")
-			--l:AddChild(d.shapeCreationLabel, LM.GUI.ALIGN_CENTER, 0)
 			l:PushH(LM.GUI.ALIGN_FILL, 1)
 				l:AddPadding(2)
 				d.fillCheck = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_fill", MOHO.Localize("/Scripts/Tool/SelectShape/Fill=Fill:"):gsub("[^%w]$", "") .. " (<alt>" .. MOHO.Localize("/LS/ShapesWindow/AnimateVisibility=Animate its visibility instead"), true, self.FILL, true)
 				d.fillCheck:SetAlternateMessage(self.FILL_ALT)
 				l:AddChild(d.fillCheck, LM.GUI.ALIGN_FILL, 0)
-				l:AddPadding(1)
+				l:AddPadding(-1)
 				l:PushH(LM.GUI.ALIGN_FILL, 0)
 					l:AddPadding(-18)
 					d.fillCol = LM.GUI.ShortColorSwatch(true, self.FILLCOLOR)
@@ -530,9 +521,9 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 				l:AddPadding(2)
 
 				d.createButtons = {}
-				table.insert(d.createButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_fill", MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. " " .. MOHO.Localize("/Scripts/Tool/CreateShape/Fill=Fill") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")", false, self.FILLED, true))
-				table.insert(d.createButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_line", MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. " " .. MOHO.Localize("/Scripts/Tool/CreateShape/Stroke=Stroke") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")", false, self.OUTLINED, true))
-				table.insert(d.createButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_both", MOHO.Localize("/Scripts/Tool/SelectPoints/Create=Create") .. " " .. MOHO.Localize("/Scripts/Tool/CreateShape/Both=Both") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")", false, self.FILLEDOUTLINED, true))
+				table.insert(d.createButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_fill", "", false, self.FILLED, true))
+				table.insert(d.createButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_line", "", false, self.OUTLINED, true))
+				table.insert(d.createButtons, LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_create_both", "", false, self.FILLEDOUTLINED, true))
 				l:AddPadding(0)
 
 				for i, but in ipairs(d.createButtons) do
@@ -560,7 +551,7 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 				d.lineCheck = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_line", MOHO.Localize("/Scripts/Tool/SelectShape/Stroke=Stroke:"):gsub("[^%w]$", "") .. " (<alt>" .. MOHO.Localize("/LS/ShapesWindow/AnimateVisibility=Animate its visibility instead"), true, self.LINE, true)
 				d.lineCheck:SetAlternateMessage(self.LINE_ALT)
 				l:AddChild(d.lineCheck, LM.GUI.ALIGN_FILL, 0)
-				l:AddPadding(1)
+				l:AddPadding(-1)
 				l:PushH(LM.GUI.ALIGN_FILL, 0)
 					l:AddPadding(-18)
 					d.lineCol = LM.GUI.ShortColorSwatch(true, self.LINECOLOR)
@@ -569,7 +560,7 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 					d.lineCol:SetValue(style ~= nil and style.fLineCol or MOHO.MohoGlobals.LineCol)
 					l:AddChild(d.lineCol, LM.GUI.ALIGN_FILL, 0)
 				l:Pop() --H
-				l:AddPadding(-3)
+				l:AddPadding(-2)
 				d.lineColOverride = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_override", MOHO.Localize("/LS/ShapesWindow/FillOverride=Line Color Override"), true, self.LINECOLOROVER, true)
 				l:AddChild(d.lineColOverride, LM.GUI.ALIGN_FILL, 0)
 				--l:AddPadding(2)
@@ -577,25 +568,35 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 				l:AddPadding(2)
 				l:AddPadding(0)
 
-				d.widthLabel = LM.GUI.DynamicText("ø", 0)
-				d.widthLabel:SetToolTip(MOHO.Localize("/Dialogs/InsertText/BalloonWidth=Stroke Width"))
-				l:AddChild(d.widthLabel, LM.GUI.ALIGN_CENTER, 0)
-				l:AddPadding(-3)
-				d.lineWidth = LM.GUI.TextControl(0, "0.0.0", self.LINEWIDTH, LM.GUI.FIELD_UFLOAT) --ø
-				d.lineWidth:SetUnits(LM.GUI.UNIT_PIXELS)
+				--d.widthLabel = LM.GUI.DynamicText("ø", 0)
+				--d.widthLabel:SetToolTip(MOHO.Localize("/Dialogs/InsertText/BalloonWidth=Stroke Width"))
+				--l:AddChild(d.widthLabel, LM.GUI.ALIGN_CENTER, 0)
+				--l:AddPadding(-3)
+				d.capsBut = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_round_caps", MOHO.Localize("/Windows/Style/RoundCaps=Round caps"), true, self.ROUNDCAPS, true)
+				d.capsBut:SetValue(style == nil or style.fLineCaps == 1)
+				l:AddChild(d.capsBut, LM.GUI.ALIGN_FILL, 0)
+				l:AddPadding(-2)
+				d.lineWidth = LM.GUI.TextControl(0, "00.0", self.LINEWIDTH, LM.GUI.FIELD_UFLOAT) --ø
+				d.lineWidth:SetUnits(LM.GUI.UNIT_PIXELS) --LM.GUI.UNIT_NONE
 				d.lineWidth:SetWheelInc(1.0)
 				d.lineWidth:SetWheelInteger(true)
-				d.lineWidth:SetValue(style ~= nil and style.fLineWidth or mohoLineWidth * docH)
+				d.lineWidth:SetValue(style ~= nil and style.fLineWidth or LS_ShapesWindow.MohoLineWidth * docH)
+				d.lineWidth:SetToolTip(MOHO.Localize("/Dialogs/InsertText/BalloonWidth=Stroke Width"))
 				l:AddChild(d.lineWidth, LM.GUI.ALIGN_FILL, 0)
 				l:AddPadding(-2)
 				d.lineWidthOverride = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_override", MOHO.Localize("/LS/ShapesWindow/FillOverride=Line Width Override"), true, self.LINEWIDTHOVER, true)
 				l:AddChild(d.lineWidthOverride, LM.GUI.ALIGN_FILL, 0)
+				--l:AddPadding(2)
+				--d.brushPreview = MOHO.MeshPreview(LS_ShapesWindow.largeButtons and 22 or 16, 22) -- It seems LM_MeshPreview widget doesn't display brushes. Oh, well...
+				--d.brushPreview:SetToolTip(MOHO.Localize("/Dialogs/BrushPicker/NoBrush=No Brush"))
+				--l:AddChild(d.brushPreview)
+				
 				--l:AddChild(LM.GUI.Divider(true), LM.GUI.ALIGN_FILL, 0)
-				l:AddPadding(4)
+				--l:AddPadding(4)
 
-				d.capsBut = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_round_caps", MOHO.Localize("/Windows/Style/RoundCaps=Round caps"), true, self.ROUNDCAPS, true)
-				d.capsBut:SetValue(style == nil or style.fLineCaps == 1)
-				l:AddChild(d.capsBut, LM.GUI.ALIGN_FILL, 0)
+				--d.capsBut = LM.GUI.ImageButton("ScriptResources/ls_shapes_window/ls_shape_round_caps", MOHO.Localize("/Windows/Style/RoundCaps=Round caps"), true, self.ROUNDCAPS, true)
+				--d.capsBut:SetValue(style == nil or style.fLineCaps == 1)
+				--l:AddChild(d.capsBut, LM.GUI.ALIGN_FILL, 0)
 				l:AddPadding(1)
 			l:Pop() --H
 		end
@@ -605,7 +606,7 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 			l:AddChild(LM.GUI.TextList(0, 1), LM.GUI.ALIGN_FILL, 0)
 			l:PushH(LM.GUI.ALIGN_FILL, 1)
 				l:Unindent(3)
-				d.menuStyle1 = LM.GUI.Menu("Style 1")
+				d.menuStyle1 = LM.GUI.Menu("Style 1") --¹²₁₂⒈⒉
 				d.menuStyle1Popup = LM.GUI.PopupMenu(math.floor((mainW + butW + butW1 + padH - menuW - 6) / 2), true)
 				--d.menuStyle1Popup:SetToolTip(MOHO.Localize("/Windows/Style/Style1=Style 1") .. " (" ..  MOHO.Localize("/LS/ShapesWindow/AppliesAbove=Applies Above") .. ")")
 				d.menuStyle1Popup:SetMenu(d.menuStyle1)
@@ -647,7 +648,6 @@ function LS_ShapesWindowDialog:new(moho) --print("LS_ShapesWindowDialog:new(" ..
 					l:PushV(LM.GUI.ALIGN_LEFT, 0)
 						--d.dummySlider = LM.GUI.Slider(math.ceil(mainW / 1.111), true, true, 0) --LM.GUI.FOLLOW_LEFT
 						d.colorSlider = LM.GUI.Slider((mainW + butW + butW1) / 1.6, true, false, LS_ShapesWindowDialog.COLORSLIDER) --LM.GUI.FOLLOW_LEFT
-						d.colorSlider:SetToolTip("Color Slider")
 						d.colorSlider:SetRange(-255, 0)
 						d.colorSlider:SetValue(-255)
 						d.colorSlider:SetSnapToTicks(false)
@@ -717,23 +717,20 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 	local styleID = -1	--print(styleName .. " (" .. tostring(style) .. "): ", tostring(style.fFillCol.value.r), ", ", tostring(style.fFillCol.value.g), ", ", tostring(style.fFillCol.value.b))
 	local styleUUID = style and style.fUUID:Buffer() or "" --doc:StyleByID(i) print(iStyle.fUUID:Buffer())
 	local styles = doc and math.floor(doc:CountStyles()) or 0
-	local stylesSel = self.itemList and (math.floor(self.itemList:NumSelectedItems() + (self.itemList:IsItemSelected(0) == true and -1 or 0))) or 0
+	local stylesSel = styleName and styleName ~= "" and 1 or LS_ShapesWindow:CountSelectedStyles(doc) --self.itemList and (math.floor(self.itemList:NumSelectedItems() + (self.itemList:IsItemSelected(0) == true and -1 or 0))) or 0
 	local style1Name, style2Name = (self.tempShape and self.tempShape.fInheritedStyle) and tostring(self.tempShape.fInheritedStyle.fName:Buffer()) or "", (self.tempShape and self.tempShape.fInheritedStyle2) and tostring(self.tempShape.fInheritedStyle2.fName:Buffer()) or "" -- See note 20231010-0554 above!
 	local style1, style2 = self.tempShape and self.tempShape.fInheritedStyle or nil, self.tempShape and self.tempShape.fInheritedStyle2 or nil
 	local style1UUID, style2UUID = style1 and style1.fUUID:Buffer() or nil, style2 and style2.fUUID:Buffer() or nil
 	local style1ID, style2ID = LS_ShapesWindow:StyleID(doc, style1), LS_ShapesWindow:StyleID(doc, style2)
 
 	if (style ~= nil) then
-		if LS_ShapesWindow.advanced then
+		if LS_ShapesWindow.advanced then --print(style.fLineWidth, ", ", moho:NewShapeLineWidth())
 			self.fillCol:SetValue(style.fFillCol and style.fFillCol.value or MOHO.MohoGlobals.FillCol)
 			self.lineCol:SetValue(style.fLineCol and style.fLineCol.value or MOHO.MohoGlobals.LineCol)
-			self.lineWidth:SetValue((style.fLineWidth ~= nil and style.fLineWidth or moho:NewShapeLineWidth()) * docH)
+			self.lineWidth:SetValue((style.fLineWidth or moho:NewShapeLineWidth() or LS_ShapesWindow.MohoLineWidth) * docH) --tonumber(string.format("%.2f\n", (style.fLineWidth ~= nil and style.fLineWidth or moho:NewShapeLineWidth()) * docH))
 			self.capsBut:SetValue(style.fLineCaps == nil or style.fLineCaps == 1) --style.fLineCaps ~= nil and (style.fLineCaps == 1 and true or false)
 			--self.capsBut:SetValue(style.fLineCaps == 1 and true or false)
 			--print(self.colorSliderVal, ", ", self.colorSlider and self.colorSlider:Value() or "?")
-			if LS_ShapesWindow.swatch ~= -1 and LS_ShapesWindow.swatch ~= self.swatch then
-				self:UpdateColor(moho)
-			end
 		end
 		if styleName == "" then
 			LS_ShapesWindow.mode = LS_ShapesWindow.mode ~= 2 and 0 or LS_ShapesWindow.mode
@@ -771,7 +768,9 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 	local lDrawing = moho.drawingLayer and moho:LayerAsVector(moho.drawingLayer) or nil
 	local lDrawingUUID = lDrawing and lDrawing:UUID() or ""
 	local mesh = moho:DrawingMesh()
+	local pointsSel = moho:CountSelectedPoints()
 	local edges = moho:CountEdges()
+	local edgesSel = moho:CountSelectedEdges()
 
 	---[[20231014-1955: Try to move all this to DoLayout? They may not need to be updated all the time after all...
 	--if (msg >= self.MENU1 and msg <= self.MENU1 + self:CountRealItems(self.menu1) - 1) then -- Do nothing else than update the menu?
@@ -780,10 +779,10 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		self.menu1:SetChecked(self.MENU1 + 2, LS_ShapesWindow.linkToStyle)
 		self.menu1:SetChecked(self.MENU1 + 3, LS_ShapesWindow.openOnStartup)
 		self.menu1:SetChecked(self.MENU1 + 4, LS_ShapesWindow.showInTools)
-		self.menu1:SetChecked(self.MENU1 + 5, LS_ShapesWindow.showAllTooltips)
-		self.menu1:SetChecked(self.MENU1 + 6, LS_ShapesWindow.advanced)
-		self.menu1:SetChecked(self.MENU1 + 7, LS_ShapesWindow.largeButtons)
-		self.menu1:SetChecked(self.MENU1 + 8, LS_ShapesWindow.largePalette)
+		self.menu1:SetChecked(self.MENU1 + 5, LS_ShapesWindow.beginnerMode)
+		self.menu1:SetChecked(self.MENU1 + 6, LS_ShapesWindow.largeButtons)
+		self.menu1:SetChecked(self.MENU1 + 7, LS_ShapesWindow.largePalette)
+		self.menu1:SetChecked(self.MENU1 + 8, LS_ShapesWindow.advanced)
 		self.menu1:SetChecked(self.MENU1 + 9, LS_ShapesWindow.showInfobar)
 		--helper:delete()
 		--return
@@ -851,6 +850,10 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 			self.menu2:AddItem(MOHO.Localize("/LS/ShapesWindow/UseSelection=Use Selection"), 0,  count + 2) self.menu2:SetEnabled(count + 2, false) --USE SELECTION (TEMP)
 			self.menu2:AddItem(MOHO.Localize("/LS/ShapesWindow/EditCurrentSwatch=Edit Current Swatch"), 0,  count + 3)
 			self.menu2:AddItem(MOHO.Localize("/LS/ShapesWindow/ReloadSwatches=Reload Swatches"), 0, count + 4)
+
+			if LS_ShapesWindow.swatch ~= -1 and LS_ShapesWindow.swatch ~= self.swatch then
+				self:UpdateColor(moho)
+			end
 		end
 	
 		self.menu2:UncheckAll()
@@ -870,9 +873,8 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		LS_ShapesWindow:BuildStyleChoiceMenu(self.menuStyle1, doc, self.SELECTSTYLE1, self.DUMMY)
 		LS_ShapesWindow:BuildStyleChoiceMenu(self.menuStyle2, doc, self.SELECTSTYLE2, self.DUMMY)
 	
-		--self.shapeCreationLabel:Enable(not toolsDisabled)
 		for i, but in ipairs(self.createButtons) do
-			but:Enable(edges > 0 and not toolsDisabled)
+			--but:Enable(((edgesSel > 0 or pointsSel > 0) and not toolsDisabled) or LS_ShapesWindow.mode > 1)
 		end
 	end
 
@@ -907,7 +909,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		self.raise:Enable(false)
 		self.lower:Enable(false)
 		self.selectAllBut:Enable(false)
-		self.selectSimilarBut:Enable(false)
+		self.selectMatchingBut:Enable(false)
 		self.deleteBut:Enable(false)
 		self.copyBut:Enable(true)
 		self.pasteBut:Enable(self.copiedStyle and true or false)
@@ -923,7 +925,6 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 
 		self.menu1Popup:Enable(true)
 		if LS_ShapesWindow.advanced then
-			--self.shapeCreationLabel:Enable(false)
 			self.fillCheck:Enable(false)
 			self.fillCheck:SetValue(true)
 			self.fillCol:Enable(true)
@@ -934,7 +935,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 			self.lineCol:Enable(true)
 			self.lineColOverride:Enable(false)
 			self.lineColOverride:SetValue(false)
-			self.widthLabel:Enable(true)
+			--self.widthLabel:Enable(true)
 			self.lineWidth:Enable(true)
 			self.lineWidthOverride:Enable(false)
 			self.lineWidthOverride:SetValue(false)
@@ -947,10 +948,11 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		end
 
 		if (doc == nil) then -- Disable everything else irrelevant if there is no document open
-			self.menu1:SetEnabled(self.MENU1 + 5, false) -- Advanced (Create)
+
 			self.menu1:SetEnabled(self.MENU1 + 6, false) -- Use Large Buttons
 			self.menu1:SetEnabled(self.MENU1 + 7, false) -- Use Large Palette
-			self.menu1:SetEnabled(self.MENU1 + 8, false) -- Show Infobar
+			self.menu1:SetEnabled(self.MENU1 + 8, false) -- Advanced (Creation Controls)
+			self.menu1:SetEnabled(self.MENU1 + 9, false) -- Show Infobar
 			self.copyBut:Enable(false)
 			self.pasteBut:Enable(false)
 			--[[20231214-0521: Commented in order to see if it's really necessary...
@@ -963,7 +965,6 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 			end
 			--]]
 			if LS_ShapesWindow.advanced then
-				--self.shapeCreationLabel:Enable(false)
 				self.menuStyle1:SetChecked(self.SELECTSTYLE1, true) self.menuStyle1Popup:Redraw()
 				self.menuStyle2:SetChecked(self.SELECTSTYLE2, true) self.menuStyle2Popup:Redraw()
 				if (LS_ShapesWindow.showInfobar and self.infobar ~= nil) then
@@ -977,10 +978,11 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		return
 	else -- Enable everything relevant if a valid/drawing layer is active
 		--l:Enable(true) -- Used classic enable/disable method due to this causes unwanted blinking at frame change and so...
-		self.menu1:SetEnabled(self.MENU1 + 5, true) -- Advanced (Create)
+
 		self.menu1:SetEnabled(self.MENU1 + 6, true) -- Use Large Buttons
 		self.menu1:SetEnabled(self.MENU1 + 7, true) -- Use Large Palette
-		self.menu1:SetEnabled(self.MENU1 + 8, true) -- Show Infobar
+		self.menu1:SetEnabled(self.MENU1 + 8, true) -- Advanced (Creation Controls)
+		self.menu1:SetEnabled(self.MENU1 + 9, true) -- Show Infobar
 		self.modeBut:Enable(true)
 		self.pasteBut:Enable(self.copiedStyle and true or false)
 		--[[20231208-0555: Here seems to be the problem with the unnecesary shape list refreshing upon frame change... STUDY!
@@ -994,19 +996,12 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		--]]
 		self.itemList:Enable(true)
 		self.itemList:Redraw()
-
-		if LS_ShapesWindow.advanced then
-			--self.shapeCreationLabel:Enable(true) --self.shapeCreationLabel:Enable(not toolsDisabled)
-			for i, but in ipairs(self.createButtons) do
-				but:Enable(edges > 0 and not toolsDisabled and LS_ShapesWindow.mode < 2)
-			end
-		end
 	end
 
 	---[[20231006-1745: Before selecting items in list much bellow, do here the "Points-Based Selection" thing if active (so then you can rely on shape/shapeID/etc. kind of values)
 	if mesh ~= nil and not (lDrawing:IsCurver() or lDrawing:IsWarpLayer()) then
 		if (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
-			if styleName == "" and moho:CountSelectedPoints() > 1 then -- Avoid Points-Based Selection select any shape if a style is being edited to allow normal Style workflow. 
+			if styleName == "" and pointsSel > 1 then -- Avoid Points-Based Selection select any shape if a style is being edited to allow normal Style workflow. 
 				for i = 0, mesh:CountShapes() - 1 do
 					local shape = mesh:Shape(i)
 					if shape:AllPointsSelected() == true then
@@ -1076,7 +1071,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 				else
 					self.baseBut:Enable(false)
 					self.topBut:Enable(false)
-					self.mergeBut:Enable(LM_SelectShape:CountSelectedShapes(moho) > 1)
+					self.mergeBut:Enable(shapesSel > 1)
 					info[4] = nil
 				end
 			else
@@ -1127,6 +1122,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 		info[3] = shapes > 0 and "#️⃣ " .. shapesSel .. "/" .. shapes or shapes
 		if not self.shape or self.shape ~= shape then
 			self:UpdateItem(moho, shape, false) --20240103-0448: Had to avoid draw fills due to a last minute weird behavior upon undoing after modifyig shapes! (TODO & TBO!)
+			--self:UpdateBrush(moho, shape) -- It seems LM_MeshPreview widget doesn't display brushes. Oh, well...
 		end
 	else
 		LS_ShapesWindow.mode = LS_ShapesWindow.mode == 2 and LS_ShapesWindow.mode or 0
@@ -1325,28 +1321,30 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 	self.raise:SetToolTip(LS_ShapesWindow.mode < 2 and MOHO.Localize("/Menus/Draw/RaiseShape=Raise Shape") .. " (<alt> " .. MOHO.Localize("/Menus/Draw/RaiseToFront=Raise To Front") .. ")" or "")
 	self.lower:Enable(((LS_ShapesWindow.mode < 2) and shapeID and shapeID >= 0) and (self.itemList:SelItem() > 0 and self.itemList:SelItem() < self.itemList:CountItems() - 1) or false)
 	self.lower:SetToolTip(LS_ShapesWindow.mode < 2 and MOHO.Localize("/Menus/Draw/LowerShape=Lower Shape") .. " (<alt> " .. MOHO.Localize("/Menus/Draw/LowerToBack=Lower To Back") .. ")" or "")
-
-	self.selectAllBut:Enable((LS_ShapesWindow.mode < 2 and shapes > 0) or (LS_ShapesWindow.mode == 2 and style ~= nil and styles > 0))
-	--self.selectAllBut:SetLabel(LM_SelectShape:CountSelectedShapes(moho) == mesh:CountShapes() and "✅" or "☑", false) -- 20230922: It seems to tail some text??
-	--self.selectAllBut:Redraw()
-	self.deleteBut:SetToolTip((LS_ShapesWindow.mode < 2) and MOHO.Localize("/Scripts/Tool/DeleteShape/DeleteShapes=Delete Shape") .. "/s" or MOHO.Localize("/LS/ShapesWindow/DeleteStyles=Delete Style/s"))
-	self.selectSimilarBut:Enable((LS_ShapesWindow.mode < 2 and shape ~= nil and shapesSel == 1 and shapes > 1) or (LS_ShapesWindow.mode == 2 and style ~= nil and stylesSel == 1 and styles > 1)) 
-	self.selectSimilarBut:SetToolTip(MOHO.Localize("/LS/ShapesWindow/SelectSimilar=Select Similar") .. (LS_ShapesWindow.mode < 2 and " (<alt> " .. MOHO.Localize("/LS/ShapesWindow/IncludingStyles=Including styles") .. ")" or ""))
+	self.selectAllBut:Enable((LS_ShapesWindow.mode < 2 and shapes > 0) or (LS_ShapesWindow.mode == 2 and style ~= nil and styles > 0)) --self.selectAllBut:SetLabel(LM_SelectShape:CountSelectedShapes(moho) == mesh:CountShapes() and "✅" or "☑", false) --self.selectAllBut:Redraw() -- 20230922: It seems to tail some text??
+	self.deleteBut:SetToolTip((LS_ShapesWindow.mode < 2) and MOHO.Localize("/LS/ShapesWindow/DeleteSelectedShapes=Delete Selected Shape") .. "/s" or MOHO.Localize("/LS/ShapesWindow/DeleteStyles=Delete Selected Style/s") .. " (<alt> " .. MOHO.Localize("/LS/ShapesWindow/UnusedOny=Only Unused Ones") .. ")")
+	self.selectMatchingBut:Enable((LS_ShapesWindow.mode < 2 and shape ~= nil and shapesSel == 1 and shapes > 1) or (LS_ShapesWindow.mode == 2 and style ~= nil and stylesSel == 1 and styles > 1))
+	self.selectMatchingBut:SetToolTip(MOHO.Localize("/LS/ShapesWindow/SelectMatchingColor=Select Matching Color") .. " " .. (LS_ShapesWindow.mode < 2 and MOHO.Localize("/LS/ShapesWindow/Shapes=Shapes") or MOHO.Localize("/LS/ShapesWindow/Styles=Styles")) .. " (<alt> " .. MOHO.Localize("/LS/ShapesWindow/SelectIdentical=Select Identical") .. ")")
 	self.checkerSelBut:SetValue(MOHO.MohoGlobals.SelectedShapeCheckerboard)
 
 	if LS_ShapesWindow.advanced then 
 		local createCursor = LS_ShapesWindow.mode < 2 and "ScriptResources/../../Support/Scripts/Tool/lm_select_shape_cursor" or "ScriptResources/../../Support/Scripts/Tool/lm_colorpoints_cursor"
 		for i, but in ipairs(self.createButtons) do
+			but:Enable(((edgesSel > 0 or pointsSel > 0) and not toolsDisabled) or LS_ShapesWindow.mode > 1)
 			but:SetCursor(LM.GUI.Cursor(createCursor, 0, 0)) --ScriptResources/../../Support/Scripts/Tool/lm_colorpoints_cursor
 		end
+		self.createButtons[1]:SetToolTip((LS_ShapesWindow.mode < 2) and MOHO.Localize("/LS/ShapesWindow/CreateFill=Create Fill") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")" or MOHO.Localize("/LS/ShapesWindow/CreateFillColorOverriderStyle=Create Fill Color Overrider Style"))
+		self.createButtons[2]:SetToolTip((LS_ShapesWindow.mode < 2) and MOHO.Localize("/LS/ShapesWindow/CreateStroke=Create Stroke") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")" or MOHO.Localize("/LS/ShapesWindow/CreateStrokeColorOverriderStyle=Create Stroke Color Overrider Style"))
+		self.createButtons[3]:SetToolTip((LS_ShapesWindow.mode < 2) and MOHO.Localize("/LS/ShapesWindow/CreateBoth=Create Both") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")" or MOHO.Localize("/LS/ShapesWindow/CreateStyle=Create Style"))
+		
 		self.menuStyle1Popup:Enable(styleName == "") self.menuStyle1Popup:Redraw()
-		self.menuStyle1Popup:SetToolTip(MOHO.Localize("/Windows/Style/Style1=Style 1") .. (style1Name ~= ""  and ": " .. style1Name or "") .. " (" ..  MOHO.Localize("/LS/ShapesWindow/AppliesAbove=Applies Above") .. ")")
-		self.menuStyle1Popup:SetCursor(LM.GUI.Cursor("ScriptResources/ls_shapes_window/ls_shape_style_1_cursor", 0, 0))
+		self.menuStyle1Popup:SetToolTip(MOHO.Localize("/Windows/Style/Style1=Style 1") .. (style1Name ~= ""  and ": " .. style1Name or "") .. (LS_ShapesWindow.beginnerMode and " (" ..  MOHO.Localize("/LS/ShapesWindow/AppliesAbove=Applies Above") .. ")" or ""))
+		self.menuStyle1Popup:SetCursor(LS_ShapesWindow.beginnerMode and LM.GUI.Cursor("ScriptResources/ls_shapes_window/ls_shape_style_1_cursor", 0, 0) or nil)
 		self.menuStyle2Popup:Enable(styleName == "") self.menuStyle2Popup:Redraw()
-		self.menuStyle2Popup:SetToolTip(MOHO.Localize("/Windows/Style/Style2=Style 2") .. (style2Name ~= ""  and ": " .. style2Name or "") .. " (" ..  MOHO.Localize("/LS/ShapesWindow/AppliesBellow=Applies Bellow") .. ")")
-		self.menuStyle2Popup:SetCursor(LM.GUI.Cursor("ScriptResources/ls_shapes_window/ls_shape_style_2_cursor", 0, 0))
-		self.menu2Popup:SetToolTip(LS_ShapesWindow.showAllTooltips and MOHO.Localize("/Windows/Style/Swatches=Swatches") .. " (" .. self.menu2:FirstCheckedLabel():gsub("^%s+", "") .. ")" or "")
-		self.menu2Popup:SetCursor(LM.GUI.Cursor("ScriptResources/ls_shapes_window/ls_swatches_cursor", 0, 0)) --"ScriptResources/../../Support/Scripts/Tool/lm_video_tracking_cursor"
+		self.menuStyle2Popup:SetToolTip(MOHO.Localize("/Windows/Style/Style2=Style 2") .. (style2Name ~= ""  and ": " .. style2Name or "") .. (LS_ShapesWindow.beginnerMode and " (" ..  MOHO.Localize("/LS/ShapesWindow/AppliesBellow=Applies Bellow") .. ")" or ""))
+		self.menuStyle2Popup:SetCursor(LS_ShapesWindow.beginnerMode and LM.GUI.Cursor("ScriptResources/ls_shapes_window/ls_shape_style_2_cursor", 0, 0) or nil)
+		self.menu2Popup:SetToolTip(MOHO.Localize("/Windows/Style/Swatches=Swatches") .. " (" .. self.menu2:FirstCheckedLabel():gsub("^%s+", "") .. ")")
+		self.menu2Popup:SetCursor(LS_ShapesWindow.beginnerMode and LM.GUI.Cursor("ScriptResources/ls_shapes_window/ls_swatches_cursor", 0, 0) or nil) --"ScriptResources/../../Support/Scripts/Tool/lm_video_tracking_cursor"
 		if LS_ShapesWindow.swatch ~= -1 and LS_ShapesWindow.swatch ~= self.swatch and self.colorSlider then
 			if self.menu2:FirstCheckedLabel():match("🎛") then --20231030-1140: Kind of dirty solution based on current swatch label... Improve! (TODO) 
 				self.colorSlider:Enable(true)
@@ -1356,20 +1354,19 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 				self.colorSlider:Enable(false)
 				self.colorSlider:SetCursor() -- Reset default cursor
 			end
+			self.colorSlider:SetToolTip(LS_ShapesWindow.beginnerMode and MOHO.Localize("/LS/ShapesWindow/ColorSlider=Color Slider") or "")
 			self.colorPreview:Refresh() --self:UpdateColor(moho)
 		end
 	end
 
-	self.modeBut:SetToolTip(MOHO.Localize("/LS/ShapesWindow/Mode=Mode: ") .. MOHO.Localize(modes[LS_ShapesWindow.mode]))
-	if (LS_ShapesWindow.showAllTooltips ~= self.showAllTooltips) or self.isNewRun then -- Avoid unnecesary tooltip updates
-		self.menu1Popup:SetToolTip(LS_ShapesWindow.showAllTooltips and MOHO.Localize("/Dialogs/LayerSettings/General=General") or "")
-		--self.menu3Popup:SetToolTip(LS_ShapesWindow.showAllTooltips and MOHO.Localize("/Windows/Library/More=More:"):gsub("[^%w]$", "") or "")
+	if (LS_ShapesWindow.beginnerMode ~= self.beginnerMode) or self.isNewRun then -- Avoid unnecesary tooltip updates
+		self.menu1Popup:SetToolTip(LS_ShapesWindow.beginnerMode and MOHO.Localize("/Dialogs/LayerSettings/General=General") or "")
+		--self.menu3Popup:SetToolTip(LS_ShapesWindow.beginnerMode and MOHO.Localize("/Windows/Library/More=More:"):gsub("[^%w]$", "") or "")
+		self.modeBut:SetToolTip(LS_ShapesWindow.beginnerMode and MOHO.Localize("/LS/ShapesWindow/Mode=Mode: ") .. MOHO.Localize(modes[LS_ShapesWindow.mode] or ""))
 		--self.itemNameLabel:SetToolTip(MOHO.Localize("/Windows/Style/Name=Name"))
-		self.combineBlend:SetToolTip(LS_ShapesWindow.showAllTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/Blend=Blend:"):gsub("[^%w]$", "") .. " (" .. MOHO.Localize("/Dialogs/NudgeDlog/Amount=Amount") ..")" or "") -- Remove any non-alphanumeric ending character
-		self.baseBut:SetToolTip(LS_ShapesWindow.showAllTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/SelectBottomOfCluster=Select bottom of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")" or "")
-		self.topBut:SetToolTip(LS_ShapesWindow.showAllTooltips and MOHO.Localize("/Scripts/Tool/SelectShape/SelectTopOfCluster=Select top of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")" or "")
-		--self.shapePaletteLabel:SetToolTip(LS_ShapesWindow.showAllTooltips and MOHO.Localize("/LS/ShapesWindow/ShapePalette=Shape Palette") or "")
-		self.showAllTooltips = LS_ShapesWindow.showAllTooltips
+		self.combineBlend:SetToolTip(LS_ShapesWindow.beginnerMode and MOHO.Localize("/Scripts/Tool/SelectShape/Blend=Blend:"):gsub("[^%w]$", "") .. " (" .. MOHO.Localize("/Dialogs/NudgeDlog/Amount=Amount") ..")" or "") -- Remove any non-alphanumeric ending character
+		self.baseBut:SetToolTip(LS_ShapesWindow.beginnerMode and MOHO.Localize("/Scripts/Tool/SelectShape/SelectBottomOfCluster=Select bottom of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")" or "")
+		self.topBut:SetToolTip(LS_ShapesWindow.beginnerMode and MOHO.Localize("/Scripts/Tool/SelectShape/SelectTopOfCluster=Select top of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")" or "")
 	end
 	
 	for k, v in ipairs(self.w) do --print(tostring(k), ", ", tostring(v), ", ", type(v))
@@ -1406,6 +1403,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 	end
 
 	self.mode = LS_ShapesWindow.mode
+	self.beginnerMode = LS_ShapesWindow.beginnerMode
 	self.style = moho:CurrentEditStyle()
 	self.shape = moho:SelectedShape()
 	self.swatch = LS_ShapesWindow.swatch
@@ -1432,7 +1430,7 @@ function LS_ShapesWindowDialog:OnOK() --print("LS_ShapesWindowDialog:OnOK(): ", 
 	helper:delete()
 end
 
-function LS_ShapesWindowDialog:UpdateItem(moho, shape, fills) --print("LS_ShapesWindowDialog:UpdateItem" .. os.clock())
+function LS_ShapesWindowDialog:UpdateItem(moho, shape, fills) --print("LS_ShapesWindowDialog:UpdateItem: " .. os.clock())
 	local lMesh = moho:DrawingMesh()
 	local pMesh = self.itemPreview:Mesh()
 	shape = shape or moho:SelectedShape() --print(tostring(shape), ", ", shape and shape:Name() or "NIL")
@@ -1516,7 +1514,30 @@ function LS_ShapesWindowDialog:UpdateItem(moho, shape, fills) --print("LS_Shapes
 	self.itemPreview:Refresh()
 end
 
-function LS_ShapesWindowDialog:UpdateColor(moho) --print("LS_ShapesWindowDialog:UpdateColor" .. os.clock())
+function LS_ShapesWindowDialog:UpdateBrush(moho, shape) --print("LS_ShapesWindowDialog:UpdateBrush: " .. os.clock())
+	local pMesh = self.brushPreview:Mesh()
+	shape = shape or moho:SelectedShape()
+	if (pMesh ~= nil and shape ~= nil) then
+		if pMesh:CountShapes() < 1 then
+			local v = LM.Vector2:new_local()
+			v:Set(-0.05, 0.05) pMesh:AddLonePoint(v, 0)
+			v:Set(-0.05, 0.05) pMesh:AppendPoint(v, 0)
+			pMesh:Point(0):SetCurvature(MOHO.PEAKED, 0)
+			pMesh:Point(1):SetCurvature(MOHO.PEAKED, 0)
+			pMesh:SelectConnected()
+			if self.brushPreview:CreateShape(false) then
+				pMesh:Shape(0).fMyStyle.fLineWidth = 0.9
+			end
+		end
+		if pMesh:CountShapes() > 0 then
+			--pMesh:Shape(0).fMyStyle.fLineWidth = shape.fMyStyle.fLineWidth --pMesh:Shape(0).fMyStyle.fLineCaps = 0 -- Tests...
+			pMesh:Shape(0).fMyStyle.fBrushName = shape.fMyStyle.fBrushName --pMesh:Shape(0).fMyStyle.fBrushName:Set(tostring(shape.fMyStyle.fBrushName:Buffer())) -- It seems LM_MeshPreview widget doesn't display brushes. Oh, well...
+		end
+	end
+	self.brushPreview:Refresh()
+end
+
+function LS_ShapesWindowDialog:UpdateColor(moho) --print("LS_ShapesWindowDialog:UpdateColor: " .. os.clock())
 	--local lMesh = moho:DrawingMesh()
 	--local pMesh = self.colorPreview and self.colorPreview:Mesh() or nil
 	if self.colorPreview and self.colorPreview:Mesh() ~= nil then
@@ -1524,7 +1545,7 @@ function LS_ShapesWindowDialog:UpdateColor(moho) --print("LS_ShapesWindowDialog:
 	end
 end
 
-function LS_ShapesWindowDialog:UpdatePreview(moho, preview) --print("LS_ShapesWindowDialog:UpdatePreview" .. os.clock())
+function LS_ShapesWindowDialog:UpdatePreview(moho, preview) --print("LS_ShapesWindowDialog:UpdatePreview: " .. os.clock())
 	if LS_ShapesWindow.doc ~= nil then -- 20231223-2345: Check to avoid crash upon auto-opening, better try to include the document as argument?
 		LS_ShapesWindow.swatchLayer = LS_ShapesWindow.swatchLayer > LS_ShapesWindow.doc:CountLayers() - 1 and LS_ShapesWindow.doc:CountLayers() - 1 or LS_ShapesWindow.swatchLayer --LM.Clamp(LS_ShapesWindow.swatchLayer, 0, LS_ShapesWindow.doc:CountLayers() - 1) --print(LS_ShapesWindow.doc:Name(), ", ", moho.document:Name())
 		local layer = LS_ShapesWindow.doc:Layer(LS_ShapesWindow.swatchLayer)
@@ -1614,7 +1635,7 @@ function LS_ShapesWindowDialog:UpdatePreview(moho, preview) --print("LS_ShapesWi
 end
 
 --[[
-function LS_ShapesWindowDialog:UpdateColor(moho) --print("LS_ShapesWindowDialog:UpdateColor" .. os.clock())
+function LS_ShapesWindowDialog:UpdateColor(moho) --print("LS_ShapesWindowDialog:UpdateColor: " .. os.clock())
 	local mesh = self.colorPreview:Mesh()
 	mesh:Clear()
 	mesh:SelectNone()
@@ -1757,6 +1778,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	local styleSelID = LS_ShapesWindow.mode == 2 and math.floor(self.itemList:SelItem()) - 1 or -1
 	local styleSel = doc and doc:StyleByID(styleSelID) or style
 	local stylesSel = math.floor(self.itemList:NumSelectedItems() + (self.itemList:IsItemSelected(0) == true and -1 or 0))
+	self.tempShape = moho:NewShapeProperties() or MOHO.MohoGlobals.NewShapeProperties
 	self.msg = msg or MOHO.MSG_BASE
 
 	if (msg >= self.MENU1 and msg <= self.MENU1 + self:CountRealItems(self.menu1)) then -- -1? -- Process first of all stuff that can be accesed even without an open document.
@@ -1775,16 +1797,16 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 			LS_ShapesWindow.showInTools = not LS_ShapesWindow.showInTools
 			moho:SetCurFrame(frame ~= 0 and 0 or 1)
 			moho:SetCurFrame(frame)
-		elseif (msg == self.MENU1 + 5) then -- Show All Tooltips
-			LS_ShapesWindow.showAllTooltips = not LS_ShapesWindow.showAllTooltips
+		elseif (msg == self.MENU1 + 5) then -- Beginner's Mode
+			LS_ShapesWindow.beginnerMode = not LS_ShapesWindow.beginnerMode
 		elseif (msg >= self.MENU1 + 6 and msg <= self.MENU1 + 9) then -- Try to encompass here options which require auto-reopening.
-			if (msg == self.MENU1 + 6) and doc ~= nil then -- Advanced (Create)
-				LS_ShapesWindow.advanced = not LS_ShapesWindow.advanced
-				--self.menu1:SetChecked(msg, LS_ShapesWindow.advanced) -- Not necessary in this case, but another possibility of update entries' checkmarks...
-			elseif (msg == self.MENU1 + 7) and doc ~= nil then -- Use Large Buttons
+			if (msg == self.MENU1 + 6) and doc ~= nil then -- Use Large Buttons
 				LS_ShapesWindow.largeButtons = not LS_ShapesWindow.largeButtons
-			elseif (msg == self.MENU1 + 8) and doc ~= nil then -- Use Large Palette
+			elseif (msg == self.MENU1 + 7) and doc ~= nil then -- Use Large Palette
 				LS_ShapesWindow.largePalette = not LS_ShapesWindow.largePalette
+			elseif (msg == self.MENU1 + 8) and doc ~= nil then -- Advanced (Creation Controls)
+					LS_ShapesWindow.advanced = not LS_ShapesWindow.advanced
+					--self.menu1:SetChecked(msg, LS_ShapesWindow.advanced) -- Not necessary in this case, but another possibility of update entries' checkmarks...
 			elseif (msg == self.MENU1 + 9) and doc ~= nil then -- Show Infobar
 				LS_ShapesWindow.showInfobar = not LS_ShapesWindow.showInfobar
 			end
@@ -1805,7 +1827,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 			MOHO.Localize("/Dialogs/ProjectSettings/RestoreDefaults=Restore Defaults"):gmatch("%w+")(), MOHO.Localize("/Strings/Cancel=Cancel")) --Restore: 0, Cancel: 1
 			if alert == 0 then
 				LS_ShapesWindow:ResetPrefs()
-				if LS_ShapesWindow.advanced ~= self.menu1:IsChecked(self.MENU1 + 5) or LS_ShapesWindow.largeButtons ~= self.menu1:IsChecked(self.MENU1 + 6) or LS_ShapesWindow.largePalette ~= self.menu1:IsChecked(self.MENU1 + 7) or LS_ShapesWindow.showInfobar ~= self.menu1:IsChecked(self.MENU1 + 8) then -- Only Reopen window if necessary.
+				if LS_ShapesWindow.largeButtons ~= self.menu1:IsChecked(self.MENU1 + 6) or LS_ShapesWindow.largePalette ~= self.menu1:IsChecked(self.MENU1 + 7) or LS_ShapesWindow.advanced ~= self.menu1:IsChecked(self.MENU1 + 8) or LS_ShapesWindow.showInfobar ~= self.menu1:IsChecked(self.MENU1 + 9) then -- Only Reopen window if necessary.
 					--print("1: (msg == self.MENU1 + 7)")
 					self.dummyList:SetSelItem(self.dummyList:GetItem(0), false)
 					--print("2: (msg == self.MENU1 + 7)")
@@ -2011,7 +2033,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	end
 
 	local undoable = true
-	if ((msg >= self.MENU1 and msg < self.FILLED) or msg == self.MODE or msg == self.CHANGE or msg == self.BASE_SHAPE or msg == self.BASE_SHAPE_ALT or msg == self.TOP_SHAPE or msg == self.TOP_SHAPE_ALT or msg == self.SELECTALL or msg == self.SELECTALL_ALT or msg == self.SELECTSIMILAR or msg == self.SELECTSIMILAR_ALT or msg == self.CHECKERSEL or msg == self.COPY or msg == self.COLORSLIDER or (msg >= self.FILLCOLOR and msg <= self.FILLCOLOR_END) or (msg >= self.LINECOLOR and msg <= self.LINECOLOR_END)) then
+	if ((msg >= self.MENU1 and msg < self.FILLED) or msg == self.MODE or msg == self.CHANGE or msg == self.BASE_SHAPE or msg == self.BASE_SHAPE_ALT or msg == self.TOP_SHAPE or msg == self.TOP_SHAPE_ALT or msg == self.SELECTALL or msg == self.SELECTALL_ALT or msg == self.SELECTMATCHING or msg == self.SELECTMATCHING_ALT or msg == self.CHECKERSEL or msg == self.COPY or msg == self.COLORSLIDER or (msg >= self.FILLCOLOR and msg <= self.FILLCOLOR_END) or (msg >= self.LINECOLOR and msg <= self.LINECOLOR_END)) then
 		undoable = false
 	end
 	if (doc ~= nil and undoable) then
@@ -2119,56 +2141,22 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	elseif (msg == self.MODE) then
 		if LS_ShapesWindow.mode < 2 then -- if Shape Modes
 			if (mesh ~= nil) and LS_ShapesWindow.mode == 1 then
-				moho:DeselectShapes()
-				MOHO.Redraw()
+				if shapeID and shapeID >= 0 then
+					if not LS_ShapesWindow.pointsBasedSel then
+						moho:DeselectShapes()
+					else
+						mesh:SelectNone()
+					end
+					self.selItem = 0
+					MOHO.Redraw()
+				end
 			end
 			LS_ShapesWindow.mode = 2
-			self.selItem = 0
 		elseif LS_ShapesWindow.mode == 2 then -- if STYLE Mode
 			if mesh ~= nil then
 				local test = LS_ShapesWindow:StyleLeaver(moho, mesh)
-				--[[
-				if styleName ~= "" then
-					--local v = LM.Vector2:new_local() v:Set(0, -100) v:Set(0, -100.0001)
-					mesh:SelectNone()
-					mesh:AddLonePoint(LM.Vector2:new_local(0, -100) , 0)
-					mesh:AppendPoint(LM.Vector2:new_local(0, -100.0001), 0)
-					mesh:SelectConnected()
-
-					if moho:CreateShape(false, false, 0) then
-						if mesh:CountShapes() > 0 then
-							local tempShape = mesh:Shape(mesh:CountShapes() - 1)
-							tempShape:SetName("")
-							tempShape:MakePlain()
-							tempShape.fSelected = true
-							--tempShape:SelectAllPoints()
-							--mesh:DeleteShape(mesh:CountShapes() - 1)
-							--curStyle = moho:CurrentEditStyle() print(curStyle.fName:Buffer())
-							--print("Before 'UpdateUI'")
-							moho:UpdateUI()
-							--print("After 'UpdateUI'")
-							moho:DeselectShapes() --tempShape.fSelected = false
-							mesh:DeleteShape(mesh:CountShapes() - 1)
-							mesh:DeleteSelectedPoints()
-							MOHO.Redraw()
-						end
-					end
-					--[=[
-					if style ~= nil and styleName == "" then
-						LS_ShapesWindow.mode = 0 -- DEFAULTS (Shape Management)
-					end
-					if shape ~= nil then
-						LS_ShapesWindow.mode = 1
-					else
-						LS_ShapesWindow.mode = 0
-					end
-					--]=]
-					--LS_ShapesWindow.mode = (style ~= nil and styleName == "") or 2
-					--LS_ShapesWindow.mode = shape ~= nil and 1 or 0
-				end
-				--]]
 			else
-				--20231205-1925: Do nothing for now, among other things, cause it would require the creation of a temp vector layer, which would be visible for a sec upon UpdatingUI...
+				--20231205-1925: Do nothing for now, among other things, cause it would require the creation of a temp vector layer, which would be visible for a sec upon the necessary UpdateUI...
 			end
 			LS_ShapesWindow.mode = 0
 			self.selItem = 0
@@ -2403,20 +2391,49 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 		moho:UpdateUI() -- It seems necessary in order to activate buttons accordingly list selection, plus it seems to solve the above note!
 		self:Update()
 		self.itemList:Redraw()
-	elseif (msg == self.SELECTSIMILAR or msg == self.SELECTSIMILAR_ALT) then
+	elseif (msg == self.SELECTMATCHING or msg == self.SELECTMATCHING_ALT) then
 		local count = 0
+		local fillCol, lineCol
 		if LS_ShapesWindow.mode < 2 then
 			for i = 0, shapes - 1 do
 				local iShape = mesh:Shape(i)
-				if iShape ~= nil and (mesh:ShapeID(iShape) ~= shapeID) and iShape:ArePropertiesEqual(shape) then
-					iShape.fSelected = true
-					if (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
+				if iShape and (mesh:ShapeID(iShape) ~= shapeID) then --and iShape:ArePropertiesEqual(shape)
+					fillCol = (iShape.fMyStyle.fFillCol.value.r == shape.fMyStyle.fFillCol.value.r) and (iShape.fMyStyle.fFillCol.value.g == shape.fMyStyle.fFillCol.value.g) and (iShape.fMyStyle.fFillCol.value.b == shape.fMyStyle.fFillCol.value.b)
+					lineCol = (iShape.fMyStyle.fLineCol.value.r == shape.fMyStyle.fLineCol.value.r) and (iShape.fMyStyle.fLineCol.value.g == shape.fMyStyle.fLineCol.value.g) and (iShape.fMyStyle.fLineCol.value.b == shape.fMyStyle.fLineCol.value.b)
+
+					iShape.fSelected = fillCol and lineCol
+					count = (fillCol and lineCol) and count + 1 or count
+					if (msg == self.SELECTMATCHING_ALT) then
+						if (fillCol and lineCol) and not iShape:ArePropertiesEqual(shape) then
+							iShape.fSelected = false
+							count = count - 1
+						end
+					end
+					if iShape.fSelected == true and (LS_ShapesWindow.pointsBasedSel and not tool:find("SelectShape")) then
 						iShape:SelectAllPoints()
 					end
-					count = count + 1
-				end
+				end	--print(i, ", ", tostring(iShape.fSelected), ", ", count)
 			end
 		else
+			local style = (style and styleName ~= "") and style or styleSel
+			local styleUUID = style.fUUID:Buffer()
+			for i = 0, styles - 1 do
+				local iStyle = doc:StyleByID(i)
+				if iStyle ~= nil and (iStyle.fUUID:Buffer() ~= styleUUID) then
+					fillCol = (iStyle.fFillCol.value.r == style.fFillCol.value.r) and (iStyle.fFillCol.value.g == style.fFillCol.value.g) and (iStyle.fFillCol.value.b == style.fFillCol.value.b) --and (iStyle.fFillCol.value.a == style.fFillCol.value.a)
+					lineCol = (iStyle.fLineCol.value.r == style.fLineCol.value.r) and (iStyle.fLineCol.value.g == style.fLineCol.value.g) and (iStyle.fLineCol.value.b == style.fLineCol.value.b) --and (iStyle.fLineCol.value.a == style.fLineCol.value.a)
+
+					iStyle.fSelected = fillCol and lineCol
+					count = (fillCol and lineCol) and count + 1 or count
+					if (msg == self.SELECTMATCHING_ALT) then
+						if (fillCol and lineCol) and not iStyle:ArePropertiesEqual(style) then
+							iStyle.fSelected = false
+							count = count - 1
+						end
+					end
+				end --print(i, ", ", tostring(iStyle.fSelected), ", ", count)
+			end
+			--[[20240109-0420: Previous, less functional, code...
 			local style = (style and styleName ~= "") and style or styleSel --print(style.fName:Buffer())
 			local styleUUID = style.fUUID:Buffer()
 			for i = 0, styles - 1 do
@@ -2426,6 +2443,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 					count = count + 1
 				end
 			end
+			--]]
 			if count > 0 then
 				LS_ShapesWindow.mode = LS_ShapesWindow:StyleLeaver(moho, mesh, 2)
 				moho:UpdateUI()
@@ -2521,7 +2539,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 			end
 		end
 		--]]
-	elseif (msg == self.DELETE) then
+	elseif (msg == self.DELETE) or (msg == self.DELETE_ALT) then
 		if (doc ~= nil) then
 			local redraw
 			local i = 0
@@ -2538,17 +2556,27 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 				end
 			else
 				local host = layer
-				while i < doc:CountStyles() do
-					local style = doc:StyleByID(i)
-					if (style.fSelected) then
-						redraw = redraw == nil and doc:IsStyleUsed(style, host) or redraw
-						doc:RemoveStyle(style, nil)
-					else
-						i = i + 1
+				if (msg == self.DELETE) then
+					while i < doc:CountStyles() do
+						local style = doc:StyleByID(i)
+						if (style.fSelected) then
+							redraw = redraw == nil and doc:IsStyleUsed(style, host) or redraw
+							doc:RemoveStyle(style, nil)
+						else
+							i = i + 1
+						end
+					end
+				else
+					while i < doc:CountStyles() do
+						local iStyle = doc:StyleByID(i)
+						if (iStyle and iStyle.fSelected) and not doc:IsStyleUsed(iStyle, host) then
+							doc:RemoveStyle(iStyle, nil)
+						else
+							i = i + 1
+						end
 					end
 				end
 			end
-
 			if redraw == true then
 				--moho.view:DrawMe()
 				MOHO.Redraw()
@@ -2752,22 +2780,49 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	elseif (msg >= self.FILLED and msg <= self.FILLEDOUTLINED_ALT) then
 		local m = msg - self.FILLED
 		local creationMode = LM_CreateShape.creationMode
-		if (mesh ~= nil) then
+		if (LS_ShapesWindow.mode < 2 and mesh ~= nil) then -- Shape Creation
 			LM_CreateShape.creationMode = math.floor(m / 2) --- #self.createButtons
 			LM_CreateShape:HandleMessage(moho, moho.view, msg % 2 == 0 and LM_CreateShape.CREATE or LM_CreateShape.CREATE_CONNECTED)
 			LM_CreateShape.creationMode = creationMode
+		else -- Style Creation
+			local baseStyle = style --or self.tempShape.fMyStyle
+			local newStyle = doc:AddStyle(MOHO.Localize("/Windows/Style/Style=Style") .. " " .. math.floor(doc:CountStyles() + 1))
+			if (newStyle ~= nil) then
+				--LS_ShapesWindow:MakeStyleNameUnique(doc, doc:CountStyles() - 1) --newStyle.fName:Set(newStyleName)
+				newStyle.fFillCol = baseStyle.fFillCol
+				newStyle.fLineCol = baseStyle.fLineCol
+				newStyle.fLineWidth = baseStyle.fLineWidth
+				newStyle.fLineCaps = baseStyle.fLineCaps
+				newStyle.fBrushName = baseStyle.fBrushName
+				if (msg == self.FILLED) then
+					newStyle.fDefineFillCol = true
+					newStyle.fDefineLineCol = false
+				elseif (msg == self.OUTLINED) then
+					newStyle.fDefineFillCol = false
+					newStyle.fDefineLineCol = true
+				elseif (msg == self.FILLEDOUTLINED) then
+					newStyle.fDefineFillCol = true
+					newStyle.fDefineLineCol = true
+				end
+				if style and styleName ~= "" then
+					LS_ShapesWindow.mode = LS_ShapesWindow:StyleLeaver(moho, mesh, 2)
+				end
+				LS_ShapesWindow:StyleSelector(doc, doc:CountStyles() - 1)
+				self:Update()
+			end
 		end
 		moho:UpdateUI()
 	elseif (msg == self.COPY or msg == self.PASTE) then
 		if shape ~= nil then
 			if msg == self.COPY then
-				self.copiedStyle = moho:NewShapeProperties()
+				self.copiedShape = moho:NewShapeProperties()
+				self.copiedStyle = self.copiedShape.fMyStyle
 			else -- PASTE
 				if mesh ~= nil and self.copiedStyle then
 					for i = 0, shapes - 1 do
 						local shape = mesh:Shape(i)
 						if (shape.fSelected) then
-							shape:CopyStyleProperties(self.copiedStyle, false, false)
+							shape.fMyStyle = self.copiedStyle --shape:CopyStyleProperties(self.copiedStyle, false, false)
 						end
 					end
 				end
@@ -2776,10 +2831,22 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 		else
 			if style ~= nil then
 				if msg == self.COPY then
-					self.copiedStyle = moho:NewShapeProperties()
+					self.copiedShape = moho:NewShapeProperties()
+					self.copiedStyle = moho:NewShapeProperties().fMyStyle
+					if styleName ~= "" then -- 20240601-2010: The following code will only half work, e.g. possible effects will be discarded, though better than nothing according to note bellow... The question is, where CurrentEditStyle data is stored when using Style Window's Copy button? 🤔
+						self.copiedShape:MakePlain()
+						self.copiedShape.fMyStyle.fFillCol = moho:CurrentEditStyle().fFillCol
+						self.copiedShape.fMyStyle.fLineCol = moho:CurrentEditStyle().fLineCol
+						self.copiedShape.fMyStyle.fLineWidth = moho:CurrentEditStyle().fLineWidth
+						self.copiedShape.fMyStyle.fLineCaps = moho:CurrentEditStyle().fLineCaps
+						self.copiedShape.fMyStyle.fBrushName = moho:CurrentEditStyle().fBrushName
+						--self.copiedStyle.fMyStyle = moho:CurrentEditStyle() -- 20240601-2010: This seems to cause problems for STYLE mode to work! (I guess due to it makes think the mode system you're still editing the copied style?) 
+					else
+						self.copiedStyle = self.copiedShape.fMyStyle
+					end
 				else -- PASTE
 					if mesh ~= nil and self.copiedStyle then
-						moho:PickStyleProperties(self.copiedStyle)
+						moho:PickStyleProperties(self.copiedShape)
 					end
 				end
 				MOHO.Redraw()
@@ -2788,7 +2855,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 		self:Update()
 		moho:UpdateUI()
 	elseif (msg == self.RESET) or (msg == self.RESET_ALT) then
-		local mohoLineWidth = 0.005556 * 2 -- Factory default value * 2 = 8px (No MohoGlobal??)
+		local mohoLineWidth =  LS_ShapesWindow.MohoLineWidth --0.005556 * 2
 		if (style ~= nil) then
 			style.fFillCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.FillCol)
 			style.fLineCol:SetValue(lDrawingFrame, MOHO.MohoGlobals.LineCol)
@@ -3024,7 +3091,7 @@ function LS_ShapesWindow:Run(moho)
 
 end
 
-function LS_ShapesWindow:CompareVersion(a, b) -- Sorting an array of semantic versions or SemVer (https://medium.com/geekculture/sorting-an-array-of-semantic-versions-in-typescript-55d65d411df2)
+function LS_ShapesWindow:CompareVersion(a, b) --(char, char) int, int -- Sorting an array of semantic versions or SemVer (https://medium.com/geekculture/sorting-an-array-of-semantic-versions-in-typescript-55d65d411df2)
 	local a1, b1 = {}, {}
 	for part in tostring(a):gmatch("[^.]+") do table.insert(a1, part) end
 	for part in tostring(b):gmatch("[^.]+") do table.insert(b1, part) end
@@ -3038,7 +3105,7 @@ function LS_ShapesWindow:CompareVersion(a, b) -- Sorting an array of semantic ve
 	return #b1 - #a1 -- 3. We hit this if the all checked versions so far are equal (0 = equal version, + = 1st > 2nd, - = 1st < 2nd)
 end --print(tostring(LS_ShapesWindow:CompareVersion("13.5.6", "14.0")))
 
-function LS_ShapesWindow:LoadDocument(moho, docPath)
+function LS_ShapesWindow:LoadDocument(moho, docPath) --(MohoDoc, char) void
 	local doc = moho:LoadDocument(docPath)
 	if (doc ~= nil) then
 		table.insert(self.docList, doc)
@@ -3048,33 +3115,21 @@ function LS_ShapesWindow:LoadDocument(moho, docPath)
 	end
 end
 
---[[20231218-2014: Using "StyleID" instead... Delete?
-function LS_ShapesWindow:StyleIDByUUID(doc, UUID)
-	if doc ~= nil and UUID ~= nil then
-		for i = 0, doc:CountStyles() - 1 do
-			if (doc:StyleByID(i).fUUID:Buffer() == UUID) then
-				return i
+function LS_ShapesWindow:CountSelectedStyles(doc) --(MohoDoc) int
+	local count = 0
+	if doc ~= nil then
+		for i = 0, doc:CountStyles() - 1 do -- Check if the name is already taken by another style and, if so, pick that style's reference ID
+			local style = doc:StyleByID(i)
+			if style.fSelected == true then
+				count = count  + 1
 			end
 		end
 	end
-end
---]]
-
-function LS_ShapesWindow:StyleID(doc, style)
-	local ID = -1
-	if doc ~= nil and style ~= nil then
-		for i = 0, doc:CountStyles() - 1 do
-			if (doc:StyleByID(i) == style) then --(doc:StyleByID(i).fUUID:Buffer() == style.fUUID)
-				ID = i
-				break
-			end
-		end
-	end
-	return ID
+	return count
 end
 
 function LS_ShapesWindow:MakeStyleNameUnique(doc, id, jump) --(MohoDoc, int, int) void
-	if (doc ~= nil and id ~= nil) then
+	if (doc ~= nil and id ~= nil and doc:StyleByID(id) ~= nil) then
 		local count = 0 + (jump or 1)
 		local baseName = doc:StyleByID(id).fName:Buffer() -- Style's original name
 		local newName = baseName -- Current name of the shape, which goes updating
@@ -3095,8 +3150,32 @@ function LS_ShapesWindow:MakeStyleNameUnique(doc, id, jump) --(MohoDoc, int, int
 	end
 end
 
+--[[20231218-2014: Using "StyleID" instead... Delete?
+function LS_ShapesWindow:StyleIDByUUID(doc, UUID) --(MohoDoc, char) int
+	if doc ~= nil and UUID ~= nil then
+		for i = 0, doc:CountStyles() - 1 do
+			if (doc:StyleByID(i).fUUID:Buffer() == UUID) then
+				return i
+			end
+		end
+	end
+end
+--]]
 
-function LS_ShapesWindow:StyleLeaver(moho, mesh, mode) -- StyleDeactivator?
+function LS_ShapesWindow:StyleID(doc, style) --(MohoDoc, M_Style) int
+	local ID = -1
+	if doc ~= nil and style ~= nil then
+		for i = 0, doc:CountStyles() - 1 do
+			if (doc:StyleByID(i) == style) then --(doc:StyleByID(i).fUUID:Buffer() == style.fUUID)
+				ID = i
+				break
+			end
+		end
+	end
+	return ID
+end
+
+function LS_ShapesWindow:StyleLeaver(moho, mesh, mode)  --(moho, M_Mesh, int) int -- StyleDeactivator?
 	mesh = mesh or moho:DrawingMesh()
 	if moho ~= nil and mesh ~= nil then
 		local styleName = moho:CurrentEditStyle() and tostring(moho:CurrentEditStyle().fName:Buffer()) or ""
@@ -3130,6 +3209,15 @@ function LS_ShapesWindow:StyleLeaver(moho, mesh, mode) -- StyleDeactivator?
 	return self.mode or 0
 end
 
+function LS_ShapesWindow:StyleSelector(doc, id) --(MohoDoc, int) void
+	for i = 0, doc:CountStyles() - 1 do
+		local style = doc:StyleByID(i)
+		if (style ~= nil) then
+			style.fSelected = i == id
+		end
+	end
+end
+
 function LS_ShapesWindow:CountCurves(moho, shape) --(moho, M_Shape) int
 	local mesh = moho:DrawingMesh()
 	local shape = shape or moho:SelectedShape()
@@ -3159,8 +3247,8 @@ function LS_ShapesWindow:IsSingleCurve(shape) --(M_Shape) bool
 	return true
 end
 
-function LS_ShapesWindow:MakeShapeNameUnique(mesh, id, jump) --(mesh, int, int) void
-	if (mesh ~= nil and id ~= nil) then
+function LS_ShapesWindow:MakeShapeNameUnique(mesh, id, jump) --(M_Mesh, int, int) void
+	if (mesh ~= nil and id ~= nil and mesh:Shape(id) ~= nil) then
 		local count = 0 + (jump or 1)
 		local baseName = mesh:Shape(id):Name() -- Shape's original name
 		local newName = baseName -- Current name of the shape, which goes updating
@@ -3181,9 +3269,9 @@ function LS_ShapesWindow:MakeShapeNameUnique(mesh, id, jump) --(mesh, int, int) 
 	end
 end
 
-function LS_ShapesWindow:BuildStyleChoiceMenu(menu, doc, baseMsg, dummyMsg, exclude) --(LM_Menu, MohoDoc, MSG_BASE, int) void
+function LS_ShapesWindow:BuildStyleChoiceMenu(menu, doc, baseMsg, dummyMsg, exclude) --(LM_Menu, MohoDoc, MSG_BASE, int, int) void
 	menu:RemoveAllItems()
-	menu:AddItem(MOHO.Localize("/Windows/Style/None2=None"), 0, baseMsg) --øØ‹›
+	menu:AddItem(MOHO.Localize("/Windows/Style/None2=None"), 0, baseMsg) --‹›
 	if doc ~= nil then
 		for i = 0, doc:CountStyles() - 1 do
 			local style = doc:StyleByID(i)
@@ -3196,11 +3284,11 @@ function LS_ShapesWindow:BuildStyleChoiceMenu(menu, doc, baseMsg, dummyMsg, excl
 	end
 end
 
-function LS_ShapesWindow:IsSwatchLayer(moho, layer)
+function LS_ShapesWindow:IsSwatchLayer(moho, layer) --(MohoDoc, MohoLayer), bool
 	return (layer and layer:LayerType() == MOHO.LT_VECTOR and moho:LayerAsVector(layer):Mesh():CountShapes() > 1) and not layer:IsRenderOnly()
 end
 
-function LS_ShapesWindow.LineBreaker(s, numSpaces, sep)
+function LS_ShapesWindow.LineBreaker(s, numSpaces, sep) --(char, int, char) char
 	s, numSpaces, sep = s or "", numSpaces or 1, sep or " "
 	local result, currentPart, sepCount = "", "", 0
 	for char in s:gmatch(".") do
@@ -3215,17 +3303,17 @@ function LS_ShapesWindow.LineBreaker(s, numSpaces, sep)
 	return #currentPart > 0 and result .. currentPart or result
 end
 
-function LS_ShapesWindow.Abbreviator(s)
+function LS_ShapesWindow.Abbreviator(s) --(char) char, int
 	local num = 0
 	local abrev = string.gsub(s, "%a+", function(w) if #w > 4 then num = num + 1 return string.sub(w, 1, 3) .. "." else return w end end)
 	return abrev, num
 end
 
-function LS_ShapesWindow.BiasedRandom (p, r, n)
-	return math.random () < p and n or math.random (n + 1, r)
+function LS_ShapesWindow.BiasedRandom (prob, range, n) --(int, int, int) int
+	return math.random () < prob and range or math.random(n + 1, range)
 end
 
-function LS_ShapesWindow:License(years, name, company)
+function LS_ShapesWindow:License(years, name, company) --(char, char, char) char
 	years = years or self.birth or os.date("%Y")
 	name = name or "Rai López"
 	company = company or "Lost Scripts™"
