@@ -4,7 +4,7 @@
 
 ScriptName = "LS_ShapesWindow"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20240208-1650"
+ScriptBuild = "20240209-0054"
 
 -- **************************************************
 -- General information about this script
@@ -19,7 +19,7 @@ function LS_ShapesWindow:Name()
 end
 
 function LS_ShapesWindow:Version()
-	return "0.2.1" .. " BETA (Build " ..  self.build .. ") for Moho® 14.1+ Pro" -- "0.0.1.20231005.1731"
+	return "0.3.0" .. " BETA (Build " ..  self.build .. ") for Moho® 14.1+ Pro" -- "0.0.1.20231005.1731"
 end
 
 function LS_ShapesWindow:Description()
@@ -831,8 +831,6 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 	local itemsSel = self.itemList and math.floor(self.itemList:NumSelectedItems()) or 0
 	local infoString = ""
 	self.tempShape = moho:NewShapeProperties() or MOHO.MohoGlobals.NewShapeProperties
-
-	--[[TEMP/WIP: MP!--]]
 
 	local brush = moho:CurrentEditStyle() and tostring(moho:CurrentEditStyle().fBrushName:Buffer():gsub("%.[^.]+$", "")) or ""
 	local styleName = moho:CurrentEditStyle() and tostring(moho:CurrentEditStyle().fName:Buffer()) or ""
@@ -4031,8 +4029,6 @@ function LS_ShapesWindow:Run(moho)
 			end
 		end
 		--]]
-
-		--[[20240120-2325: MP!--]]
 
 		self.dlog = LS_ShapesWindowDialog:new(moho)
 		--self.dlogBypass = LS_ShapesWindowDialog:new(moho) self.dlogBypass = nil -- dlogGuard, dlogShield, dlogBait, dlogTrap, dlogPatch (whatever... not necessary anymore!)
