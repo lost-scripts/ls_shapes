@@ -4,7 +4,7 @@
 
 ScriptName = "LS_ShapesWindow"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20250726-0218"
+ScriptBuild = "20250729-0250"
 ScriptVersion = "0.3.1 BETA"
 ScriptTarget = "Moho® 14.1+ Pro"
 
@@ -868,6 +868,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 	--local doc = (LS_ShapesWindow.defDoc and LS_ShapesWindow.defDoc ~= moho.document) and LS_ShapesWindow.defDoc or moho.document --print("UP: " .. (doc and doc:Name()) or "No Doc") --20240102-1638: A try to fix/patch the new opening document mess for now... (TBO!)
 	local docName = doc and doc:Name() or nil
 	local docH = doc and doc:Height() or 240
+	local frame = moho.frame
 	local toolName = (doc ~= nil and doc:Name() ~= "-") and moho:CurrentTool() or "" --20231223-2350: Extra-checking is for avoiding crashes upon auto-opening
 	local tool = _G[toolName] --print(toolName, ", ", tool:Name(), ", ", tool.dragMode)
 	local toolsDisabled = moho:DisableDrawingTools()
@@ -943,11 +944,14 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 
 	local layer = moho.layer
 	local layerUUID = doc and layer:UUID()
-	local lFrame = doc and moho.layerFrame 
+	local lFrame = doc and moho.layerFrame
+	local lFrameAlt = moho.frame + (layer and layer:TotalTimingOffset() or 0)
 	local lDrawing = (doc and moho.drawingLayer) and moho:LayerAsVector(moho.drawingLayer) or nil
 	local lDrawingUUID = lDrawing and lDrawing:UUID() or ""
-	local lDrawingOrderCh = (doc and moho:DrawingMesh() and moho:DrawingMesh():AnimatedShapeOrder()) and LS_ShapesWindow:GetLayerChan(moho, layer, CHANNEL_SHAPE_ORDER) or nil -- 20250725: Must be before mesh assignment or there be dragons...
-	local lDrawingOrderKey = lDrawingOrderCh and lDrawingOrderCh:HasKey(lFrame) or false
+	local lDrawingFrame = lDrawing and moho.drawingLayerFrame or 0
+	local lDrawingFrameAlt = moho.frame + (lDrawing and lDrawing:TotalTimingOffset() or 0)
+	local lDrawingOrderCh = (doc and moho:DrawingMesh() and moho:DrawingMesh():AnimatedShapeOrder()) and LS_ShapesWindow:ChannelByID(moho, lDrawing, CHANNEL_SHAPE_ORDER) or nil -- 20250725: Must be before mesh assignment or there be dragons...
+	local lDrawingOrderKey = lDrawingOrderCh and lDrawingOrderCh:HasKey(lFrameAlt) or false
 	local mesh = doc and moho:DrawingMesh()
 	local pointsSel = doc and moho:CountSelectedPoints()
 	local edges = doc and moho:CountEdges()
@@ -1289,8 +1293,8 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 				self.combineIntersect:Enable(true)
 				self.combineIntersect:SetValue(shape.fComboMode == MOHO.COMBO_INTERSECT)
 				if (shape.fComboMode == MOHO.COMBO_ADD or shape.fComboMode == MOHO.COMBO_SUBTRACT) then
-					self.combineBlendBut:Enable(lFrame ~= 0)
-					self.combineBlendBut:SetValue(shape.fComboBlend:HasKey(lFrame))
+					self.combineBlendBut:Enable(lFrameAlt ~= 0)
+					self.combineBlendBut:SetValue(shape.fComboBlend:HasKey(lFrameAlt))
 					self.combineBlend:Enable(true)
 					self.combineBlend:SetValue(shape.fComboBlend.value)
 				else
@@ -1613,7 +1617,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 
 	self.raise:Enable(((LS_ShapesWindow.mode < 2) and shapeID and shapeID >= 0) and self.itemList:SelItem() > 1 or false) --print(self.itemList:SelItem(), ", ", self.itemList:SelItemLabel())
 	self.raise:SetToolTip(LS_ShapesWindow.mode < 2 and MOHO.Localize("/Menus/Draw/RaiseShape=Raise Shape") .. " (<alt> " .. MOHO.Localize("/Menus/Draw/RaiseToFront=Raise To Front") .. ")" or "")
-	self.animOrder:Enable((LS_ShapesWindow.mode < 2 and pro and lFrame ~= 0 and mesh and mesh:AnimatedShapeOrder()))
+	self.animOrder:Enable((LS_ShapesWindow.mode < 2 and pro and lFrameAlt ~= 0 and mesh and mesh:AnimatedShapeOrder()))
 	self.animOrder:SetValue(LS_ShapesWindow.mode < 2 and pro and lDrawingOrderKey)
 	self.lower:Enable(((LS_ShapesWindow.mode < 2) and shapeID and shapeID >= 0) and (self.itemList:SelItem() > 0 and self.itemList:SelItem() < self.itemList:CountItems() - 1) or false)
 	self.lower:SetToolTip(LS_ShapesWindow.mode < 2 and MOHO.Localize("/Menus/Draw/LowerShape=Lower Shape") .. " (<alt> " .. MOHO.Localize("/Menus/Draw/LowerToBack=Lower To Back") .. ")" or "")
@@ -2365,10 +2369,10 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	--local caller = debug.getinfo(3) and debug.getinfo(3).name or "NULL" print(caller) --0: getinfo, 1: NULL/NULL, 2: SetSelItem/NULL, 3: NULL/Update, 4: NULL/func, 5: NULL/NULL
 	local helper = MOHO.ScriptInterfaceHelper:new_local()
 	local moho = helper:MohoObject()
-	local frame = moho.frame
 	local doc = moho.document --print("HM: " .. (doc and doc:Name()) or "No Doc") --20240103-1809: Back to normality after fixing the casue of opening document mess? (TBO!)
 	--local doc = (LS_ShapesWindow.defDoc and LS_ShapesWindow.defDoc ~= moho.document) and LS_ShapesWindow.defDoc or moho.document --print("HM: " .. (doc and doc:Name()) or "No Doc") --20240102-1638: A try to fix/patch the new opening document mess for now... (TBO!)
 	local docH = doc and doc:Height() or 240
+	local frame = moho.frame
 	local toolName = (doc ~= nil and doc:Name() ~= "-") and moho:CurrentTool() or ""
 	local tool = _G[toolName]
 	local l = self.GetLayout and self:GetLayout() or nil
@@ -2681,8 +2685,10 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 	local layer = doc and moho.layer --print("HM: " .. tostring(moho.document:Name()), ", ", layer:Name())
 	local layersSel = doc and doc:CountSelectedLayers() or 1
 	local lFrame = layer and moho.layerFrame or 0
+	local lFrameAlt = moho.frame + (layer and layer:TotalTimingOffset() or 0)
 	local lDrawing = (doc and moho.drawingLayer) and moho:LayerAsVector(moho.drawingLayer) or nil
 	local lDrawingFrame = lDrawing and moho.drawingLayerFrame or 0
+	local lDrawingFrameAlt = moho.frame + (lDrawing and lDrawing:TotalTimingOffset() or 0)
 	local mesh = doc and moho:DrawingMesh()
 	local pointsSel = doc and moho:CountSelectedPoints(true)
 	local shape = doc and moho:SelectedShape()
@@ -2978,11 +2984,15 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 			local shape = mesh:Shape(i)
 			if (shape.fSelected) then
 				if (msg == self.COMBINE_BLEND_BUT) then
-					if not shape.fComboBlend:HasKey(lDrawingFrame) then
-						shape.fComboBlend:StoreValue()
+					if not shape.fComboBlend:HasKey(lDrawingFrameAlt) then
+						if frame ~= 0 then
+							shape.fComboBlend:StoreValue()
+						else
+							shape.fComboBlend:SetValue(lDrawingFrameAlt, shape.fComboBlend:GetValue(lDrawingFrameAlt))
+						end
 						MOHO.NewKeyframe(CHANNEL_BLEND_SEL)
 					else
-						shape.fComboBlend:DeleteKey(lDrawingFrame)
+						shape.fComboBlend:DeleteKey(lDrawingFrameAlt)
 						layer:UpdateCurFrame(false)
 					end
 				else
@@ -3083,14 +3093,18 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 		end
 		self:Update()
 	elseif (msg == self.ANIMORDER or msg == self.ANIMORDER_ALT) then
-		local lDrawingOrderCh = moho:DrawingMesh() and LS_ShapesWindow:GetLayerChan(moho, layer, CHANNEL_SHAPE_ORDER) or nil -- 20250725: Channel access will ruin any following mesh access attempt!
+		local lDrawingOrderCh = moho:DrawingMesh() and LS_ShapesWindow:ChannelByID(moho, lDrawing, CHANNEL_SHAPE_ORDER) or nil -- 20250725: Channel access will ruin any following mesh access attempt!
 		if (lDrawingOrderCh ~= nil) then
 			if (msg == self.ANIMORDER) then
-				if not lDrawingOrderCh:HasKey(lDrawingFrame) then
-					lDrawingOrderCh:StoreValue()
+				if not lDrawingOrderCh:HasKey(lDrawingFrameAlt) then
+					if frame ~= 0 then
+						lDrawingOrderCh:StoreValue()
+					else
+						lDrawingOrderCh:SetValue(lDrawingFrameAlt, lDrawingOrderCh:GetValue(lDrawingFrameAlt))
+					end
 					MOHO.NewKeyframe(CHANNEL_SHAPE_ORDER)
 				else
-					lDrawingOrderCh:DeleteKey(lDrawingFrame)
+					lDrawingOrderCh:DeleteKey(lDrawingFrameAlt)
 					layer:UpdateCurFrame(false)
 				end
 			else
@@ -3098,6 +3112,7 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 				layer:UpdateCurFrame(false)
 			end
 			MOHO.Redraw()
+			--self:Update()
 			moho:UpdateUI()
 		end
 	elseif (msg == self.SELECTALL or msg == self.SELECTALL_ALT) then -- 🤔 What if click once selected all, another click deselected all and holding <alt> selected similar?
@@ -4811,14 +4826,25 @@ function LS_ShapesWindow:LoadDocument(moho, docPath) --(moho, str) void
 	end
 end
 
-function LS_ShapesWindow:GetLayerChan(moho, layer, id) --(moho, layer, int) chan -- 20250725: For some reason, it must be run before assigning `mesh` variable or it'll be messed up!
-	id = id or CHANNEL_SHAPE_ORDER
-	local ch, chInfo =  nil, MOHO.MohoLayerChannel:new_local()
+function LS_ShapesWindow:ChannelByID(moho, layer, id, subID, debug) --(moho, layer, int, int, bool) chan, chanInfo -- 20250725: For some reason, it must be run before assigning `mesh` variable or it'll be messed up!
+	subID, debug = subID or -1, debug or false
+	local ch, chInfo, done, sTime = nil, MOHO.MohoLayerChannel:new_local(), false, os.clock()
 
 	for i = 0, layer:CountChannels() - 1 do
-		layer:GetChannelInfo(i, chInfo) --print(math.floor(chInfo.channelID), chInfo.name:Buffer(), tostring(chInfo.selectionBased), tostring(chInfo.separableDimensions), chInfo.subChannelCount)
-		if (not chInfo.selectionBased and chInfo.channelID == id) then
+		layer:GetChannelInfo(i, chInfo) --channelID | name | selectionBased | separableDimensions | subChannelCount
+
+		if done then break end
+		if (chInfo.channelID == id) then
 			ch = layer:Channel(i, 0, moho.document)
+			if ((chInfo.subChannelCount > 0 or chInfo.selectionBased) and subID > -1) then
+				for j = 0, chInfo.subChannelCount - 1 do
+					if (chInfo.channelID == id and j == LM.Clamp(subID, 0, chInfo.subChannelCount - 1)) then
+						ch = layer:Channel(i, j, moho.document)
+						done = true
+						break
+					end
+				end
+			end
 			break
 		end
 	end
@@ -4830,9 +4856,12 @@ function LS_ShapesWindow:GetLayerChan(moho, layer, id) --(moho, layer, int) chan
 		elseif ch:ChannelType() == MOHO.CHANNEL_COLOR then ch = moho:ChannelAsAnimColor(ch)
 		elseif ch:ChannelType() == MOHO.CHANNEL_STRING then ch = moho:ChannelAsAnimString(ch)
 		end
-		return ch
+		if debug then
+			print("Channel " .. chInfo.name:Buffer() .. " (" .. math.floor(chInfo.channelID) .. ") " .. "has: " .. chInfo.subChannelCount .. " subchannels, " .. math.floor(ch:CountKeys()) .. " keys and... is sel. based? " .. tostring(chInfo.selectionBased) .. string.format(" (%.6f sec", os.clock() - sTime) .. ")")
+		end
+		return ch, chInfo
 	end
-end
+end -- Usage: LS_ShapesWindow:ChannelByID(moho, moho.drawingLayer, CHANNEL_SHAPE_ORDER) -- NOTE (never forget): If a function is used in a ternary expression, only its first multi-value is preserved!
 
 function LS_ShapesWindow:CountSelectedStyles(doc) --(MohoDoc) int
 	local count = 0
