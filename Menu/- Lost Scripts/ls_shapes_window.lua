@@ -4,7 +4,7 @@
 
 ScriptName = "LS_ShapesWindow"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20250820-1030"
+ScriptBuild = "20250823-0225"
 ScriptVersion = "0.4.0 BETA"
 ScriptTarget = "Moho® 14.1+ Pro"
 
@@ -1830,19 +1830,20 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 				if toolName:find("SelectShape") then
 					if (self.v and tool.prevMousePt ~= nil) then
 						local shapeID, curveID, segID  = -1, -1, -1
-						shapeID, curveID, segID = self.v:PickShape(tool.prevMousePt), self.v:PickEdge(tool.prevMousePt, curveID, segID, 6) --print(shapeID, ", ", curveID, ", ", segID)
-
-						if (shape and LS_ShapesWindow.LM_SelectShape.dragMode > -1 and (shapeID >= 0 or (curveID >= 0 and segID >= 0))) and (self.prevMousePtX and (self.prevMousePtX ~= tool.prevMousePt.x or self.prevMousePtY ~= tool.prevMousePt.y)) then
-							LS_ShapesWindow.multiMenuRules = false
+						if (shape and LS_ShapesWindow.LM_SelectShape and LS_ShapesWindow.LM_SelectShape.dragMode > -1) then 
+							shapeID, curveID, segID = self.v:PickShape(tool.prevMousePt), self.v:PickEdge(tool.prevMousePt, curveID, segID, 6) --20250821-0145: Continuos "Pick" functions calling seemed to be the cause of main window resizing crashes, so limiting calls by moving it under this condition for now...
+							if (shapeID >= 0 or (curveID >= 0 and segID >= 0)) and (self.prevMousePtX and (self.prevMousePtX ~= tool.prevMousePt.x or self.prevMousePtY ~= tool.prevMousePt.y)) then
+								LS_ShapesWindow.multiMenuRules = false
+							end
 						end
 						if LS_ShapesWindow.multiMenuRules == false then
-							if shape and LS_ShapesWindow.LM_SelectShape.dragMode == 0 then
+							if shape and LS_ShapesWindow.LM_SelectShape and  LS_ShapesWindow.LM_SelectShape.dragMode == 0 then
 								if (curveID >= 0 and segID >= 0) and shape.fHasOutline then -- an edge was clicked on
 									LS_ShapesWindow.multiMenuMode = 1
 								else
 									LS_ShapesWindow.multiMenuMode = 0
 								end
-							elseif LS_ShapesWindow.LM_SelectShape.dragMode > 0 then
+							elseif LS_ShapesWindow.LM_SelectShape and LS_ShapesWindow.LM_SelectShape.dragMode > 0 then
 								LS_ShapesWindow.multiMenuMode = 2
 							end
 						end
@@ -2074,6 +2075,7 @@ function LS_ShapesWindowDialog:Update() --print("LS_ShapesWindowDialog:Update(" 
 	self.swatchSliderVal = self.swatchSlider and self.swatchSlider:Value() or 1
 	self.prevMousePtX, self.prevMousePtY = (tool and tool.prevMousePt ~= nil) and tool.prevMousePt.x or 0, (tool and tool.prevMousePt ~= nil) and tool.prevMousePt.y or 0
 	self.isNewRun = false
+	LS_ShapesWindow.LM_SelectShape.dragMode = -1
 	helper:delete()
 end
 
@@ -2299,7 +2301,7 @@ function LS_ShapesWindowDialog:UpdateItem(moho, item, fill) --(MohoDoc, M_Shape/
 	pMesh:SelectAll()
 	pMesh:PrepMovePoints()
 	self.itemPreview:AutoZoom()
-	offset:Set(-.025, .025) -- Little south-east biased position correction
+	offset:Set(-.01, .01) -- Little south-east biased position correction
 	pMesh:TransformPoints(offset, scale, scale, 0, pMesh:SelectedCenter())
 	--pMesh:DeselectPoints()
 	self.itemPreview:Refresh()
@@ -3132,11 +3134,11 @@ function LS_ShapesWindowDialog:HandleMessage(msg) --print("LS_ShapesWindowDialog
 					local iShape = mesh:Shape(i)
 					if (iShape.fSelected) then
 						iShape:SetName(self.itemName:Value())
-						--LS_ShapesWindow:MakeShapeNameUnique(mesh, i)
+						LS_ShapesWindow:MakeShapeNameUnique(mesh, i) --20250823-0125: Why would this line be commented out? Anyway, un-commented for now...
 					end
 				end
 			elseif (style ~= nil and styleName ~= "") then -- Current Style (TAKE CARE NOT TO NAME DEFAULT NAMELESS STYLE!)
-				style.fName:Set(self.itemName:Value()) --doc:RenameStyle(styleName, self.itemName:Value(), nil) -- Doesn't seem to dio anything...
+				style.fName:Set(self.itemName:Value()) --doc:RenameStyle(styleName, self.itemName:Value(), nil) -- Doesn't seem to do anything...
 				--[[
 				style.fName:Set(self.itemName:Value())
 				for i = 0, doc:CountStyles() - 1 do
@@ -4611,12 +4613,13 @@ function LS_ShapesWindow.h:new()
 	local d = LM.GUI.SimpleDialog(LS_ShapesWindow:UILabel() .. "'s " .. MOHO.Localize("/LS/ShapesWindow/HelpTitle=Quick Help"), LS_ShapesWindow.h) --string.format(MOHO.Localize("/LS/ShapesWindow/HelpTitle=Quick Guide (up to: %s)"), "v0.4.0")
 	local l = d:GetLayout()
 	local width = 1080
-	d.w = {} -- widgets, wTable?
+	d.w = {} -- widgets
 	d.what = MOHO.MSG_BASE
+	d.iSel = false
 
 	l:AddPadding(-8)
 	l:PushH(LM.GUI.ALIGN_TOP, 0)
-		l:PushV(LM.GUI.ALIGN_FILL, 0)
+		l:PushV(LM.GUI.ALIGN_FILL, 2)
 			--[[
 			d.i = LM.GUI.RadioButton(" ℹ ", self.DLOG_UPDATE)
 			d.i:SetToolTip("Help according to: " .. "v0.4.0")
@@ -4625,131 +4628,109 @@ function LS_ShapesWindow.h:new()
 			l:AddChild(d.i, LM.GUI.ALIGN_LEFT, 0) d.w[0] = d.i
 			l:AddPadding(90)
 			--]]
+			l:AddPadding(113)
+			d.i1_1 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.1", true, self.DLOG_UPDATE + 1, true) -- Unicode Char: Figure Space " " (U+2007)
+			l:AddChild(d.i1_1, LM.GUI.ALIGN_CENTER, 12) d.w[1] = d.i1_1
+			d.i1_2 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.2", true, self.DLOG_UPDATE + 2, true)
+			l:AddChild(d.i1_2, LM.GUI.ALIGN_CENTER, 0) d.w[2] = d.i1_2
 
-			l:AddPadding(112)
-			d.i1_1 = LM.GUI.RadioButton(" 1.1", self.DLOG_UPDATE + 1) d.w[1] = d.i1_1 -- Unicode Char: Figure Space " " (U+2007)
-			l:AddChild(d.i1_1, LM.GUI.ALIGN_LEFT, 0)
-			l:AddPadding(-3)
-			d.i1_2 = LM.GUI.RadioButton(" 1.2", self.DLOG_UPDATE + 2)
-			l:AddChild(d.i1_2, LM.GUI.ALIGN_LEFT, 0) d.w[2] = d.i1_2
+			l:AddPadding(0) l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, -2)
 
-			l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0)	l:AddPadding(-2)
+			d.i1_3 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.3", true, self.DLOG_UPDATE + 3, true)
+			l:AddChild(d.i1_3, LM.GUI.ALIGN_CENTER, 0) d.w[3] = d.i1_3
+			d.i1_4 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.4", true, self.DLOG_UPDATE + 4, true)
+			l:AddChild(d.i1_4, LM.GUI.ALIGN_CENTER, 0) d.w[4] = d.i1_4
+			d.i1_5 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.5", true, self.DLOG_UPDATE + 5, true)
+			l:AddChild(d.i1_5, LM.GUI.ALIGN_CENTER, 0) d.w[5] = d.i1_5
 
-			d.i1_3 = LM.GUI.RadioButton(" 1.3", self.DLOG_UPDATE + 3)
-			l:AddChild(d.i1_3, LM.GUI.ALIGN_LEFT, 0) d.w[3] = d.i1_3
-			l:AddPadding(-3)
-			d.i1_4 = LM.GUI.RadioButton(" 1.4", self.DLOG_UPDATE + 4)
-			l:AddChild(d.i1_4, LM.GUI.ALIGN_LEFT, 0) d.w[4] = d.i1_4
-			l:AddPadding(-3)
-			d.i1_5 = LM.GUI.RadioButton(" 1.5", self.DLOG_UPDATE + 5)
-			l:AddChild(d.i1_5, LM.GUI.ALIGN_LEFT, 0) d.w[5] = d.i1_5
+			l:AddPadding(0) l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, -2)
 
-			l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0) l:AddPadding(-2)
+			d.i1_6 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.6", true, self.DLOG_UPDATE + 6, true)
+			l:AddChild(d.i1_6, LM.GUI.ALIGN_CENTER, 0) d.w[6] = d.i1_6
+			d.i1_7 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.7", true, self.DLOG_UPDATE + 7, true)
+			l:AddChild(d.i1_7, LM.GUI.ALIGN_CENTER, 0) d.w[7] = d.i1_7
+			d.i1_8 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.8", true, self.DLOG_UPDATE + 8, true)
+			l:AddChild(d.i1_8, LM.GUI.ALIGN_CENTER, 0) d.w[8] = d.i1_8
+			d.i1_9 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.9", true, self.DLOG_UPDATE + 9, true)
+			l:AddChild(d.i1_9, LM.GUI.ALIGN_CENTER, 0) d.w[9] = d.i1_9
 
-			d.i1_6 = LM.GUI.RadioButton(" 1.6", self.DLOG_UPDATE + 6)
-			l:AddChild(d.i1_6, LM.GUI.ALIGN_LEFT, 0) d.w[6] = d.i1_6
-			l:AddPadding(-3)
-			d.i1_7 = LM.GUI.RadioButton(" 1.7", self.DLOG_UPDATE + 7)
-			l:AddChild(d.i1_7, LM.GUI.ALIGN_LEFT, 0) d.w[7] = d.i1_7
-			l:AddPadding(-3)
-			d.i1_8 = LM.GUI.RadioButton(" 1.8", self.DLOG_UPDATE + 8)
-			l:AddChild(d.i1_8, LM.GUI.ALIGN_LEFT, 0) d.w[8] = d.i1_8
-			l:AddPadding(-3)
-			d.i1_9 = LM.GUI.RadioButton(" 1.9", self.DLOG_UPDATE + 9)
-			l:AddChild(d.i1_9, LM.GUI.ALIGN_LEFT, 0) d.w[9] = d.i1_9
+			l:AddPadding(0) l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, -2)
 
-			l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0) l:AddPadding(-2)
+			d.i1_10 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.10", true, self.DLOG_UPDATE + 10, true)
+			l:AddChild(d.i1_10, LM.GUI.ALIGN_CENTER, 0) d.w[10] = d.i1_10
 
-			d.i1_10 = LM.GUI.RadioButton("1.10", self.DLOG_UPDATE + 10)
-			l:AddChild(d.i1_10, LM.GUI.ALIGN_LEFT, 0) d.w[10] = d.i1_10
+			l:AddPadding(0) l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, -2)
 
-			l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0) l:AddPadding(-2)
+			d.i1_11 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.11", true, self.DLOG_UPDATE + 11, true)
+			l:AddChild(d.i1_11, LM.GUI.ALIGN_CENTER, 0) d.w[11] = d.i1_11
+			d.i1_12 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.12", true, self.DLOG_UPDATE + 12, true)
+			l:AddChild(d.i1_12, LM.GUI.ALIGN_CENTER, 0) d.w[12] = d.i1_12
+			d.i1_13 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.13", true, self.DLOG_UPDATE + 13, true)
+			l:AddChild(d.i1_13, LM.GUI.ALIGN_CENTER, 0) d.w[13] = d.i1_13
 
-			d.i1_11 = LM.GUI.RadioButton("1.11", self.DLOG_UPDATE + 11)
-			l:AddChild(d.i1_11, LM.GUI.ALIGN_LEFT, 0) d.w[11] = d.i1_11
-			l:AddPadding(-3)
-			d.i1_12 = LM.GUI.RadioButton("1.12", self.DLOG_UPDATE + 12)
-			l:AddChild(d.i1_12, LM.GUI.ALIGN_LEFT, 0) d.w[12] = d.i1_12
-			l:AddPadding(-3)
-			d.i1_13 = LM.GUI.RadioButton("1.13", self.DLOG_UPDATE + 13)
-			l:AddChild(d.i1_13, LM.GUI.ALIGN_LEFT, 0) d.w[13] = d.i1_13
+			l:AddPadding(0) l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, -2)
 
-			l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0) l:AddPadding(-2)
+			d.i1_14 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "1.14", true, self.DLOG_UPDATE + 14, true)
+			l:AddChild(d.i1_14, LM.GUI.ALIGN_CENTER, 0) d.w[14] = d.i1_14
 
-			d.i1_14 = LM.GUI.RadioButton("1.14", self.DLOG_UPDATE + 14)
-			l:AddChild(d.i1_14, LM.GUI.ALIGN_LEFT, 0) d.w[14] = d.i1_14
+			l:AddPadding(289)
 
-			l:AddPadding(286)
+			d.i2_1 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "2.1", true, self.DLOG_UPDATE + 15, true)
+			l:AddChild(d.i2_1, LM.GUI.ALIGN_CENTER, 0) d.w[15] = d.i2_1
+			d.i2_2 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "2.2", true, self.DLOG_UPDATE + 16, true)
+			l:AddChild(d.i2_2, LM.GUI.ALIGN_CENTER, 0) d.w[16] = d.i2_2
+			d.i2_3 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "2.3", true, self.DLOG_UPDATE + 17, true)
+			l:AddChild(d.i2_3, LM.GUI.ALIGN_CENTER, 0) d.w[17] = d.i2_3
+			d.i2_4 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "2.4", true, self.DLOG_UPDATE + 18, true)
+			l:AddChild(d.i2_4, LM.GUI.ALIGN_CENTER, 0) d.w[18] = d.i2_4
+			d.i2_5 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "2.5", true, self.DLOG_UPDATE + 19, true)
+			l:AddChild(d.i2_5, LM.GUI.ALIGN_CENTER, 0) d.w[19] = d.i2_5
 
-			d.i2_1 = LM.GUI.RadioButton(" 2.1", self.DLOG_UPDATE + 15)
-			l:AddChild(d.i2_1, LM.GUI.ALIGN_LEFT, 0) d.w[15] = d.i2_1
-			l:AddPadding(-3)
-			d.i2_2 = LM.GUI.RadioButton(" 2.2", self.DLOG_UPDATE + 16)
-			l:AddChild(d.i2_2, LM.GUI.ALIGN_LEFT, 0) d.w[16] = d.i2_2
-			l:AddPadding(-3)
-			d.i2_3 = LM.GUI.RadioButton(" 2.3", self.DLOG_UPDATE + 17)
-			l:AddChild(d.i2_3, LM.GUI.ALIGN_LEFT, 0) d.w[17] = d.i2_3
-			l:AddPadding(-3)
-			d.i2_4 = LM.GUI.RadioButton(" 2.4", self.DLOG_UPDATE + 18)
-			l:AddChild(d.i2_4, LM.GUI.ALIGN_LEFT, 0) d.w[18] = d.i2_4
-			l:AddPadding(-3)
-			d.i2_5 = LM.GUI.RadioButton(" 2.5", self.DLOG_UPDATE + 19)
-			l:AddChild(d.i2_5, LM.GUI.ALIGN_LEFT, 0) d.w[19] = d.i2_5
+			l:AddPadding(0) l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, -2)
 
-			l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0) l:AddPadding(-2)
+			l:AddPadding(LS_ShapesWindow.Round(d.i1_1:Height() * 3 / 2))
+			d.i2_6 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "2.6", true, self.DLOG_UPDATE + 20, true)
+			l:AddChild(d.i2_6, LM.GUI.ALIGN_CENTER, 0) d.w[20] = d.i2_6
+			l:AddPadding(LS_ShapesWindow.Round(d.i1_1:Height() * 3 / 2))
 
-			d.i2_6 = LM.GUI.RadioButton(" 2.6", self.DLOG_UPDATE + 20)
-			l:AddChild(d.i2_6, LM.GUI.ALIGN_LEFT, 0) d.w[20] = d.i2_6
-			l:AddPadding(-3)
-			d.i2_7 = LM.GUI.RadioButton(" 2.7", self.DLOG_UPDATE + 21)
-			l:AddChild(d.i2_7, LM.GUI.ALIGN_LEFT, 0) d.w[21] = d.i2_7
-			l:AddPadding(-3)
-			d.i2_8 = LM.GUI.RadioButton(" 2.8", self.DLOG_UPDATE + 22)
-			l:AddChild(d.i2_8, LM.GUI.ALIGN_LEFT, 0) d.w[22] = d.i2_8
-			l:AddPadding(-3)
-			d.i2_9 = LM.GUI.RadioButton(" 2.9", self.DLOG_UPDATE + 23)
-			l:AddChild(d.i2_9, LM.GUI.ALIGN_LEFT, 0) d.w[23] = d.i2_9
+			l:AddPadding(0) l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, -2)
 
-			l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0) l:AddPadding(-2)
+			d.i2_7 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "2.7", true, self.DLOG_UPDATE + 21, true)
+			l:AddChild(d.i2_7, LM.GUI.ALIGN_CENTER, 0) d.w[21] = d.i2_7
 
-			d.i2_10 = LM.GUI.RadioButton("2.10", self.DLOG_UPDATE + 24)
-			l:AddChild(d.i2_10, LM.GUI.ALIGN_LEFT, 0) d.w[24] = d.i2_10
+			l:AddPadding(0) l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, -2)
 
-			l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0) l:AddPadding(-2)
-
-			l:AddPadding(d.i1_1:Height() - 1)
-			d.i2_11 = LM.GUI.RadioButton("2.11", self.DLOG_UPDATE + 25)  -- Unicode Char: Punctuation Space " " (U+2008)
-			l:AddChild(d.i2_11, LM.GUI.ALIGN_LEFT, 0) d.w[25] = d.i2_11
+			l:AddPadding(d.i1_1:Height())
+			d.i2_11 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "2.8", true, self.DLOG_UPDATE + 22, true) -- Unicode Char: Punctuation Space " " (U+2008)
+			l:AddChild(d.i2_11, LM.GUI.ALIGN_CENTER, 0) d.w[22] = d.i2_11
 			l:AddPadding(-1)
 		l:Pop()
 
 		l:AddPadding(4)
 		d.helpImgBut = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "HELP", "", false, LM.GUI.MSG_CANCEL, false)
 		d.helpImgBut:SetCursor(LM.GUI.Cursor(LS_ShapesWindow.resources .. "ls_cursor_cancel", 0, 0))
-		l:AddChild(d.helpImgBut, LM.GUI.ALIGN_FILL, 0)
-		--l:AddPadding(d.i1_1:Width())
+		l:AddChild(d.helpImgBut, LM.GUI.ALIGN_CENTER, 0)
+		l:AddPadding(4)
 
-		l:PushV(LM.GUI.ALIGN_FILL, 0)
+		l:PushV(LM.GUI.ALIGN_FILL, 2)
 			l:AddPadding(530)
-			d.i3_1 = LM.GUI.RadioButton(" 3.1", self.DLOG_UPDATE + 26)
-			l:AddChild(d.i3_1, LM.GUI.ALIGN_LEFT, 4) d.w[26] = d.i3_1
+			d.i3_1 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "3.1", true, self.DLOG_UPDATE + 23, true)
+			l:AddChild(d.i3_1, LM.GUI.ALIGN_CENTER, 12) d.w[23] = d.i3_1
 
-			l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0)	l:AddPadding(-2)
+			l:AddPadding(0) l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, -2)
 
-			d.i3_2 = LM.GUI.RadioButton(" 3.2", self.DLOG_UPDATE + 27)
-			l:AddChild(d.i3_2, LM.GUI.ALIGN_LEFT, 4) d.w[27] = d.i3_2
+			d.i3_2 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "3.2", true, self.DLOG_UPDATE + 24, true)
+			l:AddChild(d.i3_2, LM.GUI.ALIGN_CENTER, 0) d.w[24] = d.i3_2
+			l:AddPadding(178)
 
-			l:AddPadding(176)
+			d.i3_3 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "3.3", true, self.DLOG_UPDATE + 25, true)
+			l:AddChild(d.i3_3, LM.GUI.ALIGN_CENTER, 0) d.w[25] = d.i3_3
+			l:AddPadding(88)
 
-			d.i3_3 = LM.GUI.RadioButton(" 3.3", self.DLOG_UPDATE + 28)
-			l:AddChild(d.i3_3, LM.GUI.ALIGN_LEFT, 4) d.w[28] = d.i3_3
-			l:AddPadding(-3)
+			l:AddPadding(0) l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, -2)
 
-			l:AddPadding(95)
-			l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0)	l:AddPadding(-2)
-
-			d.i3_4 = LM.GUI.RadioButton(" 3.4", self.DLOG_UPDATE + 29)
-			l:AddChild(d.i3_4, LM.GUI.ALIGN_LEFT, 4) d.w[29] = d.i3_4
+			d.i3_4 = LM.GUI.ImageButton(LS_ShapesWindow.resources .. "ls_info", "3.4", true, self.DLOG_UPDATE + 26, true)
+			l:AddChild(d.i3_4, LM.GUI.ALIGN_CENTER, 0) d.w[26] = d.i3_4
 		l:Pop()
 	l:Pop()
 
@@ -4757,34 +4738,27 @@ function LS_ShapesWindow.h:new()
 	l:AddChild(LM.GUI.Divider(false), LM.GUI.ALIGN_FILL, 0)
 	l:AddPadding(-14)
 
-	width = (d.i1_1:Width() * 2) - 8 + d.helpImgBut:Width() - 8
-	l:PushV(LM.GUI.ALIGN_LEFT, 0)
-		l:PushH(LM.GUI.ALIGN_FILL)
-			d.i = LM.GUI.RadioButton("", self.DLOG_UPDATE)
-			d.i:SetToolTip("Help according to: " .. "v0.4.0")
-			d.i:SetCursor(LM.GUI.Cursor(LS_ShapesWindow.resources .. "ls_cursor_help", 0, 0))
-			d.i:SetValue(true)
-			l:AddChild(d.i, LM.GUI.ALIGN_LEFT, 0) d.w[0] = d.i
-			l:AddPadding(-17)
-			d.t1 = LM.GUI.DynamicText("ℹ " .. MOHO.Localize("/LS/ShapesWindow/HelpInfo=Info"), width)
-			l:AddChild(d.t1, LM.GUI.ALIGN_LEFT, 0) --18
-		l:Pop()
-		l:PushH(LM.GUI.ALIGN_FILL)
-			d.close = LM.GUI.ShortButton(MOHO.Localize("/Menus/File/Close=Close"), LM.GUI.MSG_CANCEL)
-			l:AddPadding(14)
-			d.t2 = LM.GUI.DynamicText("💡 " .. MOHO.Localize("/LS/ShapesWindow/HelpTip=Tip"), width - 16 - d.close:Width())
-			l:AddChild(d.t2, LM.GUI.ALIGN_BOTTOM, 0)
-			l:AddPadding(0)
-			l:AddChild(d.close, LM.GUI.ALIGN_BOTTOM, 0)
-			l:AddPadding(-6)
-		l:Pop()
-		--[[
+	width = (d.i1_1:Width() * 2) + d.helpImgBut:Width() + 4
+	l:PushH(LM.GUI.ALIGN_FILL)
+		d.t1i = LM.GUI.DynamicText("ℹ ", 0)
+		d.t1i:SetToolTip("Help according to: " .. "v0.4.0")
+		d.t1i:SetCursor(LM.GUI.Cursor(LS_ShapesWindow.resources .. "ls_cursor_help", 0, 0))
+		l:AddChild(d.t1i, LM.GUI.ALIGN_LEFT, 0)
+		l:AddPadding(-17)
+		d.t1 = LM.GUI.DynamicText("ℹ " .. MOHO.Localize("/LS/ShapesWindow/HelpInfo=Info"), width)
+		l:AddChild(d.t1, LM.GUI.ALIGN_LEFT, 0) --18
+	l:Pop()
+
+	l:AddPadding(-16)
+
+	l:PushH(LM.GUI.ALIGN_FILL)
+		d.close = LM.GUI.ShortButton(MOHO.Localize("/Menus/File/Close=Close"), LM.GUI.MSG_CANCEL)
+		l:AddPadding(-7)
+		d.t2 = LM.GUI.DynamicText("💡 " .. MOHO.Localize("/LS/ShapesWindow/HelpTip=Tip"), width + 4 - d.close:Width())
+		l:AddChild(d.t2, LM.GUI.ALIGN_BOTTOM, 0)
 		l:AddPadding(0)
-		d.info = LM.GUI.StaticText("ℹ")
-		d.info:SetToolTip("Help according to: " .. "v0.3.1")
-		d.info:SetCursor(LM.GUI.Cursor(LS_ShapesWindow.resources .. "ls_cursor_help", 0, 0))
-		l:AddChild(d.info, LM.GUI.ALIGN_CENTER, 0)
-		--]]
+		l:AddChild(d.close, LM.GUI.ALIGN_BOTTOM, 0)
+		l:AddPadding(-1)
 	l:Pop()
 	l:AddPadding(-1280) --10
 
@@ -4794,94 +4768,104 @@ end
 function LS_ShapesWindow.h:UpdateWidgets()
 	self.what = self.what ~= nil and self.what or MOHO.MSG_BASE
 
-	self.t1:SetValue("ℹ " .. MOHO.Localize("/LS/ShapesWindow/HelpInfo=Click on a label to get the description of its adjacent element. Most widgets has a tootip anyway (specially if Main Menu's \"Begginer's Mode\" entry is checked). Press <Esc / Enter / Button> to close..."))
-	self.t2:SetValue("💡 " .. MOHO.Localize("/LS/ShapesWindow/HelpTip=The logic behind \"Modes\" is similar to Moho's Style window; if any shape is selected: SHAPE mode, if editing a style: STYLE mode, otherwise: DEFAULT (but switchable at will, plus with a GROUP mode by holding <Alt>)."))
+	if not self.iSel then
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/HelpInfo=Click on an info button to get the description of its adjacent element. Most widgets has a tootip anyway (specially if Main Menu's \"Begginer's Mode\" entry is checked). Press <Esc / Enter / Button> to close..."))
+		self.t2:SetValue("💡 " .. MOHO.Localize("/LS/ShapesWindow/HelpTip=The logic behind \"Modes\" is similar to Moho's Style window; if any shape is selected: SHAPE mode, if editing a style: STYLE mode, otherwise: DEFAULT (but switchable at will, plus with a GROUP mode by holding <Alt>)."))
+	end
 end
 
 function LS_ShapesWindow.h:HandleMessage(what) --print("LS_ShapesWindow.h:OnOK " , os.clock())
 	self.what = what or MOHO.MSG_BASE
+	self.iSel = false
 	self.t2:SetValue("") --💡ℹ⚠💥🧪❓📝🎉
 
-	for i = 0, #self.w do
-		if self.w[i] ~= niil and i ~= what - MOHO.MSG_BASE then
+	for i = 1, #self.w do
+		if self.w[i] ~= nil and i ~= what - MOHO.MSG_BASE then
 			self.w[i]:SetValue(false)
 		end
+		self.iSel = self.iSel == false and self.w[i]:Value() == true and self.w[i]:Value() or self.iSel
 	end
 
 	if (what == self.DLOG_UPDATE) then
-		self:UpdateWidgets()
-	elseif (what == self.DLOG_UPDATE + 1) then
-		self.t1:SetValue("1.1 - It ensures \"Shapes Window\" always match status with Moho's Style window (at some click response time cost).")
+		--self:UpdateWidgets()
+	elseif (what == self.DLOG_UPDATE + 1) then	-- 1. Main Menu
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_1=1.1 - It ensures \"Shapes Window\" always match status with Moho's Style window (at some click response time cost)."))
 	elseif (what == self.DLOG_UPDATE + 2) then
-		self.t1:SetValue("1.2 - Shapes in vector layers like \"Mesh Warps\" won't be listed (Curver and Auto-triangulated layers are always ignored anyway).")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_2=1.2 - Shapes in vector layers like \"Mesh Warps\" won't be listed (Curver and Auto-triangulated layers are always ignored anyway)."))
 	elseif (what == self.DLOG_UPDATE + 3) then
-		self.t1:SetValue("1.3 - If active, the window will appear upon opening the first document (intended to work in partnership with option below).")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_3=1.3 - If active, the window will appear upon opening the first document (intended to work in partnership with option below)."))
 	elseif (what == self.DLOG_UPDATE + 4) then
-		self.t1:SetValue("1.4 - Show or hide the button in \"Tools\" palette, which may help to save some space there (once hidden, you'll have to go to \"Scripts -> Lost Scripts - Shapes Window\" to open).")
-		self.t2:SetValue("💡 A showing \"Tools\" button allows open and close by a click and/or with a custom keyboard shortcut (e.g. <Shift + S>)")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_4=1.4 -Whether or not the button appears in the \"Tools\" palette (hiding it can help save space there, but then you'll have to go to \"Scripts » - Lost Scripts » Shapes Window\" to open)."))
+		self.t2:SetValue("💡 " .. MOHO.Localize("/LS/ShapesWindow/Tip1_4=Having it visible not only allows you to open & close it with a click but also by a custom keyboard shortcut (e.g., setting <Shift + S> to it from \"Edit » Edit Keyboard Shortcuts...\")."))
 	elseif (what == self.DLOG_UPDATE + 5) then
-		self.t1:SetValue("1.5 - Enables/disables certain tooltips that may be useful at the beginning but annoying in the end...")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_5=1.5 - Enables/disables certain tooltips that may be useful at the beginning but annoying in the end..."))
 	--------
 	elseif (what == self.DLOG_UPDATE + 6) then
-		self.t1:SetValue("1.6 - Hide or show widgets related to shape/style/group creation, either because you don't need them or to save vertical space.")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_6=1.6 - Hide or show widgets related to shape/style/group creation, either because you don't need them or to save vertical space."))
 	elseif (what == self.DLOG_UPDATE + 7) then
-		self.t1:SetValue("1.7 - Make buttons, and therefore clickable area, larger (with the advantage of increasing Swatches and shape preview area a little bit too).")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_7=1.7 - Make buttons, and therefore clickable area, larger (with the advantage of increasing Swatches and shape preview area a little bit too)."))
 	elseif (what == self.DLOG_UPDATE + 8) then
-		self.t1:SetValue("1.8 - Make the window as taller as possible (accordingly to viewport height).")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_8=1.8 - Make the window as taller as possible (accordingly to current viewport height)."))
 	elseif (what == self.DLOG_UPDATE + 9) then
-		self.t1:SetValue("1.9 - Provides some info about selected item/s, but uncheck it should you want to save some vertical space.")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_9=1.9 - Provides some info about selected item/s, but uncheck it should you want to save some vertical space."))
 	--------
 	elseif (what == self.DLOG_UPDATE + 10) then
-		self.t1:SetValue("1.10 - Restores the script to its factory settings.")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_10=1.10 - Restores the script to its factory settings."))
 	--------
 	elseif (what == self.DLOG_UPDATE + 11) then
-		self.t1:SetValue("1.11 - Yep, it opens this help dialog :D")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_11=1.11 - Yep, it opens this help dialog :D"))
 	elseif (what == self.DLOG_UPDATE + 12) then
-		self.t1:SetValue("1.12 - Visit the script's webpage at \"www.lost-scripts.github.io\" for more details, info, or just to discuss.")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_12=1.12 - Visit the script's webpage at \"www.lost-scripts.github.io\" for more details, info, or just to discuss."))
 	elseif (what == self.DLOG_UPDATE + 13) then
-		self.t1:SetValue("1.13 - It takes you to the page with the latest release of the script so you can compare versions.")
-		self.t2:SetValue("💡 Yours should appear at the end of the URL for ease comparison.")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_13=1.13 - It takes you to the page with the latest release of the script so you can compare versions."))
+		self.t2:SetValue("💡 " .. MOHO.Localize("/LS/ShapesWindow/Tip1_13=Yours should appear at the end of the URL for ease comparison."))
 	--------
 	elseif (what == self.DLOG_UPDATE + 14) then
-		self.t1:SetValue("1.14 - Opens a dialog from where you can check information such as copyright/license, credits, version...")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help1_14=1.14 - Opens a dialog from where you can check information such as copyright/license, credits, version..."))
 
-	elseif (what == self.DLOG_UPDATE + 15) then
-		self.t1:SetValue("2.1 - Controls act on fill color/opacity (auto-activates upon clicking on a fill with the Select Shape tool).")
+	elseif (what == self.DLOG_UPDATE + 15) then	-- 2. Tweak Menu
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help2_1=2.1 - Controls act on fill color/opacity (auto-activates upon clicking on a fill with the Select Shape tool)."))
 	elseif (what == self.DLOG_UPDATE + 16) then
-		self.t1:SetValue("2.2 - Controls act on stroke color/opacity (auto-activates upon clicking near a stroke with the Select Shape tool).")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help2_2=2.2 - Controls act on stroke color/opacity (auto-activates upon clicking near a stroke with the Select Shape tool)."))
 	elseif (what == self.DLOG_UPDATE + 17) then
-		self.t1:SetValue("2.3 - Controls act on Shape FX handles \"preciselly\" (auto-activates upon clicking on a shape FX handle with the Select Shape tool).")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help2_3=2.3 - Controls act on Shape FX handles \"preciselly\" (auto-activates upon clicking on a shape FX handle with the Select Shape tool)."))
 	elseif (what == self.DLOG_UPDATE + 18) then
-		self.t1:SetValue("2.4 - Allows recoloring selected shapes' fill/stroke (as per OPTIONS below) in the classic RGBα fashion, hold <alt> upon pressing \"Apply\" to randomize coloring!")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help2_4=2.4 - Allows recoloring selected shapes' fill/stroke (as per OPTIONS below) in the classic RGBα fashion, hold <alt> upon pressing \"Apply\" to randomize coloring!"))
 	elseif (what == self.DLOG_UPDATE + 19) then
-		self.t1:SetValue("2.5 - Allows recoloring selected shapes' fill/stroke (as per OPTIONS below) in a much more intuitive HSB (Hue/Saturation/Brightness) way, hold <alt> upon pressing \"Apply\" to randomize coloring!")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help2_5=2.5 - Allows recoloring selected shapes' fill/stroke (as per OPTIONS below) in a much more intuitive HSB (Hue/Saturation/Brightness) way, hold <alt> upon pressing \"Apply\" to randomize coloring!"))
 	--------
-	elseif (what >= self.DLOG_UPDATE + 20 and what <= self.DLOG_UPDATE + 24) then
-		self.t1:SetValue("2.6~10 - Several color related utilities...")
+	elseif (what == self.DLOG_UPDATE + 20) then
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help2_6=2.6 - Color related actions..."))
 	--------
-	elseif (what == self.DLOG_UPDATE + 25) then
-		self.t1:SetValue("2.11 - Whether if recoloring should just affect fills, strokes or both.")
+	elseif (what == self.DLOG_UPDATE + 21) then
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help2_7=2.7 - Color related utilities..."))
+	--------
+	elseif (what == self.DLOG_UPDATE + 22) then
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help2_8=2.8 - OPTIONS: Whether if recoloring should just affect fills, strokes or both."))
 
+	elseif (what == self.DLOG_UPDATE + 23) then	-- 3. Swatch Menu
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help3_1=3.1 - Hides Swatch and (Re)color controls, which can help saving quite vertical space..."))
+	--------
+	elseif (what == self.DLOG_UPDATE + 24) then
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help3_2=3.2 - Factory Swatches list."))
+		self.t2:SetValue("⚠ " .. MOHO.Localize("/LS/ShapesWindow/Tip3_2_=It's not recommended to modify these ones as they may be overwritten upon reinstalling or updating the script."))
+	elseif (what == self.DLOG_UPDATE + 25) then
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help3_3=3.3 - Custom Swatches list. Their place is your Custom Content Folder's \"Swatches\" directory and they are the ones you can create or modify at your convenience."))
 	elseif (what == self.DLOG_UPDATE + 26) then
-		self.t1:SetValue("3.1 - Hides Swatch and (Re)color controls, which can help saving quite vertical space...")
 	--------
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help3_4=3.4 - Opens your Custom Swatches folder."))
+		self.t2:SetValue("💡 " .. MOHO.Localize("/LS/ShapesWindow/Tip3_4=You can copy there any Factory Swatches from the script's ScriptResources directory as a starting point for your own ones."))
 	elseif (what == self.DLOG_UPDATE + 27) then
-		self.t1:SetValue("3.2 - Factory Swatches list. ⚠ WARNING: It's not recommended to modify these ones because they may be overwritten upon installing script updates.")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help3_5=3.5 - WIP!"))
 	elseif (what == self.DLOG_UPDATE + 28) then
-		self.t1:SetValue("3.3 - Custom Swatches list. Their place is your Custom Content Folder's \"Swatches\" directory and they are the ones you can create or modify at your convenience.")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help3_6=3.6 - Opens current Custom Swatch to modify or create new ones. They are simple Moho® projects which can contain anythig, including a pose called \"SLIDER\" for user interaction!"))
 	elseif (what == self.DLOG_UPDATE + 29) then
-	--------
-		self.t1:SetValue("3.4 - Opens your Custom Swatches folder. 💡 TIP: You can copy there any Factory Swatches from the script's ScriptResources directory as a starting point for your own ones.")
-	elseif (what == self.DLOG_UPDATE + 30) then
-		self.t1:SetValue("3.5 - WIP!")
-	elseif (what == self.DLOG_UPDATE + 31) then
-		self.t1:SetValue("3.6 - Opens current Custom Swatch to modify or create new ones. They are simple Moho® projects which can contain anythig, including a pose called \"SLIDER\" for user interaction!")
-	elseif (what == self.DLOG_UPDATE + 32) then
-		self.t1:SetValue("3.7 - Allows you to reload Swatches thus changes are available immediately after adding/modifying any of them.")
+		self.t1:SetValue(MOHO.Localize("/LS/ShapesWindow/Help3_7=3.7 - Allows you to reload Swatches thus changes are available immediately after adding/modifying any of them."))
 	elseif (what == LM.GUI.MSG_CANCEL or what == LM.GUI.MSG_OK) then
 		--MOHO.ScriptInterface:Click()
+		return
 	end
-	--self:UpdateWidgets()
+	self:UpdateWidgets()
 end
 
 function LS_ShapesWindow.h:OnOK() --print("LS_ShapesWindow.h:OnOK " , os.clock())
@@ -5700,7 +5684,7 @@ function LS_ShapesWindow.BiasedRandom (prob, range, n) --(int, int, int) int
 end
 
 function LS_ShapesWindow.Round(x, n) --(float, int) int
-	return tonumber(string.format("%." .. n .. "f", x))
+	return tonumber(string.format("%." .. (n or 0) .. "f", x))
 end
 
 function LS_ShapesWindow.Abbreviator(s) --(char) char, int
