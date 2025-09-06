@@ -413,7 +413,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 			--d.itemPreview:SetToolTip(MOHO.Localize("/Windows/Style/SHAPE=SHAPE"):lower():gsub("^%l", string.upper))
 			l:AddChild(d.itemPreview)
 
-			d.itemVisCheck = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_vis_" .. (math.random() < 0.5 and 0 or math.random(1, 5)), MOHO.Localize("/LS/Shapes/ShapeVisibility=Shape Visibility (Hide/Unhide)"), true, self.VIS, false)
+			d.itemVisCheck = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_visibility_" .. (math.random() < 0.5 and 0 or math.random(1, 5)), MOHO.Localize("/LS/Shapes/ShapeVisibility=Shape Visibility (Hide/Unhide)"), true, self.VIS, false)
 			d.itemName = LM.GUI.TextControl(mainW - d.itemVisCheck:Width() - 3, "Sel. Item Name", self.NAME, -1) --20240207-2030: wat? -1 instead of LM.GUI.FIELD_TEXT seems to make the enter key work??
 			d.itemName:SetValue("")
 			l:AddChild(d.itemName, LM.GUI.ALIGN_FILL, 0)
@@ -439,7 +439,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				if LS_Shapes.largeButtons then l:AddPadding(-1) l:AddChild(LM.GUI.TextList(butW + butW1, 0, 0), LM.GUI.ALIGN_FILL, 0) l:AddPadding(1) end
 				
 				l:AddPadding(3)
-				d.raise = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_raise", "", false, self.RAISE, true)
+				d.raise = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_order_raise", "", false, self.RAISE, true)
 				d.raise:SetAlternateMessage(self.RAISE_ALT)
 				l:AddChild(d.raise, LM.GUI.ALIGN_FILL, 0)
 
@@ -451,24 +451,24 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:AddChild(d.animOrder, LM.GUI.ALIGN_FILL, 0)
 				l:AddPadding(2)
 
-				d.lower = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_lower", "", false, self.LOWER, true)
+				d.lower = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_order_lower", "", false, self.LOWER, true)
 				d.lower:SetAlternateMessage(self.LOWER_ALT)
 				l:AddChild(d.lower, LM.GUI.ALIGN_FILL, 0)
 			l:Pop() --V
 			l:AddPadding(-butW - butW1)
 
 			l:PushV(LM.GUI.ALIGN_BOTTOM, 0)
-				d.selectAllBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_sel_all", MOHO.Localize("/Menus/Edit/SelectAll=Select All") .. " (<alt> " .. MOHO.Localize("/Menus/Edit/SelectInverse=Select Inverse") .. ")", false, self.SELECTALL, true) --<alt> Select Cluster
+				d.selectAllBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_sel_all", MOHO.Localize("/Menus/Edit/SelectAll=Select All") .. " (<alt> " .. MOHO.Localize("/Menus/Edit/SelectInverse=Select Inverse") .. ")", false, self.SELECTALL, true) --<alt> Select Cluster
 				d.selectAllBut:SetAlternateMessage(self.SELECTALL_ALT)
 				l:AddChild(d.selectAllBut, LM.GUI.ALIGN_FILL)
 				l:AddPadding(3)
 
-				d.selectMatchingBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_sel_similar", "", false, self.SELECTMATCHING, true)
+				d.selectMatchingBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_sel_similar", "", false, self.SELECTMATCHING, true)
 				d.selectMatchingBut:SetAlternateMessage(self.SELECTMATCHING_ALT)
 				l:AddChild(d.selectMatchingBut, LM.GUI.ALIGN_FILL)
 				l:AddPadding(3)
 
-				d.selectPtBasedBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_sel_pt_based", MOHO.Localize("/LS/Shapes/PointBasedSelection=Point-Based Selection (<alt> Keep Active)"), true, self.SELECTPTBASED, true)
+				d.selectPtBasedBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_sel_pt_based", MOHO.Localize("/LS/Shapes/PointBasedSelection=Point-Based Selection (<alt> Keep Active)"), true, self.SELECTPTBASED, true)
 				d.selectPtBasedBut:SetAlternateMessage(self.SELECTPTBASED_ALT)
 				l:AddChild(d.selectPtBasedBut, LM.GUI.ALIGN_FILL)
 				l:AddPadding(3)
@@ -485,7 +485,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:AddChild(d.mergeBut, LM.GUI.ALIGN_FILL, 0)
 				l:AddPadding(3)
 
-				d.deleteBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_delete", MOHO.Localize("/Windows/Style/Delete=Delete"), false, self.DELETE, true) --"<alt> Delete entire Liquid Shape"? 
+				d.deleteBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_delete", MOHO.Localize("/Windows/Style/Delete=Delete"), false, self.DELETE, true) --"<alt> Delete entire Liquid Shape"? 
 				d.deleteBut:SetAlternateMessage(self.DELETE_ALT)
 				l:AddChild(d.deleteBut, LM.GUI.ALIGN_FILL, 0)
 
@@ -493,17 +493,17 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:AddChild(LM.GUI.TextList(butW + butW1, 1, 0), LM.GUI.ALIGN_FILL, 0)
 				l:AddPadding(4)
 
-				d.copyBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_copy", MOHO.Localize("/Windows/Library/Copy=Copy") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/HEXToClipboard=HEX To Clipboard") .. ")", false, self.COPY, true)
+				d.copyBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_edit_copy", MOHO.Localize("/Windows/Library/Copy=Copy") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/HEXToClipboard=HEX To Clipboard") .. ")", false, self.COPY, true)
 				d.copyBut:SetAlternateMessage(self.COPY_ALT)
 				l:AddChild(d.copyBut, LM.GUI.ALIGN_FILL, 0)
 				l:AddPadding(3)
 
-				d.pasteBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_paste", MOHO.Localize("/Windows/Style/Paste=Paste") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/ColorFromClipboard=Color From Clipboard") .. ")", false, self.PASTE, true)
+				d.pasteBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_edit_paste", MOHO.Localize("/Windows/Style/Paste=Paste") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/ColorFromClipboard=Color From Clipboard") .. ")", false, self.PASTE, true)
 				d.pasteBut:SetAlternateMessage(self.PASTE_ALT)
 				l:AddChild(d.pasteBut, LM.GUI.ALIGN_FILL, 0)
 				l:AddPadding(3)
 
-				d.resetBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_reset" , MOHO.Localize("/Windows/Style/Reset=Reset"), false, self.RESET, true)
+				d.resetBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_edit_reset" , MOHO.Localize("/Windows/Style/Reset=Reset"), false, self.RESET, true)
 				d.resetBut:SetAlternateMessage(self.RESET_ALT)
 				d.resetBut:SetToolTip(MOHO.Localize("/Windows/Style/Reset=Reset") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/Full=Full") .. ")")
 				l:AddChild(d.resetBut, LM.GUI.ALIGN_FILL, 0)
@@ -535,25 +535,25 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 		l:PushH(LM.GUI.ALIGN_FILL, 2)
 			l:AddPadding(1)
 			l:PushV(LM.GUI.ALIGN_CENTER, 0)
-				d.combineNormal = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_combine_normal", MOHO.Localize("/Scripts/Tool/SelectShape/Normal=Normal"), true, self.COMBINE_NORMAL, true)
+				d.combineNormal = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_normal", MOHO.Localize("/Scripts/Tool/SelectShape/Normal=Normal"), true, self.COMBINE_NORMAL, true)
 				d.combineNormal.prop = {v = 14, pro = true, tooltip = false} table.insert(d.w, d.combineNormal)
 				l:AddChild(d.combineNormal, LM.GUI.ALIGN_FILL, 0)
 				if LS_Shapes.largeButtons then l:AddChild(LM.GUI.TextList(butW + butW1, 0, 0), LM.GUI.ALIGN_FILL, 0) end
 			l:Pop() --V
 			l:PushV(LM.GUI.ALIGN_CENTER, 0)
-				d.combineAdd = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_combine_add", "⊕ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Add=Add"), true, self.COMBINE_ADD, true) --" (+)"
+				d.combineAdd = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_add", "⊕ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Add=Add"), true, self.COMBINE_ADD, true) --" (+)"
 				d.combineAdd.prop = {v = 14, pro = true, tooltip = false} table.insert(d.w, d.combineAdd)
 				l:AddChild(d.combineAdd, LM.GUI.ALIGN_FILL, 0)
 				if LS_Shapes.largeButtons then l:AddChild(LM.GUI.TextList(butW + butW1, 0, 0), LM.GUI.ALIGN_FILL, 0) end
 			l:Pop() --V
 			l:PushV(LM.GUI.ALIGN_CENTER, 0)
-				d.combineSubtract = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_combine_subtract", "⊖ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Subtract=Subtract"), true, self.COMBINE_SUBTRACT, true) --⊝" (-)"
+				d.combineSubtract = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_subtract", "⊖ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Subtract=Subtract"), true, self.COMBINE_SUBTRACT, true) --⊝" (-)"
 				d.combineSubtract.prop = {v = 14, pro = true, tooltip = false} table.insert(d.w, d.combineSubtract)
 				l:AddChild(d.combineSubtract, LM.GUI.ALIGN_FILL, 0)
 				if LS_Shapes.largeButtons then l:AddChild(LM.GUI.TextList(butW + butW1, 0, 0), LM.GUI.ALIGN_FILL, 0) end
 			l:Pop() --V
 			l:PushV(LM.GUI.ALIGN_CENTER, 0)
-				d.combineIntersect = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_combine_intersect", "⊗ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Clip=Clip"), true, self.COMBINE_INTERSECT, true) --" (×)"
+				d.combineIntersect = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_intersect", "⊗ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Clip=Clip"), true, self.COMBINE_INTERSECT, true) --" (×)"
 				d.combineIntersect.prop = {v = 14, pro = true, tooltip = false} table.insert(d.w, d.combineIntersect)
 				l:AddChild(d.combineIntersect, LM.GUI.ALIGN_FILL, 0)
 				if LS_Shapes.largeButtons then l:AddChild(LM.GUI.TextList(butW + butW1, 0, 0), LM.GUI.ALIGN_FILL, 0) end
@@ -561,7 +561,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 			l:AddPadding(2)
 
 			--if LS_Shapes.largeButtons then l:AddPadding(0) end
-			d.combineBlendBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_combine_blend", MOHO.Localize("/Scripts/Tool/SelectShape/Blend=Blend:"):gsub("[^%w]$", "") .. " (<alt> " .. MOHO.Localize("/Windows/Style/Reset=Reset") .. ")", true, self.COMBINE_BLEND_BUT, true) --Remove any non-alphanumeric ending character
+			d.combineBlendBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_blend", MOHO.Localize("/Scripts/Tool/SelectShape/Blend=Blend:"):gsub("[^%w]$", "") .. " (<alt> " .. MOHO.Localize("/Windows/Style/Reset=Reset") .. ")", true, self.COMBINE_BLEND_BUT, true) --Remove any non-alphanumeric ending character
 			d.combineBlendBut:SetAlternateMessage(self.COMBINE_BLEND_BUT_ALT)
 			d.combineBlendBut.prop = {v = 14, pro = true, tooltip = false} table.insert(d.w, d.combineBlendBut)
 			l:AddChild(d.combineBlendBut, LM.GUI.ALIGN_FILL, 0)
@@ -574,13 +574,13 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 			if true then l:AddPadding(0) end --not LS_Shapes.largeButtons
 
 			l:PushV(LM.GUI.ALIGN_CENTER, 0)
-				d.topBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_select_cluster_top", MOHO.Localize("/Scripts/Tool/SelectShape/SelectTopOfCluster=Select top of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")", false, self.TOP_SHAPE, true)
+				d.topBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_sel_cluster_top", MOHO.Localize("/Scripts/Tool/SelectShape/SelectTopOfCluster=Select top of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")", false, self.TOP_SHAPE, true)
 				d.topBut:SetAlternateMessage(self.TOP_SHAPE_ALT)
 				--d.topBut:SetToolTip(MOHO.Localize("/Scripts/Tool/SelectShape/SelectTopOfCluster=Select top of Liquid Shape"))
 				d.topBut.prop = {v = 14, pro = true, tooltip = false} table.insert(d.w, d.topBut)
 				if true then l:AddChild(d.topBut, LM.GUI.ALIGN_FILL, 0) end --not LS_Shapes.largeButtons
 
-				d.baseBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_select_cluster_bottom", MOHO.Localize("/Scripts/Tool/SelectShape/SelectBottomOfCluster=Select bottom of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")", false, self.BASE_SHAPE, true)
+				d.baseBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_sel_cluster_bottom", MOHO.Localize("/Scripts/Tool/SelectShape/SelectBottomOfCluster=Select bottom of Liquid Shape") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/SelectShape/SelectAll=Select All") .. ")", false, self.BASE_SHAPE, true)
 				d.baseBut:SetAlternateMessage(self.BASE_SHAPE_ALT)
 				--d.baseBut:SetToolTip(MOHO.Localize("/Scripts/Tool/SelectShape/SelectBottomOfCluster=Select bottom of Liquid Shape"))
 				d.baseBut.prop = {v = 14, pro = true, tooltip = false} table.insert(d.w, d.baseBut)
@@ -626,9 +626,9 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:AddPadding(2)
 
 				d.createButtons = {}
-				table.insert(d.createButtons, LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_create_fill", "", false, self.FILLED, true))
-				table.insert(d.createButtons, LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_create_line", "", false, self.OUTLINED, true))
-				table.insert(d.createButtons, LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_create_both", "", false, self.FILLEDOUTLINED, true))
+				table.insert(d.createButtons, LM.GUI.ImageButton(LS_Shapes.resources .. "ls_create_fill", "", false, self.FILLED, true))
+				table.insert(d.createButtons, LM.GUI.ImageButton(LS_Shapes.resources .. "ls_create_line", "", false, self.OUTLINED, true))
+				table.insert(d.createButtons, LM.GUI.ImageButton(LS_Shapes.resources .. "ls_create_both", "", false, self.FILLEDOUTLINED, true))
 				l:AddPadding(0)
 
 				for i, but in ipairs(d.createButtons) do
