@@ -269,8 +269,9 @@ LS_ShapesDialog.APPLY_ALT				= MOHO.MSG_BASE + 66; LS_ShapesDialog.F.APPLY_ALT =
 LS_ShapesDialog.SWATCHSLIDER			= MOHO.MSG_BASE + 67; LS_ShapesDialog.F.SWATCHSLIDER = MOHO.MSGF_NOTUNDO + MOHO.MSGF_PASS
 LS_ShapesDialog.INFO					= MOHO.MSG_BASE + 68; LS_ShapesDialog.F.INFO = MOHO.MSGF_NOTUNDO
 
-LS_ShapesDialog.CHANGE					= MOHO.MSG_BASE + 69; LS_ShapesDialog.F.CHANGE = MOHO.MSGF_NOTUNDO
-LS_ShapesDialog.DUMMY					= MOHO.MSG_BASE + 70
+LS_ShapesDialog.DUMMY					= MOHO.MSG_BASE + 69
+LS_ShapesDialog.CHANGE					= MOHO.MSG_BASE + 70; LS_ShapesDialog.F.CHANGE = MOHO.MSGF_NOTUNDO
+
 
 LS_ShapesDialog.MAINMENU				= MOHO.MSG_BASE +  300; LS_ShapesDialog.F.MAINMENU = {[6] = MOHO.MSGF_REOPEN, [7] = MOHO.MSGF_REOPEN, [8] = MOHO.MSGF_REOPEN, [9] = MOHO.MSGF_REOPEN}
 LS_ShapesDialog.MULTIMENU				= MOHO.MSG_BASE +  400
@@ -1543,6 +1544,21 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		LS_Shapes:Log("END")
 		helper:delete() return
 	end
+
+	local shapeSets = {
+		{{type = "self", TopOfCluster = "↱  ", BottomOfCluster = "↳  "}, {type = "fComboMode", COMBO_ADD = "+ ", COMBO_SUBTRACT = "- ", COMBO_INTERSECT = "×"}},
+		{{type = "bool", fHidden = " *"}}
+	}
+	local styleSets = {[2] = {
+		{type = "bool", fDefineLineWidth = {" ·", ""}},
+		{type = "custom", sole = true, [function(item) return item.fDefineFillCol and item.fDefineLineCol end] = {" ‍◉", ""}}, -- NOTE: sets wanted to be displayed next to a `sole` must come first in the list
+		{type = "bool", fDefineFillCol = {" ‍◍", ""}}, -- Unicode Char: Zero Width Joiner Emoji (ZWJ) ""‍ (U+200D)
+		{type = "bool", fDefineLineCol = {" ‍◎", ""}}}
+	}
+	local groupSets = {
+		{{type = "bool", ls_fSelPartly = {"· ", "  "}}},
+		{{type = "bool", ls_fHidden = " *"}}
+	}
 
 	LS_Shapes:Log("1.4") --[Start of item list update block]--
 	if LS_Shapes.mode < 2 then -- Shape Modes... --MARK: CURSTATE
@@ -6121,6 +6137,160 @@ function LS_Shapes:MakeShapeNameUnique(mesh, id, jump) --(M_Mesh, int, int) void
 	end
 end
 
+function LS_Shapes:IsSwatchLayer(moho, layer) --(MohoDoc, MohoLayer), bool
+	return (layer and layer:LayerType() == MOHO.LT_VECTOR and moho:LayerAsVector(layer):Mesh():CountShapes() > 1) and not layer:IsRenderOnly()
+end
+--MARK: UI
+function LS_Shapes:BuildShapeList(host, sets) --(M_Mesh, tbl) tbl
+	if not host then return end
+	local itemTable, itemCount = {}, host:CountShapes()
+	sets[1], sets[2] = sets[1] or {}, sets[2] or {}
+	host.itemTable = {} -- clean instantiation to avoid extra indexes (on second though, it'd be better to remove extra indexes instead)
+
+	for i = itemCount - 1, 0, -1 do
+		local item = host:Shape(i)
+		local pref, suff, stopPre, stopSuf = "", "", false, false
+
+		for posIndex = 1, #sets do
+			local pos = (posIndex == 1) and "pre" or "suf"
+			local stopFlag = (pos == "pre") and stopPre or stopSuf
+
+			for _, entry in ipairs(sets[posIndex]) do
+				if stopFlag then break end -- If we've already decided to stop, we leave
+
+				if type(entry) == "string" then
+					if pos == "pre" then pref = pref .. entry else suff = suff .. entry end
+				elseif type(entry) == "table" then
+					local setType = entry.type
+					for key, symbol in pairs(entry) do
+						if key ~= "type" and key ~= "sole" then
+							local toAdd = self:BuildListHelper(item, setType, key, symbol)
+							if toAdd ~= "" then
+								if pos == "pre" then pref = pref .. toAdd else suff = suff .. toAdd end
+								if entry.sole then
+									if pos == "pre" then stopPre = true else stopSuf = true end
+									stopFlag = true -- Indicate we don't want any more sets
+								end
+								break -- Exit the key loop for this set
+							end
+						end
+					end
+				end
+			end
+		end
+		itemTable[#itemTable + 1] = pref .. item:Name() .. suff
+		host.itemTable[#host.itemTable + 1] = itemTable[#itemTable]
+	end
+	return itemTable
+end --for i, v in ipairs(LS_Shapes:BuildShapeList(mesh, shapeSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildShapeList(mesh, shapeSets), ", "))
+
+function LS_Shapes:BuildStyleList(host, sets) --(MohoDoc, tbl) tbl
+	if not host then return end
+	local itemTable, itemCount = {}, host:CountStyles()
+	sets[1], sets[2] = sets[1] or {}, sets[2] or {}
+	host.itemTable = {}
+
+	for i = 1, itemCount do
+		local item = host:StyleByID(i - 1)
+		local pref, suff, stopPre, stopSuf = "", "", false, false
+
+		for posIndex = 1, #sets do
+			local pos = (posIndex == 1) and "pre" or "suf"
+			local stopFlag = (pos == "pre") and stopPre or stopSuf
+
+			for _, entry in ipairs(sets[posIndex]) do
+				if stopFlag then break end
+
+				if type(entry) == "string" then
+					if pos == "pre" then pref = pref .. entry else suff = suff .. entry end
+				elseif type(entry) == "table" then
+					local setType = entry.type
+					for key, symbol in pairs(entry) do
+						if key ~= "type" and key ~= "sole" then
+							local toAdd = self:BuildListHelper(item, setType, key, symbol)
+							if toAdd ~= "" then
+								if pos == "pre" then pref = pref .. toAdd else suff = suff .. toAdd end
+								if entry.sole then
+									if pos == "pre" then stopPre = true else stopSuf = true end
+									stopFlag = true
+								end
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+		itemTable[#itemTable + 1] = pref .. tostring(host:StyleByID(i - 1).fName:Buffer()) .. suff
+		host.itemTable[#host.itemTable + 1] = itemTable[#itemTable]
+	end
+	return itemTable
+end --for i, v in ipairs(LS_Shapes:BuildStyleList(doc, styleSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildStyleList(doc, styleSets), ", "))
+
+function LS_Shapes:BuildGroupList(host, sets) --(M_Mesh, tbl) tbl
+	if not host then return end
+	local itemTable, itemCount = {}, host:CountGroups()
+	sets[1], sets[2] = sets[1] or {}, sets[2] or {}
+	host.itemTable = {}
+
+	for i = 0, itemCount - 1 do
+		local item = host:Group(i)
+		local pref, suff, stopPre, stopSuf = "", "", false, false
+
+		for posIndex = 1, #sets do
+			local pos = (posIndex == 1) and "pre" or "suf"
+			local stopFlag = (pos == "pre") and stopPre or stopSuf
+
+			for _, entry in ipairs(sets[posIndex]) do
+				if stopFlag then break end
+
+				if type(entry) == "string" then
+					if pos == "pre" then pref = pref .. entry else suff = suff .. entry end
+				elseif type(entry) == "table" then
+					local setType = entry.type
+					for key, symbol in pairs(entry) do
+						if key ~= "type" and key ~= "sole" then
+							local toAdd = self:BuildListHelper(item, setType, key, symbol)
+							if toAdd ~= "" then
+								if pos == "pre" then pref = pref .. toAdd else suff = suff .. toAdd end
+								if entry.sole then
+									if pos == "pre" then stopPre = true else stopSuf = true end
+									stopFlag = true
+								end
+								break
+							end
+						end
+					end
+				end
+			end
+		end
+		itemTable[#itemTable + 1] = pref .. item:Name() .. suff
+		host.itemTable[#host.itemTable + 1] = itemTable[#itemTable]
+	end
+	return itemTable
+end --for i, v in ipairs(LS_Shapes:BuildGroupList(mesh, groupSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildGroupList(mesh, groupSets), ", "))
+
+function LS_Shapes:BuildListHelper(item, setType, key, symbol)
+	local condition = false
+
+	if setType == "self" and type(item[key]) == "function" then
+		condition = item[key](item) == item
+	elseif setType == "bool" then
+		condition = item[key] == true
+	elseif setType == "custom" and type(key) == "function" then
+		condition = key(item)
+	elseif setType and setType ~= "self" and setType ~= "bool" and setType ~= "custom" then
+		condition = item[setType] == MOHO[key]
+	end
+	if type(symbol) == "table" and (symbol[1] or symbol[2]) then -- Resolve the symbol, [1] if true & [2] if false, with an optional placeholder
+		return condition and symbol[1] or symbol[2] or ""
+	elseif condition then
+		return symbol
+	else
+		return ""
+	end
+end
+
 function LS_Shapes:BuildStyleChoiceMenu(menu, doc, baseMsg, dummyMsg, exclude) --(LM_Menu, MohoDoc, MSG_BASE, int, int) void
 	menu:RemoveAllItems()
 	menu:AddItem(MOHO.Localize("/Windows/Style/None2=None"), 0, baseMsg) --‹› --¹ 
@@ -6135,10 +6305,6 @@ function LS_Shapes:BuildStyleChoiceMenu(menu, doc, baseMsg, dummyMsg, exclude) -
 			end
 		end
 	end
-end
-
-function LS_Shapes:IsSwatchLayer(moho, layer) --(MohoDoc, MohoLayer), bool
-	return (layer and layer:LayerType() == MOHO.LT_VECTOR and moho:LayerAsVector(layer):Mesh():CountShapes() > 1) and not layer:IsRenderOnly()
 end
 --MARK: MATH/STR
 function LS_Shapes:CompareVersion(a, b) --(char, char) int, int -- Sorting an array of semantic versions or SemVer (https://medium.com/geekculture/sorting-an-array-of-semantic-versions-in-typescript-55d65d411df2)
