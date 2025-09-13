@@ -1559,6 +1559,9 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		{{type = "bool", ls_fSelPartly = {"· ", "  "}}},
 		{{type = "bool", ls_fHidden = " *"}}
 	}
+	--for i, v in ipairs(LS_Shapes:BuildStyleList(doc, styleSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildStyleList(doc, styleSets), ", "))
+	--for i, v in ipairs(LS_Shapes:BuildGroupList(mesh, groupSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildGroupList(mesh, groupSets), ", "))
+	--for i, v in ipairs(LS_Shapes:BuildStyleList(doc, styleSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildStyleList(doc, styleSets), ", "))
 
 	LS_Shapes:Log("1.4") --[Start of item list update block]--
 	if LS_Shapes.mode < 2 then -- Shape Modes... --MARK: CURSTATE
@@ -1574,6 +1577,56 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 				self.itemList:RemoveItem(i, false)
 			end
 
+			--[[BENCHMARK START
+			local loops = 10000  -- repetir muchas veces para que se note la diferencia
+			-- Versión nueva
+			local t1 = os.clock()
+			for _ = 1, loops do
+				local items = LS_Shapes:BuildShapeList(mesh, shapeSets)
+				for _, name in ipairs(items) do
+					-- No añadimos a itemList para no medir el coste de UI, solo la construcción
+					local _ = name
+				end
+			end
+			local t2 = os.clock()
+
+			-- Versión antigua
+			local t3 = os.clock()
+			for _ = 1, loops do
+				for i = shapeCount - 1, 0, -1 do
+					local shape = mesh:Shape(i)
+					local cMode = (shape.fComboMode == MOHO.COMBO_ADD and "+")
+						or (shape.fComboMode == MOHO.COMBO_SUBTRACT and "- ")
+						or (shape.fComboMode == MOHO.COMBO_INTERSECT and "×")
+						or "  "
+					local vMode = (shape.fHidden == true and " *" or "")
+
+					if shape == shape:BottomOfCluster() then
+						local _ = "↳  " .. cMode .. " " .. shape:Name() .. vMode
+					elseif shape == shape:TopOfCluster() then
+						local _ = "↱  " .. cMode .. " " .. shape:Name() .. vMode
+					else
+						if shape:IsInCluster() then
+							local _ = "    " .. cMode .. " " .. shape:Name() .. vMode
+						else
+							local _ = shape:Name() .. vMode
+						end
+					end
+				end
+			end
+			local t4 = os.clock()
+
+			print(string.format("Nueva: %.4f s", t2 - t1))
+			print(string.format("Antigua: %.4f s", t4 - t3))
+			--BENCHMARK END]]
+
+			--[[TEST NEW FUNCTION
+			local items = LS_Shapes:BuildShapeList(mesh, shapeSets)
+			for _, name in ipairs(items) do
+				self.itemList:AddItem(name, false)
+			end
+			--]]
+			---[[
 			for i = shapeCount - 1, 0, -1 do
 				local shape = mesh:Shape(i)
 				local cMode = (shape.fComboMode == MOHO.COMBO_ADD and "+") or (shape.fComboMode == MOHO.COMBO_SUBTRACT and "- ") or (shape.fComboMode == MOHO.COMBO_INTERSECT and "×") or "  " --⊕⊝⊖⊗⊘
@@ -1592,6 +1645,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 				end
 			end
 			self.skipBlock = false
+			--]]
 		end
 
 		local shape = shape or self.tempShape
@@ -5432,7 +5486,9 @@ function MOHO:GetConstants(prefix, value) --(char, int)
 	return #matches > 0, #matches, matches
 end -- Use: ok, count, list = MOHO:GetConstants("LS_CT") for _, name in ipairs(list) do print(name, MOHO[name]) end
 
---MARK: COLOR
+-----------------
+-- MARK: COLOR --
+-----------------
 
 function LM.ColorOps:Ls_Rgb2Vec(col) --(rgb_color) ColorVector
 	local cv = LM.ColorVector:new_local()
@@ -5634,7 +5690,11 @@ function LS_Shapes:convertHSB(col) --(rgb_color) rgb_color -- From Mike Kelley's
 	hsbcolor.b = math.floor(B * 255)
 	return hsbcolor
 end
---MARK: OS
+
+--------------
+-- MARK: OS --
+--------------
+
 function LS_Shapes:SuitPath(path) --(char) char
 	return (package.config:sub(1, 1) == "\\" and path:gsub("/", "\\")) or path:gsub("\\", "/")
 end
@@ -5719,7 +5779,9 @@ function LS_Shapes:Lapse(wait) -- (float) bool, float
 	return false, wait - delta
 end
 
---MARK: OBJECTS
+-------------------
+-- MARK: OBJECTS --
+-------------------
 
 function LS_Shapes:ChannelByID(moho, layer, id, subID, debug) --(moho, MohoLayer, int, int, bool) chan, chanInfo -- 20250725: For some reason, it must be run before assigning `mesh` variable or it'll be messed up!
 	subID, debug = subID or -1, debug or false
@@ -6140,7 +6202,11 @@ end
 function LS_Shapes:IsSwatchLayer(moho, layer) --(MohoDoc, MohoLayer), bool
 	return (layer and layer:LayerType() == MOHO.LT_VECTOR and moho:LayerAsVector(layer):Mesh():CountShapes() > 1) and not layer:IsRenderOnly()
 end
---MARK: UI
+
+--------------
+-- MARK: UI --
+--------------
+
 function LS_Shapes:BuildShapeList(host, sets) --(M_Mesh, tbl) tbl
 	if not host then return end
 	local itemTable, itemCount = {}, host:CountShapes()
@@ -6151,23 +6217,26 @@ function LS_Shapes:BuildShapeList(host, sets) --(M_Mesh, tbl) tbl
 		local item = host:Shape(i)
 		local pref, suff, stopPre, stopSuf = "", "", false, false
 
-		for posIndex = 1, #sets do
+		for posIndex = 1, 2 do
 			local pos = (posIndex == 1) and "pre" or "suf"
 			local stopFlag = (pos == "pre") and stopPre or stopSuf
+			local setList = sets[posIndex]
 
-			for _, entry in ipairs(sets[posIndex]) do
+			for i = 1, #setList do
 				if stopFlag then break end -- If we've already decided to stop, we leave
+				local entry = setList[i]
 
 				if type(entry) == "string" then
 					if pos == "pre" then pref = pref .. entry else suff = suff .. entry end
-				elseif type(entry) == "table" then
+				else -- tabla
 					local setType = entry.type
+					local sole = entry.sole
 					for key, symbol in pairs(entry) do
 						if key ~= "type" and key ~= "sole" then
 							local toAdd = self:BuildListHelper(item, setType, key, symbol)
 							if toAdd ~= "" then
 								if pos == "pre" then pref = pref .. toAdd else suff = suff .. toAdd end
-								if entry.sole then
+								if sole then
 									if pos == "pre" then stopPre = true else stopSuf = true end
 									stopFlag = true -- Indicate we don't want any more sets
 								end
@@ -6194,27 +6263,30 @@ function LS_Shapes:BuildStyleList(host, sets) --(MohoDoc, tbl) tbl
 		local item = host:StyleByID(i - 1)
 		local pref, suff, stopPre, stopSuf = "", "", false, false
 
-		for posIndex = 1, #sets do
+		for posIndex = 1, 2 do
 			local pos = (posIndex == 1) and "pre" or "suf"
 			local stopFlag = (pos == "pre") and stopPre or stopSuf
+			local setList = sets[posIndex]
 
-			for _, entry in ipairs(sets[posIndex]) do
-				if stopFlag then break end
+			for i = 1, #setList do
+				if stopFlag then break end -- If we've already decided to stop, we leave
+				local entry = setList[i]
 
 				if type(entry) == "string" then
 					if pos == "pre" then pref = pref .. entry else suff = suff .. entry end
-				elseif type(entry) == "table" then
+				else -- tabla
 					local setType = entry.type
+					local sole = entry.sole
 					for key, symbol in pairs(entry) do
 						if key ~= "type" and key ~= "sole" then
 							local toAdd = self:BuildListHelper(item, setType, key, symbol)
 							if toAdd ~= "" then
 								if pos == "pre" then pref = pref .. toAdd else suff = suff .. toAdd end
-								if entry.sole then
+								if sole then
 									if pos == "pre" then stopPre = true else stopSuf = true end
-									stopFlag = true
+									stopFlag = true -- Indicate we don't want any more sets
 								end
-								break
+								break -- Exit the key loop for this set
 							end
 						end
 					end
@@ -6237,27 +6309,30 @@ function LS_Shapes:BuildGroupList(host, sets) --(M_Mesh, tbl) tbl
 		local item = host:Group(i)
 		local pref, suff, stopPre, stopSuf = "", "", false, false
 
-		for posIndex = 1, #sets do
+		for posIndex = 1, 2 do
 			local pos = (posIndex == 1) and "pre" or "suf"
 			local stopFlag = (pos == "pre") and stopPre or stopSuf
+			local setList = sets[posIndex]
 
-			for _, entry in ipairs(sets[posIndex]) do
-				if stopFlag then break end
+			for i = 1, #setList do
+				if stopFlag then break end -- If we've already decided to stop, we leave
+				local entry = setList[i]
 
 				if type(entry) == "string" then
 					if pos == "pre" then pref = pref .. entry else suff = suff .. entry end
-				elseif type(entry) == "table" then
+				else -- tabla
 					local setType = entry.type
+					local sole = entry.sole
 					for key, symbol in pairs(entry) do
 						if key ~= "type" and key ~= "sole" then
 							local toAdd = self:BuildListHelper(item, setType, key, symbol)
 							if toAdd ~= "" then
 								if pos == "pre" then pref = pref .. toAdd else suff = suff .. toAdd end
-								if entry.sole then
+								if sole then
 									if pos == "pre" then stopPre = true else stopSuf = true end
-									stopFlag = true
+									stopFlag = true -- Indicate we don't want any more sets
 								end
-								break
+								break -- Exit the key loop for this set
 							end
 						end
 					end
@@ -6271,24 +6346,28 @@ function LS_Shapes:BuildGroupList(host, sets) --(M_Mesh, tbl) tbl
 end --for i, v in ipairs(LS_Shapes:BuildGroupList(mesh, groupSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildGroupList(mesh, groupSets), ", "))
 
 function LS_Shapes:BuildListHelper(item, setType, key, symbol)
-	local condition = false
-
-	if setType == "self" and type(item[key]) == "function" then
-		condition = item[key](item) == item
+	local condition
+	if setType == "self" then
+		local fn = item[key]
+		condition = (type(fn) == "function" and fn(item) == item)
 	elseif setType == "bool" then
 		condition = item[key] == true
-	elseif setType == "custom" and type(key) == "function" then
-		condition = key(item)
-	elseif setType and setType ~= "self" and setType ~= "bool" and setType ~= "custom" then
+	elseif setType == "custom" then
+		condition = (type(key) == "function" and key(item))
+	elseif setType then
 		condition = item[setType] == MOHO[key]
+	else
+		condition = false
 	end
-	if type(symbol) == "table" and (symbol[1] or symbol[2]) then -- Resolve the symbol, [1] if true & [2] if false, with an optional placeholder
-		return condition and symbol[1] or symbol[2] or ""
+	if type(symbol) == "table" then
+		local s1, s2 = symbol[1], symbol[2]
+		if s1 or s2 then -- Resolve the symbol, [1] if true & [2] if false, with an optional placeholder
+			return condition and s1 or s2 or ""
+		end
 	elseif condition then
 		return symbol
-	else
-		return ""
 	end
+	return ""
 end
 
 function LS_Shapes:BuildStyleChoiceMenu(menu, doc, baseMsg, dummyMsg, exclude) --(LM_Menu, MohoDoc, MSG_BASE, int, int) void
@@ -6306,7 +6385,11 @@ function LS_Shapes:BuildStyleChoiceMenu(menu, doc, baseMsg, dummyMsg, exclude) -
 		end
 	end
 end
---MARK: MATH/STR
+
+--------------------
+-- MARK: MATH/STR --
+--------------------
+
 function LS_Shapes:CompareVersion(a, b) --(char, char) int, int -- Sorting an array of semantic versions or SemVer (https://medium.com/geekculture/sorting-an-array-of-semantic-versions-in-typescript-55d65d411df2)
 	local a1, b1 = {}, {}
 	for part in tostring(a):gmatch("[^.]+") do table.insert(a1, part) end
