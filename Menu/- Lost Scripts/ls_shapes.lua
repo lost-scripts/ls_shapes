@@ -4392,7 +4392,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		local creationMode = LM_CreateShape.creationMode
 		if (mesh ~= nil and LS_Shapes.mode < 2) then -- Shape Creation
 			LM_CreateShape.creationMode = math.floor(m / 2)
-			LM_CreateShape:HandleMessage(moho, moho.view, msg % 2 == 0 and LM_CreateShape.CREATE or LM_CreateShape.CREATE_CONNECTED)
+			LM_CreateShape:HandleMessage(moho, moho.view, m % 2 == 0 and LM_CreateShape.CREATE or LM_CreateShape.CREATE_CONNECTED)
 			LM_CreateShape.creationMode = creationMode
 		elseif (doc ~= nil and LS_Shapes.mode == 2) then -- Style Creation
 			local baseStyle = style --or self.tempShape.fMyStyle
