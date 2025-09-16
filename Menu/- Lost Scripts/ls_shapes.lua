@@ -3743,7 +3743,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 					for i = 0, shapeCount - 1 do
 						local shape = mesh:Shape(i)
 						if (shape.fSelected) then
-							shape.fMyStyle = self.copiedStyle --shape:CopyStyleProperties(self.copiedStyle, false, false)
+							shape:CopyStyleProperties(self.copiedShape) -- NOTE: Stop using `shape.fMyStyle = self.copiedStyle` due to occasional crashes (besides, the new way could allow skipping fill/line)
 						end
 					end
 				else
