@@ -4,7 +4,7 @@
 
 ScriptName = "LS_Shapes"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20250916-2135"
+ScriptBuild = "20250916-2345"
 ScriptVersion = "0.4.1"
 ScriptStage = "BETA"
 ScriptTarget = "Moho® 14.3+ Pro"
@@ -1558,24 +1558,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		helper:delete() return
 	end
 
-	local shapeSets = {
-		{{type = "self", TopOfCluster = "↱  ", BottomOfCluster = "↳  "}, {type = "fComboMode", COMBO_ADD = "+ ", COMBO_SUBTRACT = "- ", COMBO_INTERSECT = "×"}},
-		{{type = "bool", fHidden = " *"}}
-	}
-	local styleSets = {[2] = {
-		{type = "bool", fDefineLineWidth = {" ·", ""}},
-		{type = "custom", sole = true, [function(item) return item.fDefineFillCol and item.fDefineLineCol end] = {" ‍◉", ""}}, -- NOTE: sets wanted to be displayed next to a `sole` must come first in the list
-		{type = "bool", fDefineFillCol = {" ‍◍", ""}}, -- Unicode Char: Zero Width Joiner Emoji (ZWJ) ""‍ (U+200D)
-		{type = "bool", fDefineLineCol = {" ‍◎", ""}}}
-	}
-	local groupSets = {
-		{{type = "bool", ls_fSelPartly = {"· ", "  "}}},
-		{{type = "bool", ls_fHidden = " *"}}
-	}
-	--for i, v in ipairs(LS_Shapes:BuildStyleList(doc, styleSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildStyleList(doc, styleSets), ", "))
-	--for i, v in ipairs(LS_Shapes:BuildGroupList(mesh, groupSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildGroupList(mesh, groupSets), ", "))
-	--for i, v in ipairs(LS_Shapes:BuildStyleList(doc, styleSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildStyleList(doc, styleSets), ", "))
-
 	LS_Shapes:Log("1.4") --[Start of item update block]--
 	if LS_Shapes.mode < 2 then -- Shape Modes... --MARK: CURSTATE
 		---[[Performance Overhaul 
@@ -2156,17 +2138,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		end
 	end
 	LS_Shapes:Log("1.7")  --MARK: OLDSTATE
-	--[[DEPRECATED?
-	shapeCount = mesh and mesh:CountShapes() or 0
-	for i = 0, #self.shapeTable do -- Ensure the table is empty before updating! Otherwise if it had more elements, they will remain and the system will think there are more items than actually are (force an unnecessary list update).
-		self.shapeTable[i] = nil
-	end
-	for i = 1, shapeCount do -- Previous item state
-		local shape = mesh:Shape(i - 1)
-		self.shapeTable[0] = moho.drawingLayer:UUID()
-		self.shapeTable[i] = shape:Name() .. shape.fComboMode .. (shape.fHidden == true and " *" or "")
-	end
-	--]]
+
 	local shape = shape or self.tempShape
 	if (shape ~= nil) then -- 20240123-0135: Addded the self.shape ~= nil part. TBO...
 		local bbMin, bbMax = LM.Vector2:new_local(), LM.Vector2:new_local() shape:ShapeBounds(bbMin, bbMax, 0)
@@ -2174,46 +2146,13 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.shapeTable[-1] = math.floor(bbMin.x*10+.5)/10 .. math.floor(bbMin.y*10+.5)/10 .. math.floor(bbMax.x*10+.5)/10 .. math.floor(bbMax.y*10+.5)/10 .. fc.r .. fc.g .. fc.b .. fc.a .. lc.r .. lc.g .. lc.b .. lc.a .. lw .. hf .. ho .. hp .. eo.x .. eo.y .. er ..es .. shape.fInheritedStyleName:Buffer() .. shape.fInheritedStyleName2:Buffer() .. tostring(shape.fHidden)
 	end
 	LS_Shapes:Log("1.8")
-	--[[DEPRECATED?
-	styleCount = doc and doc:CountStyles() or 0
-	for i = 0, #self.styleTable do -- Ensure the table is empty before updating! Otherwise if it had more elements, they will remain and the system will think there are more items than actually are (force an unnecessary list update).
-		self.styleTable[i] = nil
-	end
-	for i = 1, styleCount do -- Previous item state
-		local iStyleName = tostring(doc:StyleByID(i - 1).fName:Buffer())
-		local iStyle = doc:StyleByID(i - 1)
-		self.styleTable[0] = moho.drawingLayer:UUID()
-		self.styleTable[i] = iStyleName
-	end
-	--]]
+
 	if (style ~= nil and self.style ~= nil) then
 		local fc, lc, lw, df, dl, dw, bn = style.fFillCol.value, style.fLineCol.value, style.fLineWidth, tostring(style.fDefineFillCol), tostring(style.fDefineLineCol), tostring(style.fDefineLineWidth), style.fBrushName:Buffer()
 		self.styleTable[-1] = fc.r .. fc.g .. fc.b .. fc.a .. lc.r .. lc.g .. lc.b .. lc.a .. lw .. df .. dl .. dw .. bn
 	end
-	LS_Shapes:Log("1.9")
-	if LS_Shapes.mode == 3 then -- if GROUP Mode
-		LS_Shapes:ProcessGroups(mesh, layerUUID)
+	LS_Shapes:Log("1.09")
 
-		mesh.ls_fTempGroupLabels = ""
-		groupCount = mesh and mesh:CountGroups() or 0
-
-		for i = 0, #mesh.ls_fGroups.old do -- Ensure the table is empty before updating! Otherwise if it had more elements, they will remain and the system will think there are more items than actually are (force an unnecessary list update).
-			mesh.ls_fGroups.old[i] = nil
-		end
-		for i = 0, groupCount - 1 do -- Previous item state
-			local group = mesh:Group(i)
-			group.ls_fTempHidden = group.ls_fHidden
-			group.ls_fTempSelected = group.ls_fSelected
-			group.ls_fTempSelPartly = group.ls_fSelPartly
-			group.ls_fTempLabel = group.ls_fLabel
-			mesh.ls_fTempGroupLabels = mesh.ls_fTempGroupLabels .. group.ls_fLabel
-		end
-		if (group ~= nil and self.group ~= nil) then
-			local ptCount, ptList = group:CountPoints(), table.concat(LS_Shapes:GroupPointIDs(mesh, group))
-			mesh.ls_fGroups.old[-1] = ptCount .. ptList
-		end
-	end
-	LS_Shapes:Log("1.10")
 	self.toolName = (doc ~= nil and doc:Name() ~= "-") and moho:CurrentTool() or ""
 	self.mode = LS_Shapes.mode
 	self.beginnerMode = LS_Shapes.beginnerMode
@@ -6281,53 +6220,6 @@ end
 --------------
 -- MARK: UI --
 --------------
---[[
-function LS_Shapes:BuildShapeList(host, sets) --(M_Mesh, tbl) tbl
-	if not host then return end
-	local itemTable, itemCount = {}, host:CountShapes()
-	sets[1], sets[2] = sets[1] or {}, sets[2] or {}
-	host.itemTable = {} -- clean instantiation to avoid extra indexes (on second though, it'd be better to remove extra indexes instead)
-
-	for i = itemCount - 1, 0, -1 do
-		local item = host:Shape(i)
-		local pref, suff, stopPre, stopSuf = "", "", false, false
-
-		for posIndex = 1, 2 do
-			local pos = (posIndex == 1) and "pre" or "suf"
-			local stopFlag = (pos == "pre") and stopPre or stopSuf
-			local setList = sets[posIndex]
-
-			for i = 1, #setList do
-				if stopFlag then break end -- If we've already decided to stop, we leave
-				local entry = setList[i]
-
-				if type(entry) == "string" then
-					if pos == "pre" then pref = pref .. entry else suff = suff .. entry end
-				else -- tabla
-					local setType = entry.type
-					local sole = entry.sole
-					for key, symbol in pairs(entry) do
-						if key ~= "type" and key ~= "sole" then
-							local toAdd = self:BuildListHelper(item, setType, key, symbol)
-							if toAdd ~= "" then
-								if pos == "pre" then pref = pref .. toAdd else suff = suff .. toAdd end
-								if sole then
-									if pos == "pre" then stopPre = true else stopSuf = true end
-									stopFlag = true -- Indicate we don't want any more sets
-								end
-								break -- Exit the key loop for this set
-							end
-						end
-					end
-				end
-			end
-		end
-		itemTable[#itemTable + 1] = pref .. item:Name() .. suff
-		host.itemTable[#host.itemTable + 1] = itemTable[#itemTable]
-	end
-	return itemTable
-end --for i, v in ipairs(LS_Shapes:BuildShapeList(mesh, shapeSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildShapeList(mesh, shapeSets), ", "))
---]]
 
 function LS_Shapes:BuildLabel(t, sep) --(tbl|char, char) char
 	sep = sep or " "
@@ -6336,147 +6228,6 @@ function LS_Shapes:BuildLabel(t, sep) --(tbl|char, char) char
 	end 
 	return t
 end --print(LS_Shapes:BuildLabel({"PREF", "NAME", "SUFF"}, ""))
-
-function LS_Shapes:BuildLabelAlt(sep, ...) --(char, char|tbl, char|tbl) char
-	local args = {...}
-	for i = 1, #args do
-		local arg = args[i]
-		arg = type(arg) == "table" and table.concat(arg) or tostring(arg) 
-	end
-	return table.concat(args, sep and sep or " ")
-end
-
-function LS_Shapes:BuildShapeList(host, pref, suff) --(M_Mesh, char|tbl, char|tbl) tbl
-	if not host then return end
-	pref = type(pref) == (type(pref) == "string" and pref) or (type(pref) == "table" and table.concat(pref)) or ""
-	suff = type(suff) == (type(suff) == "string" and suff) or (type(suff) == "table" and table.concat(suff)) or ""
-	host.itemTable = {} -- clean instantiation to avoid extra indexes (on second though, it'd be better to remove extra indexes instead)
-	local itemTable, itemCount = {}, host:CountShapes()
-
-	for i = itemCount - 1, 0, -1 do
-		local item = host:Shape(i)
-		itemTable[#itemTable + 1] = pref .. item:Name() .. suff
-		host.itemTable[#host.itemTable + 1] = itemTable[#itemTable]
-	end
-	return itemTable
-end --for i, v in ipairs(LS_Shapes:BuildShapeList(mesh, shapeSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildShapeList(mesh, shapeSets), ", "))
-
-function LS_Shapes:BuildStyleList(host, sets) --(MohoDoc, tbl) tbl
-	if not host then return end
-	local itemTable, itemCount = {}, host:CountStyles()
-	sets[1], sets[2] = sets[1] or {}, sets[2] or {}
-	host.itemTable = {}
-
-	for i = 1, itemCount do
-		local item = host:StyleByID(i - 1)
-		local pref, suff, stopPre, stopSuf = "", "", false, false
-
-		for posIndex = 1, 2 do
-			local pos = (posIndex == 1) and "pre" or "suf"
-			local stopFlag = (pos == "pre") and stopPre or stopSuf
-			local setList = sets[posIndex]
-
-			for i = 1, #setList do
-				if stopFlag then break end -- If we've already decided to stop, we leave
-				local entry = setList[i]
-
-				if type(entry) == "string" then
-					if pos == "pre" then pref = pref .. entry else suff = suff .. entry end
-				else -- tabla
-					local setType = entry.type
-					local sole = entry.sole
-					for key, symbol in pairs(entry) do
-						if key ~= "type" and key ~= "sole" then
-							local toAdd = self:BuildListHelper(item, setType, key, symbol)
-							if toAdd ~= "" then
-								if pos == "pre" then pref = pref .. toAdd else suff = suff .. toAdd end
-								if sole then
-									if pos == "pre" then stopPre = true else stopSuf = true end
-									stopFlag = true -- Indicate we don't want any more sets
-								end
-								break -- Exit the key loop for this set
-							end
-						end
-					end
-				end
-			end
-		end
-		itemTable[#itemTable + 1] = pref .. tostring(host:StyleByID(i - 1).fName:Buffer()) .. suff
-		host.itemTable[#host.itemTable + 1] = itemTable[#itemTable]
-	end
-	return itemTable
-end --for i, v in ipairs(LS_Shapes:BuildStyleList(doc, styleSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildStyleList(doc, styleSets), ", "))
-
-function LS_Shapes:BuildGroupList(host, sets) --(M_Mesh, tbl) tbl
-	if not host then return end
-	local itemTable, itemCount = {}, host:CountGroups()
-	sets[1], sets[2] = sets[1] or {}, sets[2] or {}
-	host.itemTable = {}
-
-	for i = 0, itemCount - 1 do
-		local item = host:Group(i)
-		local pref, suff, stopPre, stopSuf = "", "", false, false
-
-		for posIndex = 1, 2 do
-			local pos = (posIndex == 1) and "pre" or "suf"
-			local stopFlag = (pos == "pre") and stopPre or stopSuf
-			local setList = sets[posIndex]
-
-			for i = 1, #setList do
-				if stopFlag then break end -- If we've already decided to stop, we leave
-				local entry = setList[i]
-
-				if type(entry) == "string" then
-					if pos == "pre" then pref = pref .. entry else suff = suff .. entry end
-				else -- tabla
-					local setType = entry.type
-					local sole = entry.sole
-					for key, symbol in pairs(entry) do
-						if key ~= "type" and key ~= "sole" then
-							local toAdd = self:BuildListHelper(item, setType, key, symbol)
-							if toAdd ~= "" then
-								if pos == "pre" then pref = pref .. toAdd else suff = suff .. toAdd end
-								if sole then
-									if pos == "pre" then stopPre = true else stopSuf = true end
-									stopFlag = true -- Indicate we don't want any more sets
-								end
-								break -- Exit the key loop for this set
-							end
-						end
-					end
-				end
-			end
-		end
-		itemTable[#itemTable + 1] = pref .. item:Name() .. suff
-		host.itemTable[#host.itemTable + 1] = itemTable[#itemTable]
-	end
-	return itemTable
-end --for i, v in ipairs(LS_Shapes:BuildGroupList(mesh, groupSets)) do print(i, v) end --print(table.concat(LS_Shapes:BuildGroupList(mesh, groupSets), ", "))
-
-function LS_Shapes:BuildListHelper(item, setType, key, symbol)
-	local condition
-	if setType == "self" then
-		local fn = item[key]
-		condition = (type(fn) == "function" and fn(item) == item)
-	elseif setType == "bool" then
-		condition = item[key] == true
-	elseif setType == "custom" then
-		condition = (type(key) == "function" and key(item))
-	elseif setType then
-		condition = item[setType] == MOHO[key]
-	else
-		condition = false
-	end
-	if type(symbol) == "table" then
-		local s1, s2 = symbol[1], symbol[2]
-		if s1 or s2 then -- Resolve the symbol, [1] if true & [2] if false, with an optional placeholder
-			return condition and s1 or s2 or ""
-		end
-	elseif condition then
-		return symbol
-	end
-	return ""
-end
 
 function LS_Shapes:BuildStyleChoiceMenu(menu, doc, baseMsg, dummyMsg, exclude) --(LM_Menu, MohoDoc, MSG_BASE, int, int) void
 	menu:RemoveAllItems()
