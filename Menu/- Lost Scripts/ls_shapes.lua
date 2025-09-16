@@ -4,7 +4,7 @@
 
 ScriptName = "LS_Shapes"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20250916-0250"
+ScriptBuild = "20250916-2135"
 ScriptVersion = "0.4.1"
 ScriptStage = "BETA"
 ScriptTarget = "Moho® 14.3+ Pro"
@@ -953,6 +953,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		if styleName == "" then
 			self.info[1] = (doc and moho:DrawingMesh()) and "" or "v" .. LS_Shapes.version .. " " .. LS_Shapes.stage .. (LS_Shapes.debugMode and " · 🐞" or "") .. " · " .. MOHO.Localize("/LS/Shapes/NotAVector=No vector...")
 			self.info[2] = (doc and moho:DrawingMesh()) and self.info.n .. math.floor(moho:CountShapes()) or nil
+			self.info[3] = nil -- NOTE: Ensure next index of a potentially nil one is also nil to prevent concat errors!
 		else
 			LS_Shapes.mode = 2
 			self.itemName:SetValue(styleName or "?")
@@ -1220,7 +1221,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			end
 		end
 		if (LS_Shapes.showInfobar and self.infobar) then
-			self.infoText = table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", "") -- ERROR (20250916-0235): LC concat error upon opening a proyect which first layer is not vector...
+			self.infoText = table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", "") -- ERROR (20250916-0235): LC concat error upon opening a proyect which first layer is not vector or selecting a not vector layer...
 			if (self.info.uid2 ~= nil) then
 				self.infoText = string.gsub(self.infoText, self.info.uid2:gsub("-", "%%-"), "…")
 			end
