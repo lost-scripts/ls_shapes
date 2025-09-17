@@ -1696,10 +1696,21 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		for i = 1, styleCount do
 			local styleName = tostring(doc:StyleByID(i - 1).fName:Buffer()) -- NOTE: The swapped order is to get around the style becoming an LM_String bug!
 			local style = doc:StyleByID(i - 1)
+			local styleDefLine = (style.fDefineLineWidth and style.fBrushName:Buffer() ~= "" and "; ") or style.fDefineLineWidth and "· " or style.fBrushName:Buffer() ~= "" and ", " or "  " --local defWidth = style.fDefineLineWidth and "· " or "  "
+			local styleDefFillLine = (style.fDefineFillCol and style.fDefineLineCol and "◉‍ ")  or (style.fDefineFillCol and "◍‍ ") or (style.fDefineLineCol and "◎‍ ") or "○‍ "
+			local styleIsUsed = ""
 
-			local defLine = (style.fDefineLineWidth and style.fBrushName:Buffer() ~= "" and "; ") or style.fDefineLineWidth and "· " or style.fBrushName:Buffer() ~= "" and ", " or "  " --local defWidth = style.fDefineLineWidth and "· " or "  "
-			local defFillLine = (style.fDefineFillCol and style.fDefineLineCol and "◉‍ ")  or (style.fDefineFillCol and "◍‍ ") or (style.fDefineLineCol and "◎‍ ") or "○‍ "
-			itemLabel = defFillLine .. defLine .. styleName
+			if doc and style then
+				for j = 0, doc:CountLayers() - 1 do
+					local jLayer = doc:Layer(j)
+					styleIsUsed = ""
+					if doc:IsStyleUsed(style, jLayer) then
+						styleIsUsed = " *"
+						break
+					end 
+				end
+			end
+			itemLabel = styleDefFillLine .. styleDefLine .. styleName .. styleIsUsed
 
 			if listIndex < currentCount then -- Update existing item or add a new one (use < instead of <= because when listIndex == currentCount that slot doesn't exist yet and trying to update it would lead to out-of-range errors, so we must add it instead)
 				if self.itemList:GetItem(listIndex) ~= itemLabel then
