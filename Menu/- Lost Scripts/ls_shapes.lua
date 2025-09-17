@@ -453,6 +453,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:AddPadding(3)
 				d.raise = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_order_raise", "", false, self.RAISE, true)
 				d.raise:SetAlternateMessage(self.RAISE_ALT)
+				--d.raise:SetContinuousMessages(0.2) -- It would require quite extra logic in HandleMessage...
 				l:AddChild(d.raise, LM.GUI.ALIGN_FILL, 0)
 
 				l:AddPadding(2)
@@ -465,6 +466,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 
 				d.lower = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_order_lower", "", false, self.LOWER, true)
 				d.lower:SetAlternateMessage(self.LOWER_ALT)
+				--d.lower:SetContinuousMessages(0.2) -- It would require quite extra logic in HandleMessage...
 				l:AddChild(d.lower, LM.GUI.ALIGN_FILL, 0)
 			l:Pop() --V
 			l:AddPadding(-butW - butW1)
@@ -1887,7 +1889,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 	self.raise:SetToolTip(LS_Shapes.mode < 2 and MOHO.Localize("/Menus/Draw/RaiseShape=Raise Shape") .. " (<alt> " .. MOHO.Localize("/Menus/Draw/RaiseToFront=Raise To Front") .. ")" or "")
 	self.animOrder:Enable((LS_Shapes.mode < 2 and pro and lFrameAlt ~= 0 and mesh and mesh:AnimatedShapeOrder()))
 	self.animOrder:SetValue(LS_Shapes.mode < 2 and pro and lDrawingOrderKey)
-	self.lower:Enable(((LS_Shapes.mode < 2) and shapeID and shapeID >= 0) and (self.itemList:SelItem() > 0 and self.itemList:SelItem() + self.itemList:NumSelectedItems() < self.itemList:CountItems()) or false)
+	self.lower:Enable(((LS_Shapes.mode < 2) and shapeID and shapeID >= 0) and (self.itemList:SelItem() > 0 and not self.itemList:IsItemSelected(self.itemList:CountItems() - 1)) or false)
 	self.lower:SetToolTip(LS_Shapes.mode < 2 and MOHO.Localize("/Menus/Draw/LowerShape=Lower Shape") .. " (<alt> " .. MOHO.Localize("/Menus/Draw/LowerToBack=Lower To Back") .. ")" or "")
 	self.selectAllBut:Enable((LS_Shapes.mode < 2 and shapeCount > 0) or (LS_Shapes.mode == 2 and style ~= nil and styleCount > 0) or (LS_Shapes.mode == 3 and groupCount > 0)) --self.selectAllBut:SetLabel(LM_SelectShape:CountSelectedShapes(moho) == mesh:CountShapes() and "✅" or "☑", false) --self.selectAllBut:Redraw() -- 20230922: It seems to tail some text??
 	self.deleteBut:SetToolTip(MOHO.Localize("/Windows/Style/Delete=Delete") .. (LS_Shapes.mode == 2 and " (<alt> " .. MOHO.Localize("/LS/Shapes/UnusedOny=Only If Unused") .. ")" or ""))
@@ -3308,9 +3310,14 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		MOHO.Redraw()
 		self:Update()
 	elseif (msg == self.RAISE or msg == self.RAISE_ALT) then
-		for i = shapeCount - 1, 0, -1 do
-			if (mesh:Shape(i).fSelected) then
-				mesh:RaiseShape(i, msg == self.RAISE_ALT)
+		if msg == self.RAISE_ALT then
+			mesh:RaiseShape(shapeID, true)
+			self.itemList:SetSelItem(self.itemList:GetItem((shapeCount) - mesh:ShapeID(shape)), false, false) -- Can't use skipAll/Block in this case...
+		else
+			for i = shapeCount - 1, 0, -1 do
+				if mesh:Shape(i).fSelected then
+					mesh:RaiseShape(i, false)
+				end
 			end
 		end
 		MOHO.Redraw()
@@ -3319,9 +3326,14 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		end
 		self:Update()
 	elseif (msg == self.LOWER or msg == self.LOWER_ALT) then
-		for i = 0, shapeCount - 1 do
-			if (mesh:Shape(i).fSelected) then
-				mesh:LowerShape(i, msg == self.LOWER_ALT)
+		if msg == self.LOWER_ALT then
+			mesh:LowerShape(shapeID, true)
+			self.itemList:SetSelItem(self.itemList:GetItem((shapeCount) - mesh:ShapeID(shape)), false, false) -- Can't use skipAll/Block in this case...
+		else
+			for i = 0, shapeCount - 1 do
+				if mesh:Shape(i).fSelected then
+					mesh:LowerShape(i, false)
+				end
 			end
 		end
 		MOHO.Redraw()
