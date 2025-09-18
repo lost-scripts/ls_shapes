@@ -3225,6 +3225,9 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				self.itemSel = 0
 			else
 				LS_Shapes.mode = 2
+				self.itemList:SetSelItem(self.itemList:GetItem(0), true)
+				self.itemList:ScrollItemIntoView(0, true)
+				self.itemSel = 0
 			end
 		elseif LS_Shapes.mode == 2 then -- if STYLE Mode
 			local mode
