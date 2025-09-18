@@ -959,7 +959,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		else
 			LS_Shapes.mode = 2
 			self.itemName:SetValue(styleName or "?")
-			self.info[1] = self.info[1]
+			self.info[1] = self.info[1] or ""
 			self.info[2] = self.info.id .. styleID --self.info[2] = shapeLUID > -1 and self.info.id .. shapeLUID or self.info.id .. "?" --string.format("%d", shape:ShapeID())
 			self.info[3] = styleCount > 0 and self.info.n .. itemsSel .. "/" .. styleCount or self.info.n .. styleCount
 			self.info[4] = self.info.uid .. (styleUUIDToShow ~= "" and styleUUIDToShow or "?")
@@ -1223,7 +1223,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			end
 		end
 		if (LS_Shapes.showInfobar and self.infobar) then
-			self.infoText = table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", "") -- ERROR (20250916-0235): LC concat error upon opening a proyect which first layer is not vector or selecting a not vector layer...
+			self.infoText = table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", "")
 			if (self.info.uid2 ~= nil) then
 				self.infoText = string.gsub(self.infoText, self.info.uid2:gsub("-", "%%-"), "…")
 			end
@@ -1698,19 +1698,18 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			local style = doc:StyleByID(i - 1)
 			local styleDefLine = (style.fDefineLineWidth and style.fBrushName:Buffer() ~= "" and "; ") or style.fDefineLineWidth and "· " or style.fBrushName:Buffer() ~= "" and ", " or "  " --local defWidth = style.fDefineLineWidth and "· " or "  "
 			local styleDefFillLine = (style.fDefineFillCol and style.fDefineLineCol and "◉‍ ")  or (style.fDefineFillCol and "◍‍ ") or (style.fDefineLineCol and "◎‍ ") or "○‍ "
-			local styleIsUsed = ""
 
 			if doc and style then
 				for j = 0, doc:CountLayers() - 1 do
 					local jLayer = doc:Layer(j)
-					styleIsUsed = ""
+					style.ls_isUsed = false
 					if doc:IsStyleUsed(style, jLayer) then
-						styleIsUsed = " *"
+						style.ls_isUsed = true
 						break
 					end 
 				end
 			end
-			itemLabel = styleDefFillLine .. styleDefLine .. styleName .. styleIsUsed
+			itemLabel = styleDefFillLine .. styleDefLine .. styleName .. (style.ls_isUsed and " *" or "")
 
 			if listIndex < currentCount then -- Update existing item or add a new one (use < instead of <= because when listIndex == currentCount that slot doesn't exist yet and trying to update it would lead to out-of-range errors, so we must add it instead)
 				if self.itemList:GetItem(listIndex) ~= itemLabel then
@@ -1906,8 +1905,9 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 	self.deleteBut:SetToolTip(MOHO.Localize("/Windows/Style/Delete=Delete") .. (LS_Shapes.mode == 2 and " (<alt> " .. MOHO.Localize("/LS/Shapes/UnusedOny=Only If Unused") .. ")" or ""))
 	self.selectMatchingBut:Enable((LS_Shapes.mode < 2 and shape ~= nil and shapesSel == 1 and shapeCount > 1) or (LS_Shapes.mode == 2 and style ~= nil and stylesSel == 1 and styleCount > 1) or (LS_Shapes.mode == 3 and groupSelCount < 2 and groupCount > 1)) --or (LS_Shapes.mode == 3 and groupSelCount == 1 and groupCount > 1)
 	self.selectMatchingBut:SetToolTip((LS_Shapes.mode < 2 and MOHO.Localize("/LS/Shapes/SelectMatchingColorShapes=Select Matching-Color Shapes") or LS_Shapes.mode == 2 and MOHO.Localize("/LS/Shapes/SelectMatchingColorStyles=Select Matching-Color Styles") or LS_Shapes.mode == 3 and MOHO.Localize("/LS/Shapes/SelectMatchingGroups=Select Matching-Point Groups (Duplicates)")) .. (LS_Shapes.mode < 3 and " (<alt> " .. MOHO.Localize("/LS/Shapes/SelectIdentical=Select Identical") .. ")" or ""))
-	self.selectPtBasedBut:Enable( doc ~= nil and LS_Shapes.mode < 2 or LS_Shapes.mode == 3)
+	self.selectPtBasedBut:Enable(doc ~= nil and (LS_Shapes.mode < 2 or LS_Shapes.mode == 3) or (LS_Shapes.mode == 2 and style ~= nil and itemsSel == 1 and styleSel.ls_isUsed))
 	self.selectPtBasedBut:SetValue(LS_Shapes.mode < 2 and LS_Shapes.pointBasedSel or LS_Shapes.mode == 3 and LS_Shapes.pointBasedSel3)
+	self.selectPtBasedBut:SetToolTip(LS_Shapes.mode ~= 2 and MOHO.Localize("/LS/Shapes/PointBasedSelection=Point-Based Selection (<alt> Keep Active)") or MOHO.Localize("/LS/Shapes/StyleBasedSelection=Style-Based Selection"))
 	self.checkerSelBut:SetValue(MOHO.MohoGlobals.SelectedShapeCheckerboard)
 
 	if LS_Shapes.advanced then 
@@ -3546,10 +3546,35 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			self.itemList:Redraw()
 		end
 	elseif (msg == self.SELECTPTBASED or msg == self.SELECTPTBASED_ALT) then
+		if LS_Shapes.mode == 2 then -- STYLE Mode
+			if mesh ~= nil then
+				local isUsed = false
+				for i = 0, shapeCount - 1 do
+					local shape = mesh:Shape(i)
+					if shape ~= nil then
+						shape.fSelected = false
+						if styleSel == shape.fInheritedStyle or styleSel == shape.fInheritedStyle2 then
+							isUsed = true
+							shape.fSelected = true
+						end
+					end
+				end
+				if isUsed then
+					self:Update()
+					MOHO.Redraw()
+				else
+					self.selectPtBasedBut:Enable(false)
+					self.selectPtBasedBut:SetValue(false)
+					LM.Beep()
+				end
+				helper:delete()
+				return
+			end
+		end
 		if (msg == self.SELECTPTBASED) then -- If applicable, make pointBasedSel "active" during self:Update() below...
-			if LS_Shapes.mode < 2 then
+			if LS_Shapes.mode < 2 then -- SHAPE Modes
 				LS_Shapes.pointBasedSel = true
-			elseif LS_Shapes.mode == 3 then
+			elseif LS_Shapes.mode == 3 then -- GROUP MOde
 				LS_Shapes.pointBasedSel3 = true
 			end
 		else
