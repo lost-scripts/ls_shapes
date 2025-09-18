@@ -482,7 +482,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:AddChild(d.selectMatchingBut, LM.GUI.ALIGN_FILL)
 				l:AddPadding(3)
 
-				d.selectPtBasedBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_sel_pt_based", MOHO.Localize("/LS/Shapes/PointBasedSelection=Point-Based Selection (<alt> Keep Active)"), true, self.SELECTPTBASED, true)
+				d.selectPtBasedBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_sel_pt_based", "", true, self.SELECTPTBASED, true)
 				d.selectPtBasedBut:SetAlternateMessage(self.SELECTPTBASED_ALT)
 				l:AddChild(d.selectPtBasedBut, LM.GUI.ALIGN_FILL)
 				l:AddPadding(3)
@@ -1834,9 +1834,9 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		end
 
 		-- 3) Restore item selection
-		if self.itemList:SelItem() ~= styleID then
+		if self.itemList:SelItem() ~= groupID then
 			self.skipAll = true
-			self.itemList:SetSelItem(self.itemList:GetItem(styleID), false, false)
+			self.itemList:SetSelItem(self.itemList:GetItem(groupID), false, false)
 			self.skipAll = false
 		end
 		if not self.itemList:IsEnabled() then
@@ -1895,12 +1895,12 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 	LS_Shapes:Log("1.5") --[End of item update block]--
 
 	self.modeBut:SetToolTip(LS_Shapes.beginnerMode and MOHO.Localize("/LS/Shapes/Mode=Mode: ") .. MOHO.Localize(modes[LS_Shapes.mode] or ""))
-	self.raise:Enable(((LS_Shapes.mode < 2) and shapeID and shapeID >= 0) and self.itemList:SelItem() > 1 or false) --print(self.itemList:SelItem(), ", ", self.itemList:SelItemLabel())
-	self.raise:SetToolTip(LS_Shapes.mode < 2 and MOHO.Localize("/Menus/Draw/RaiseShape=Raise Shape") .. " (<alt> " .. MOHO.Localize("/Menus/Draw/RaiseToFront=Raise To Front") .. ")" or "")
+	self.raise:Enable((((LS_Shapes.mode < 2) and shapeID and shapeID >= 0) or (LS_Shapes.mode == 3 and itemsSel == 1)) and self.itemList:SelItem() > 1 or false) --print(self.itemList:SelItem(), ", ", self.itemList:SelItemLabel())
+	self.raise:SetToolTip(LS_Shapes.mode < 4 and MOHO.Localize("/LS/Shapes/RaiseItem=Raise Item") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/RaiseToTop=Raise To Top") .. ")" or "")
 	self.animOrder:Enable((LS_Shapes.mode < 2 and pro and lFrameAlt ~= 0 and mesh and mesh:AnimatedShapeOrder()))
 	self.animOrder:SetValue(LS_Shapes.mode < 2 and pro and lDrawingOrderKey)
-	self.lower:Enable(((LS_Shapes.mode < 2) and shapeID and shapeID >= 0) and (self.itemList:SelItem() > 0 and not self.itemList:IsItemSelected(self.itemList:CountItems() - 1)) or false)
-	self.lower:SetToolTip(LS_Shapes.mode < 2 and MOHO.Localize("/Menus/Draw/LowerShape=Lower Shape") .. " (<alt> " .. MOHO.Localize("/Menus/Draw/LowerToBack=Lower To Back") .. ")" or "")
+	self.lower:Enable((((LS_Shapes.mode < 2) and shapeID and shapeID >= 0) or (LS_Shapes.mode == 3 and itemsSel == 1)) and (self.itemList:SelItem() > 0 and not self.itemList:IsItemSelected(self.itemList:CountItems() - 1)) or false)
+	self.lower:SetToolTip(LS_Shapes.mode < 4 and MOHO.Localize("/LS/Shapes/LowerItem=Lower Item") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/LowerToBottom=Lower To Bottom") .. ")" or "")
 	self.selectAllBut:Enable((LS_Shapes.mode < 2 and shapeCount > 0) or (LS_Shapes.mode == 2 and style ~= nil and styleCount > 0) or (LS_Shapes.mode == 3 and groupCount > 0)) --self.selectAllBut:SetLabel(LM_SelectShape:CountSelectedShapes(moho) == mesh:CountShapes() and "✅" or "☑", false) --self.selectAllBut:Redraw() -- 20230922: It seems to tail some text??
 	self.deleteBut:SetToolTip(MOHO.Localize("/Windows/Style/Delete=Delete") .. (LS_Shapes.mode == 2 and " (<alt> " .. MOHO.Localize("/LS/Shapes/UnusedOny=Only If Unused") .. ")" or ""))
 	self.selectMatchingBut:Enable((LS_Shapes.mode < 2 and shape ~= nil and shapesSel == 1 and shapeCount > 1) or (LS_Shapes.mode == 2 and style ~= nil and stylesSel == 1 and styleCount > 1) or (LS_Shapes.mode == 3 and groupSelCount < 2 and groupCount > 1)) --or (LS_Shapes.mode == 3 and groupSelCount == 1 and groupCount > 1)
@@ -3224,7 +3224,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				self.itemList:ScrollItemIntoView(0, true)
 				self.itemSel = 0
 			else
-				LS_Shapes.mode = 2
+				--LS_Shapes.mode = 2
 				self.itemList:SetSelItem(self.itemList:GetItem(0), true)
 				self.itemList:ScrollItemIntoView(0, true)
 				self.itemSel = 0
@@ -3323,38 +3323,58 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		end
 		MOHO.Redraw()
 		self:Update()
-	elseif (msg == self.RAISE or msg == self.RAISE_ALT) then
-		if msg == self.RAISE_ALT then
-			mesh:RaiseShape(shapeID, true)
-			self.itemList:SetSelItem(self.itemList:GetItem((shapeCount) - mesh:ShapeID(shape)), false, false) -- Can't use skipAll/Block in this case...
-		else
-			for i = shapeCount - 1, 0, -1 do
-				if mesh:Shape(i).fSelected then
-					mesh:RaiseShape(i, false)
+	elseif (msg == self.RAISE or msg == self.RAISE_ALT) then --MARK: RAISE
+		local m = self.RAISE - msg -- 0/-1
+		if LS_Shapes.mode < 2 then -- SHAPE Modes
+			if msg == self.RAISE_ALT then
+				mesh:RaiseShape(shapeID, true)
+				self.itemList:SetSelItem(self.itemList:GetItem((shapeCount) - mesh:ShapeID(shape)), false, false) -- Can't use skipAll/Block in this case...
+			else
+				for i = shapeCount - 1, 0, -1 do
+					if mesh:Shape(i).fSelected then
+						mesh:RaiseShape(i, false)
+					end
+				end
+			end
+			MOHO.Redraw()
+			if mesh and mesh:AnimatedShapeOrder() and lFrame ~= 0 then
+				moho:UpdateUI()
+			end
+			self:Update()
+		elseif LS_Shapes.mode == 3 then -- GROUP Mode
+			if mesh then
+				local idx = LS_Shapes:MoveGroup(mesh, itemSel, -1 + m) -- -1 = raise, -2 = to front/top
+				if idx then
+					self.itemList:SetSelItem(self.itemList:GetItem(idx), true, false)
 				end
 			end
 		end
-		MOHO.Redraw()
-		if mesh and mesh:AnimatedShapeOrder() and lFrame ~= 0 then
-			moho:UpdateUI()
-		end
-		self:Update()
 	elseif (msg == self.LOWER or msg == self.LOWER_ALT) then
-		if msg == self.LOWER_ALT then
-			mesh:LowerShape(shapeID, true)
-			self.itemList:SetSelItem(self.itemList:GetItem((shapeCount) - mesh:ShapeID(shape)), false, false) -- Can't use skipAll/Block in this case...
-		else
-			for i = 0, shapeCount - 1 do
-				if mesh:Shape(i).fSelected then
-					mesh:LowerShape(i, false)
+		local m = msg - self.LOWER  -- 0/1
+		if LS_Shapes.mode < 2 then -- SHAPE Modes
+			if msg == self.LOWER_ALT then
+				mesh:LowerShape(shapeID, true)
+				self.itemList:SetSelItem(self.itemList:GetItem((shapeCount) - mesh:ShapeID(shape)), false, false) -- Can't use skipAll/Block in this case...
+			else
+				for i = 0, shapeCount - 1 do
+					if mesh:Shape(i).fSelected then
+						mesh:LowerShape(i, false)
+					end
+				end
+			end
+			MOHO.Redraw()
+			if mesh and mesh:AnimatedShapeOrder() and lFrame ~= 0 then
+				moho:UpdateUI()
+			end
+			self:Update()
+		elseif LS_Shapes.mode == 3 then -- GROUP Mode
+			if mesh then
+				local idx = LS_Shapes:MoveGroup(mesh, itemSel, 1 + m) -- 1 = lower, 2 = to back/bottom
+				if idx then
+					self.itemList:SetSelItem(self.itemList:GetItem(idx), true, false)
 				end
 			end
 		end
-		MOHO.Redraw()
-		if mesh and mesh:AnimatedShapeOrder() and lFrame ~= 0 then
-			moho:UpdateUI()
-		end
-		self:Update()
 	elseif (msg == self.ANIMORDER or msg == self.ANIMORDER_ALT) then
 		local lDrawingOrderCh = moho:DrawingMesh() and LS_Shapes:ChannelByID(moho, lDrawing, CHANNEL_SHAPE_ORDER) or nil -- 20250725: Channel access will ruin any following mesh access attempt!
 		if (lDrawingOrderCh ~= nil) then
@@ -6212,6 +6232,49 @@ function LS_Shapes:MakeGroupNameUnique(mesh, id, jump) --(M_Mesh, int, int) void
 	end
 end
 --]]
+
+function LS_Shapes:GetGroupPoints(mesh, groupIndex) --(M_Mesh, int) tbl
+	local ids = {}
+	local group = mesh:Group(groupIndex)
+	if group then
+		for i = 0, group:CountPoints() - 1 do
+			table.insert(ids, mesh:PointID(group:Point(i)))
+		end
+	end
+	return ids
+end
+
+function LS_Shapes:MoveGroup(mesh, idx, dir, offset) --(M_Mesh, int, int[-1:🔼,-2:⏫,1:🔽,2:⏬], int) int
+	offset = offset or 1
+	local targetIdx = (dir < -1 and 0) or (dir > 1 and mesh:CountGroups() - 1) or idx + dir
+	if targetIdx < 0 or targetIdx >= mesh:CountGroups() then
+		return nil
+	end
+
+	local nameA, nameB = mesh:Group(idx):Name(), mesh:Group(targetIdx):Name()
+	local idsA, idsB = self:GetGroupPoints(mesh, idx), self:GetGroupPoints(mesh, targetIdx)
+	if #idsA == 0 or #idsB == 0 then return targetIdx + offset end
+
+	-- Overwrite group B with points from A
+	mesh:SelectNone()
+	mesh:Point(idsA[1]).fSelected = true
+	mesh:AddGroup(nameB)
+	local groupB = mesh:Group(targetIdx)
+	for i = 2, #idsA do groupB:AddPointID(idsA[i]) end
+
+	-- Overwrite group A with points from B
+	mesh:SelectNone()
+	mesh:Point(idsB[1]).fSelected = true
+	mesh:AddGroup(nameA)
+	local groupA = mesh:Group(idx)
+	for i = 2, #idsB do groupA:AddPointID(idsB[i]) end
+
+	--Exchange names
+	groupA.fName:Set(nameB)
+	groupB.fName:Set(nameA)
+
+	return targetIdx + offset -- final index of the moved group
+end
 
 function LS_Shapes:CountCurves(moho, shape) --(moho, M_Shape) int
 	local mesh = moho:DrawingMesh()
