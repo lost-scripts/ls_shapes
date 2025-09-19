@@ -1895,12 +1895,12 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 	LS_Shapes:Log("1.5") --[End of item update block]--
 
 	self.modeBut:SetToolTip(LS_Shapes.beginnerMode and MOHO.Localize("/LS/Shapes/Mode=Mode: ") .. MOHO.Localize(modes[LS_Shapes.mode] or ""))
-	self.raise:Enable((((LS_Shapes.mode < 2) and shapeID and shapeID >= 0) or (LS_Shapes.mode == 3 and itemsSel == 1)) and self.itemList:SelItem() > 1 or false) --print(self.itemList:SelItem(), ", ", self.itemList:SelItemLabel())
-	self.raise:SetToolTip(LS_Shapes.mode < 4 and MOHO.Localize("/LS/Shapes/RaiseItem=Raise Item") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/RaiseToTop=Raise To Top") .. ")" or "")
+	self.raise:Enable((((LS_Shapes.mode < 2) and shapeID and shapeID >= 0) or (LS_Shapes.mode == 3 and itemsSel == 1)) and self.itemList:SelItem() > 1 or false)
+	self.raise:SetToolTip(LS_Shapes.mode < 2 and (MOHO.Localize("/LS/Shapes/RaiseShape=Raise Shape") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/RaiseToFront=To Front") .. ")" or "") or (MOHO.Localize("/LS/Shapes/RaiseItem=Raise Item") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/RaiseToTop=To Top") .. ")" or ""))
 	self.animOrder:Enable((LS_Shapes.mode < 2 and pro and lFrameAlt ~= 0 and mesh and mesh:AnimatedShapeOrder()))
 	self.animOrder:SetValue(LS_Shapes.mode < 2 and pro and lDrawingOrderKey)
 	self.lower:Enable((((LS_Shapes.mode < 2) and shapeID and shapeID >= 0) or (LS_Shapes.mode == 3 and itemsSel == 1)) and (self.itemList:SelItem() > 0 and not self.itemList:IsItemSelected(self.itemList:CountItems() - 1)) or false)
-	self.lower:SetToolTip(LS_Shapes.mode < 4 and MOHO.Localize("/LS/Shapes/LowerItem=Lower Item") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/LowerToBottom=Lower To Bottom") .. ")" or "")
+	self.lower:SetToolTip(LS_Shapes.mode < 2 and (MOHO.Localize("/LS/Shapes/LowerShape=Lower Shape") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/LowerToBack=To Back") .. ")" or "") or MOHO.Localize("/LS/Shapes/LowerItem=Lower Item") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/LowerToBottom=To Bottom") .. ")" or "")
 	self.selectAllBut:Enable((LS_Shapes.mode < 2 and shapeCount > 0) or (LS_Shapes.mode == 2 and style ~= nil and styleCount > 0) or (LS_Shapes.mode == 3 and groupCount > 0)) --self.selectAllBut:SetLabel(LM_SelectShape:CountSelectedShapes(moho) == mesh:CountShapes() and "✅" or "☑", false) --self.selectAllBut:Redraw() -- 20230922: It seems to tail some text??
 	self.deleteBut:SetToolTip(MOHO.Localize("/Windows/Style/Delete=Delete") .. (LS_Shapes.mode == 2 and " (<alt> " .. MOHO.Localize("/LS/Shapes/UnusedOny=Only If Unused") .. ")" or ""))
 	self.selectMatchingBut:Enable((LS_Shapes.mode < 2 and shape ~= nil and shapesSel == 1 and shapeCount > 1) or (LS_Shapes.mode == 2 and style ~= nil and stylesSel == 1 and styleCount > 1) or (LS_Shapes.mode == 3 and groupSelCount < 2 and groupCount > 1)) --or (LS_Shapes.mode == 3 and groupSelCount == 1 and groupCount > 1)
@@ -3224,7 +3224,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				self.itemList:ScrollItemIntoView(0, true)
 				self.itemSel = 0
 			else
-				--LS_Shapes.mode = 2
+				LS_Shapes.mode = 2
 				self.itemList:SetSelItem(self.itemList:GetItem(0), true)
 				self.itemList:ScrollItemIntoView(0, true)
 				self.itemSel = 0
@@ -6244,10 +6244,33 @@ function LS_Shapes:GetGroupPoints(mesh, groupIndex) --(M_Mesh, int) tbl
 	return ids
 end
 
+	--offset = offset or 1
+	--local targetIdx = (dir < -1 and 0) or (dir > 1 and mesh:CountGroups() - 1) or idx + dir
+	--if targetIdx < 0 or targetIdx >= mesh:CountGroups() then
+		--return nil
+	--end
+
 function LS_Shapes:MoveGroup(mesh, idx, dir, offset) --(M_Mesh, int, int[-1:🔼,-2:⏫,1:🔽,2:⏬], int) int
 	offset = offset or 1
-	local targetIdx = (dir < -1 and 0) or (dir > 1 and mesh:CountGroups() - 1) or idx + dir
-	if targetIdx < 0 or targetIdx >= mesh:CountGroups() then
+	local count = mesh:CountGroups()
+	if count < 2 then return nil end
+
+	-- 🚩 Special K: moving to the top or bottom step by step
+	if dir == -2 then
+		while idx > 0 do
+			idx = self:MoveGroup(mesh, idx, -1, 0) - 0 -- offset 0 to avoid accumulation
+		end
+		return idx + offset
+	elseif dir == 2 then
+		while idx < count - 1 do
+			idx = self:MoveGroup(mesh, idx, 1, 0) - 0
+		end
+		return idx + offset
+	end
+
+	-- 🔄 Normal movement ±1 (direct swap)
+	local targetIdx = idx + dir
+	if targetIdx < 0 or targetIdx >= count then
 		return nil
 	end
 
