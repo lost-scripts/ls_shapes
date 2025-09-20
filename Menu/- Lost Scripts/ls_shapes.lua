@@ -1589,17 +1589,21 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			local shape = mesh:Shape(shapeIndex)
 			local shapeName = shape:Name()
 			local shapeCombo = (shape.fComboMode == MOHO.COMBO_ADD and "+") or (shape.fComboMode == MOHO.COMBO_SUBTRACT and "- ") or (shape.fComboMode == MOHO.COMBO_INTERSECT and "×") or "  "
-			local shapeVis = (shape.fHidden and " *" or "")
+			local shapeVis = (shape.fHidden and " *" or "")
+			local shapeSt1, shapeSt2 = shape.fInheritedStyle and " ·" or "", shape.fInheritedStyle2 and " ." or ""
+			local shapeSt = (shapeSt1 ~= "" and shapeSt2 ~= "" and " :") or (shapeSt1 ~= "" and shapeSt1) or (shapeSt2 ~= "" and shapeSt2) or ""
 
 			if shape == shape:BottomOfCluster() then
-				itemLabel = "↳  " .. shapeCombo .. " " .. shapeName .. shapeVis
+				itemLabel = "↳  " .. shapeCombo .. " "
 			elseif shape == shape:TopOfCluster() then
-				itemLabel = "↱  " .. shapeCombo .. " " .. shapeName .. shapeVis
+				itemLabel = "↱  " .. shapeCombo .. " "
 			elseif shape:IsInCluster() then
-				itemLabel = "    " .. shapeCombo .. " " .. shapeName .. shapeVis
+				itemLabel = "    " .. shapeCombo .. " "
 			else
-				itemLabel = shapeName.. shapeVis
+				itemLabel = ""
 			end
+
+			itemLabel = itemLabel .. shapeName .. shapeSt .. shapeVis
 
 			if listIndex < currentCount then -- Update item if it already exists, otherwise add it
 				if self.itemList:GetItem(listIndex) ~= itemLabel then
