@@ -1290,7 +1290,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		--]]
 		self.itemList:Enable(true) self.itemList:Redraw()
 
-		if self.multiMenuPopup and LS_Shapes.swatch > -1 then
+		if self.multiMenuPopup then
 			self.multiMenuPopup:Enable(true)
 			self.multi1:Enable(true)
 			self.multi2:Enable(true)
@@ -1319,6 +1319,11 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			end
 		end
 	elseif LS_Shapes.mode == 3 then
+		self.multiMenuPopup:Enable(false)
+		self.multi1:Enable(false)
+		self.multi2:Enable(false)
+		self.multi3:Enable(false)
+		self.multi4:Enable(false)
 		if LS_Shapes.pointBasedSel3 == true then
 			if styleName == "" and mesh ~= nil and pointsSel > 0 then -- Avoid Point-Based Selection select any group if a style is being edited to allow normal Style workflow
 				for i = 0, mesh:CountGroups() - 1 do
@@ -4460,30 +4465,42 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				end --string.format(MOHO.Localize("/LS/Shapes/HelpTitle=Quick Guide (up to: %s)"), "v0.4.0")
 			end
 		elseif (doc ~= nil and LS_Shapes.mode == 2) then -- Style Creation
-			local baseStyle = style --or self.tempShape.fMyStyle
-			local newStyle = doc:AddStyle(MOHO.Localize("/Windows/Style/Style=Style") .. " " .. math.floor(doc:CountStyles() + 1))
-			if (newStyle ~= nil) then
-				--LS_Shapes:MakeStyleNameUnique(doc, doc:CountStyles() - 1) --newStyle.fName:Set(newStyleName)
-				newStyle.fFillCol = baseStyle.fFillCol
-				newStyle.fLineCol = baseStyle.fLineCol
-				newStyle.fLineWidth = baseStyle.fLineWidth
-				newStyle.fLineCaps = baseStyle.fLineCaps
-				newStyle.fBrushName = baseStyle.fBrushName
-				if (msg == self.FILLED) then
-					newStyle.fDefineFillCol = true
-					newStyle.fDefineLineCol = false
-				elseif (msg == self.OUTLINED) then
-					newStyle.fDefineFillCol = false
-					newStyle.fDefineLineCol = true
-				elseif (msg == self.FILLEDOUTLINED) then
-					newStyle.fDefineFillCol = true
-					newStyle.fDefineLineCol = true
+			if m % 2 < 2 then -- 0: No Alt
+				local baseStyle = style --or self.tempShape.fMyStyle
+				local newStyle = doc:AddStyle(MOHO.Localize("/Windows/Style/Style=Style") .. " " .. math.floor(doc:CountStyles() + 1))
+				if (newStyle ~= nil) then
+					--LS_Shapes:MakeStyleNameUnique(doc, doc:CountStyles() - 1) --newStyle.fName:Set(newStyleName)
+					newStyle.fFillCol = baseStyle.fFillCol
+					newStyle.fLineCol = baseStyle.fLineCol
+					newStyle.fLineWidth = baseStyle.fLineWidth
+					newStyle.fLineCaps = baseStyle.fLineCaps
+					newStyle.fBrushName = baseStyle.fBrushName
+					if (msg == self.FILLED) then
+						newStyle.fDefineFillCol = true
+						newStyle.fDefineLineCol = false
+					elseif (msg == self.OUTLINED) then
+						newStyle.fDefineFillCol = false
+						newStyle.fDefineLineCol = true
+					elseif (msg == self.FILLEDOUTLINED) then
+						newStyle.fDefineFillCol = true
+						newStyle.fDefineLineCol = true
+					end
+					if style and styleName ~= "" then
+						LS_Shapes.mode = LS_Shapes:StyleLeaver(moho, mesh, 2)
+					end
+					LS_Shapes:StyleSelector(doc, doc:CountStyles() - 1)
+					self:Update()
 				end
-				if style and styleName ~= "" then
-					LS_Shapes.mode = LS_Shapes:StyleLeaver(moho, mesh, 2)
+			else -- 1: Alt
+				--[[ 20250921-1700: I pretended to add style duplicaction by holding <alt> but it seems buggy, so U-turning...
+				if styleSel then
+					doc:AddStyle(styleSel)
+					local lastStyle = doc:CountStyles() - 1
+					local styleName = doc:StyleByID(lastStyle).fName:Buffer()
+					local style = doc:StyleByID(lastStyle)
+					style.fName:Set(styleName .. " " .. math.floor(doc:CountStyles() + 1))
 				end
-				LS_Shapes:StyleSelector(doc, doc:CountStyles() - 1)
-				self:Update()
+				--]]
 			end
 		elseif (mesh ~= nil and LS_Shapes.mode == 3) then -- Group Creation/Update
 			if (msg == self.FILLED or msg == self.FILLED_ALT) then
