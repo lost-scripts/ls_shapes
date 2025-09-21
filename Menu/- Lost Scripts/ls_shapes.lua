@@ -4,7 +4,7 @@
 
 ScriptName = "LS_Shapes"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20250916-2345"
+ScriptBuild = "20250921-1615"
 ScriptVersion = "0.4.1"
 ScriptStage = "BETA"
 ScriptTarget = "Moho® 14.3+ Pro"
@@ -317,7 +317,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 	d.isNewRun = true
 	d.mode = 0
 	d.multiMenuMode = LS_Shapes.multiMenuMode
-	d.info = {i="ℹ ", w="⚠ ", t="💡 ", id="🆔 ", uid="🔣 ", n="🔢 ", li="♒ ", p="🅿 ", sep = " · ", ib=false, up=true, co=true}
+	d.info = {i="ℹ ", w="⚠ ", t="💡 ", id="🆔 ", uid="🔣 ", n="🔢 ", liq="♒ ", pt="🅿 ", sep=" · ", upd=true, cop=true, but=false, pip=false} -- upd: update, cop: copiable, but: button, pip: beep
 	d.infoText = ""
 	d.count = 0
 	d.countFactory = 0
@@ -1227,7 +1227,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			if (self.info.uid2 ~= nil) then
 				self.infoText = string.gsub(self.infoText, self.info.uid2:gsub("-", "%%-"), "…")
 			end
-			if self.info.up then
+			if self.info.upd then
 				self.infobar:SetValue(self.infoText)
 				self.infoBut:SetValue(false)
 			end
@@ -1403,7 +1403,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 					self.baseBut:Enable(position > 1)
 					self.topBut:Enable(position < total)
 					self.mergeBut:Enable(true)
-					self.info[4] = self.info.li .. position .. "/" .. total
+					self.info[4] = self.info.liq .. position .. "/" .. total
 				else
 					self.baseBut:Enable(false)
 					self.topBut:Enable(false)
@@ -1527,14 +1527,14 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		elseif LS_Shapes.mode == 3 then
 			self.info[1] = itemSel > -1 and self.info.id .. itemSel or ""
 			self.info[2] = groupCount > 0 and self.info.n .. itemsSel .. "/" .. groupCount or self.info.n .. groupCount
-			self.info[3] = groupCount > 0 and (groupPtCount ~= nil and self.info.p .. groupPtCount) or nil
+			self.info[3] = groupCount > 0 and (groupPtCount ~= nil and self.info.pt .. groupPtCount) or nil
 			self.info[4] = nil
 		end
 	end
 
 	self.modeBut:SetLabel(MOHO.Localize(modes[LS_Shapes.mode]):gsub("%s+%b()", ""), false)
 
-	if self.info.up then
+	if self.info.upd then
 		self.infoText = table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", "")
 	end
 	if (LS_Shapes.showInfobar and self.infobar) then
@@ -1542,7 +1542,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		if (self.info.uid2 ~= nil) then
 			self.infoText = string.gsub(self.infoText, self.info.uid2:gsub("-", "%%-"), "…")
 		end
-		if self.info.up then
+		if self.info.upd then
 			self.infobar:SetValue(self.infoText) --self.infobar:SetValue(#self.infoText > 30 and (self.infoText):sub(1, 30) .. "…" or self.infoText) -- 2023101011-1530: Discarted for now, since string.sub can "destroy" emojis and cause problems! 
 			self.infoBut:SetValue(false)
 		end
@@ -1918,7 +1918,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		local createCursor = LS_Shapes.mode < 2 and LS_Shapes.resources .. "ls_cursor_create_shape" or LS_Shapes.mode == 2 and LS_Shapes.resources .. "ls_cursor_create_style" or LS_Shapes.resources .. "ls_cursor_create_group"
 		for i, but in ipairs(self.createButtons) do
 			if LS_Shapes.mode ~= 3 then
-				but:Enable(((edgesSel > 0 or pointsSel > 0) and not toolsDisabled) or LS_Shapes.mode > 1)
+				but:Enable(((edgesSel > 0) and not toolsDisabled) or LS_Shapes.mode > 1)
 			else
 				if i == 1 then
 					but:Enable(true)
@@ -2182,7 +2182,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 	self.swatch = LS_Shapes.swatch
 	self.swatchSliderVal = self.swatchSlider and self.swatchSlider:Value() or 1
 	self.prevMousePtX, self.prevMousePtY = (tool and tool.prevMousePt ~= nil) and tool.prevMousePt.x or 0, (tool and tool.prevMousePt ~= nil) and tool.prevMousePt.y or 0
-	self.info.up = true
+	self.info.upd = true
 	self.isNewRun = false
 	self.skipAll = false
 	LS_Shapes.LM_SelectShape.dragMode = -1
@@ -3327,7 +3327,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		end
 		MOHO.Redraw()
 		self:Update()
-	elseif (msg == self.RAISE or msg == self.RAISE_ALT) then --MARK: RAISE
+	elseif (msg == self.RAISE or msg == self.RAISE_ALT) then
 		local m = self.RAISE - msg -- 0/-1
 		if LS_Shapes.mode < 2 then -- SHAPE Modes
 			if msg == self.RAISE_ALT then
@@ -4406,9 +4406,59 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		local m = msg - self.FILLED
 		local creationMode = LM_CreateShape.creationMode
 		if (mesh ~= nil and LS_Shapes.mode < 2) then -- Shape Creation
+			-- 1st step for allowing stacked shapes (kudos to synthsin for pioneering its reintroduction in his "lm_create_shape" mod)
+			local v, c, stackCount = mesh:SelectedCenter(), mesh:CountShapes(), 0
+			for i = 0, mesh:CountShapes() - 1 do
+				local shape = mesh:Shape(i)
+				if shape:AllPointsSelected() == true then
+					stackCount = stackCount + 1
+				end
+			end
+			if stackCount > 0 then
+				--[[Start manual patching
+				self.origPrepUndo = doc.PrepUndo
+				self.origSetDirty = doc.SetDirty
+				doc:PrepUndo(lDrawing)
+				doc:SetDirty()
+				moho.document.PrepUndo = function() end
+				moho.document.SetDirty = function() end
+				--]]
+				LS_Shapes:PatchUndo(doc, lDrawing)
+				mesh:AddLonePoint(v, 0)
+				mesh:AppendPoint(v * 1.0001, 0)
+
+				local penul, last = mesh:Point(mesh:CountPoints() - 2), mesh:Point(mesh:CountPoints() - 1)
+				--penul.fHidden, last.fHidden = true, true -- I kinda like can se the points as visual indication...
+				penul.fSelected, last.fSelected = true, true
+				penul.fWidth:SetValue(0, 0); last.fWidth:SetValue(0, 0)
+			end
+
 			LM_CreateShape.creationMode = math.floor(m / 2)
 			LM_CreateShape:HandleMessage(moho, moho.view, m % 2 == 0 and LM_CreateShape.CREATE or LM_CreateShape.CREATE_CONNECTED)
 			LM_CreateShape.creationMode = creationMode
+
+			-- 2nd step for allowing stacked shapes
+			if stackCount > 0 then
+				--[[End manual patching (restoration)
+				doc.PrepUndo = origPrepUndo
+				doc.SetDirty = origSetDirty
+				--]]
+				LS_Shapes:PatchUndo(doc)
+				mesh:DeletePoint(mesh:CountPoints() - 1)
+			end
+			MOHO.Redraw()
+
+			if c == mesh:CountShapes() then
+				self.info[1], self.info.upd, self.info.cop = MOHO.Localize("/LS/Shapes/NoShapeWasCreated=No shape was created..."), false, false
+				self.infobar:SetValue(table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", ""))
+				self.infoBut:SetValue(true)
+			else
+				if stackCount > 0 then
+					self.info[1], self.info.upd, self.info.cop, self.info.pip = string.format(MOHO.Localize("/LS/Shapes/StackedShapeCreated=Stacked shape created! (%d)"), stackCount), false, false, true
+					self.infobar:SetValue(table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", ""))
+					self.infoBut:SetValue(true)
+				end --string.format(MOHO.Localize("/LS/Shapes/HelpTitle=Quick Guide (up to: %s)"), "v0.4.0")
+			end
 		elseif (doc ~= nil and LS_Shapes.mode == 2) then -- Style Creation
 			local baseStyle = style --or self.tempShape.fMyStyle
 			local newStyle = doc:AddStyle(MOHO.Localize("/Windows/Style/Style=Style") .. " " .. math.floor(doc:CountStyles() + 1))
@@ -4445,14 +4495,14 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 
 					if pointsSel == 1 then
 						if (LS_Shapes.showInfobar and self.infobar) then
-							self.info[1], self.info.up, self.info.co = MOHO.Localize("/LS/Shapes/LonePointGroupCreated=Lone-point group created"), false, false
+							self.info[1], self.info.upd, self.info.cop = MOHO.Localize("/LS/Shapes/LonePointGroupCreated=Lone-point group created"), false, false
 							self.infobar:SetValue(table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", ""))
 							self.infoBut:SetValue(true)
 						end
 					end
 				else -- Can't create
 					if (LS_Shapes.showInfobar and self.infobar) then
-						self.info[1], self.info.co = MOHO.Localize("/LS/Shapes/SelectSomePoints=Select some points first..."), false
+						self.info[1], self.info.cop = MOHO.Localize("/LS/Shapes/SelectSomePoints=Select some points first..."), false
 						self.infobar:SetValue(table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", ""))
 						self.infoBut:SetValue(true)
 					end
@@ -5554,6 +5604,58 @@ function LS_Shapes.MsgFlag(self, msg, ...) --(tbl, int, int...) bool -- NOTE: Re
 	end
 	return false
 end --Usage: print(tostring(LS_Shapes.MsgFlag(self, LS_ShapesDialog.SWATCHSLIDER, MOHO.MSGF_NOTUNDO...)))
+
+function LS_Shapes:PatchUndo(doc, layerOrMulti, shallow, willOnlyAddPoints, action) --(MohoDoc, [MohoLayer|bool], bool, bool, function) void
+	doc = doc or moho.document
+	shallow = shallow or false
+	willOnlyAddPoints = willOnlyAddPoints or false
+	if not doc then return end
+
+	-- Patching phase
+	if not self._origPrepUndo and not self._origPrepMultiUndo then
+		--local isMulti, isLayer = layerOrMulti == true, type(layerOrMulti) == "userdata" -- If you wanted to normalize at the beginning...
+		self._origPrepUndo, self._origPrepMultiUndo, self._origSetDirty = doc.PrepUndo, doc.PrepMultiUndo, doc.SetDirty -- Save originals
+
+		-- Own Undo before patching
+		if layerOrMulti ~= false then
+			if layerOrMulti == true then -- or just `isMulti` if normalized
+				doc:PrepMultiUndo(shallow)
+			elseif type(layerOrMulti) == "userdata" then -- or just `isLayer` if normalized
+				doc:PrepUndo(layerOrMulti, shallow, willOnlyAddPoints)
+			end
+			doc:SetDirty()
+		end
+		-- Patch only what's necessary
+		if layerOrMulti ~= false then
+			if layerOrMulti == true then -- or just `isMulti` if normalized
+				doc.PrepMultiUndo = function() end
+			elseif type(layerOrMulti) == "userdata" then -- or just `isLayer` if normalized
+				doc.PrepUndo = function() end
+			end
+			doc.SetDirty = function() end
+		end
+		-- If there is an action block, execute it protected and restore
+		if type(action) == "function" then
+			local ok, err = pcall(action)
+			self:PatchUndo(doc) -- Always restore
+			if not ok then error(err) end
+		end
+	else
+		-- Restoration phase
+		if not self._origPrepUndo and not self._origPrepMultiUndo then return end -- Extra protection, do nothing if no originals saved
+		doc.PrepUndo, doc.PrepMultiUndo, doc.SetDirty = self._origPrepUndo, self._origPrepMultiUndo, self._origSetDirty
+		self._origPrepUndo, self._origPrepMultiUndo, self._origSetDirty = nil, nil, nil	-- Clear references
+	end
+end --[[Usage:
+1) Linear mode; the change is trivial and unlikely to fail (no pcall, manual restore):
+self:PatchUndo(doc, lDrawing, false, false) -- patch
+-- your code...
+self:PatchUndo(doc) -- restore
+
+2) Callback mode, the code block may fail and you want guaranteed restore without manual call (pcall integrated, auto-restore):
+self:PatchUndo(doc, lDrawing, false, false, function()
+	-- your code...
+end) --]]
 
 MOHO.LS_CT_UNK = 0
 MOHO.LS_CT_RGB = 1
