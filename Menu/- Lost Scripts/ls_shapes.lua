@@ -555,19 +555,19 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				if LS_Shapes.largeButtons then l:AddChild(LM.GUI.TextList(butW + butW1, 0, 0), LM.GUI.ALIGN_FILL, 0) end
 			l:Pop() --V
 			l:PushV(LM.GUI.ALIGN_CENTER, 0)
-				d.combineAdd = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_add", "⊕ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Add=Add"), true, self.COMBO_ADD, true) --" (+)"
+				d.combineAdd = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_add", "⊕‍ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Add=Add"), true, self.COMBO_ADD, true) --" (+)"
 				d.combineAdd.prop = {v = 14, pro = true, tooltip = false} table.insert(d.w, d.combineAdd)
 				l:AddChild(d.combineAdd, LM.GUI.ALIGN_FILL, 0)
 				if LS_Shapes.largeButtons then l:AddChild(LM.GUI.TextList(butW + butW1, 0, 0), LM.GUI.ALIGN_FILL, 0) end
 			l:Pop() --V
 			l:PushV(LM.GUI.ALIGN_CENTER, 0)
-				d.combineSubtract = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_subtract", "⊖ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Subtract=Subtract"), true, self.COMBO_SUBTRACT, true) --⊝" (-)"
+				d.combineSubtract = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_subtract", "⊖‍ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Subtract=Subtract"), true, self.COMBO_SUBTRACT, true) --⊝" (-)"
 				d.combineSubtract.prop = {v = 14, pro = true, tooltip = false} table.insert(d.w, d.combineSubtract)
 				l:AddChild(d.combineSubtract, LM.GUI.ALIGN_FILL, 0)
 				if LS_Shapes.largeButtons then l:AddChild(LM.GUI.TextList(butW + butW1, 0, 0), LM.GUI.ALIGN_FILL, 0) end
 			l:Pop() --V
 			l:PushV(LM.GUI.ALIGN_CENTER, 0)
-				d.combineIntersect = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_intersect", "⊗ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Clip=Clip"), true, self.COMBO_INTERSECT, true) --" (×)"
+				d.combineIntersect = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_shape_combine_intersect", "⊗‍ " .. MOHO.Localize("/Scripts/Tool/SelectShape/Clip=Clip"), true, self.COMBO_INTERSECT, true) --" (×)"
 				d.combineIntersect.prop = {v = 14, pro = true, tooltip = false} table.insert(d.w, d.combineIntersect)
 				l:AddChild(d.combineIntersect, LM.GUI.ALIGN_FILL, 0)
 				if LS_Shapes.largeButtons then l:AddChild(LM.GUI.TextList(butW + butW1, 0, 0), LM.GUI.ALIGN_FILL, 0) end
@@ -1599,9 +1599,9 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			local shapeSt = (shapeSt1 ~= "" and shapeSt2 ~= "" and " :") or (shapeSt1 ~= "" and shapeSt1) or (shapeSt2 ~= "" and shapeSt2) or ""
 
 			if shape == shape:BottomOfCluster() then
-				itemLabel = "↳  " .. shapeCombo .. " "
+				itemLabel = "↳‍  " .. shapeCombo .. " "
 			elseif shape == shape:TopOfCluster() then
-				itemLabel = "↱  " .. shapeCombo .. " "
+				itemLabel = "↱‍  " .. shapeCombo .. " "
 			elseif shape:IsInCluster() then
 				itemLabel = "    " .. shapeCombo .. " "
 			else
