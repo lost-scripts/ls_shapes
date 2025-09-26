@@ -170,8 +170,8 @@ LS_Shapes.dlog = nil
 LS_Shapes.shouldOpen = false
 LS_Shapes.shouldReopen = false
 LS_Shapes.mode = 0 -- 0: DEFAULT, 1: SHAPE, 2: STYLE (Style Management), 3: GROUP (Point Group Mgmt.)
-LS_Shapes.multiMenuLast = (LS_Shapes.multiMode and LS_Shapes.multiMode < 2) and LS_Shapes.multiMode or 0
 LS_Shapes.multiMenuRules = false
+LS_Shapes.multiMenuLast = (LS_Shapes.multiMode and LS_Shapes.multiMode < 2) and LS_Shapes.multiMode or 0
 LS_Shapes.multiValues = {[3] = {0, 0, 0, 1}} -- 3: Recolor
 LS_Shapes.isHelpVisible = false
 LS_Shapes.showHelp = false
@@ -1985,7 +1985,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 					end
 					if LS_Shapes.multiMenuRules == false then
 						if shape and LS_Shapes.LM_SelectShape and LS_Shapes.LM_SelectShape.dragMode == 0 then
-							if (curveID >= 0 and segID >= 0) and shape.fHasOutline then -- an edge was clicked on
+							if (curveID >= 0 and segID >= 0) and shape.fHasOutline then -- An edge was clicked on
 								LS_Shapes.multiMode = 1
 							else
 								LS_Shapes.multiMode = 0
@@ -2041,6 +2041,10 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.multiMenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_mode_cursortip", 0, 0) or nil)
 		self.multiMenuPopup:Redraw()
 		LS_Shapes:Log("1.5.4")
+
+		if shape ~= self.shape or style ~= self.style then
+			self._lastHue, self._lastSat = nil, nil
+		end
 
 		self.hsvBut:SetValue(LS_Shapes.useHsv)
 		self.multi3:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_col_b", 0, 0))
@@ -3881,6 +3885,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				self.lineWidth:SetValue(mohoLineWidth * docH)
 				self.capsBut:SetValue(true)
 				self.brushBut:SetValue(false)
+				self._lastHue = nil
 				helper:delete()
 				return
 			end
@@ -3935,6 +3940,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			end
 			MOHO.Redraw()
 		end
+		self._lastHue = nil
 		self:Update()
 		moho:UpdateUI()
 	elseif (msg == self.COMBO_NORMAL) then --MARK: COMBO
@@ -4189,6 +4195,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			self.multi2:SetValue(self.fillCol:Value().g / (LS_Shapes.useHsv and 255 or 1))
 			self.multi3:SetValue(self.fillCol:Value().b / (LS_Shapes.useHsv and 255 or 1))
 			self.multi4:SetValue(self.fillCol:Value().a / 255) --(1 - self.fillCol:Value().a / 255) * 100
+			self._lastHue = nil
 		end
 		self.coloredTable = {}
 	elseif (msg == self.FILLCOLOROVER) then --styleName ~= "" or (style1 and style1.fDefineLineWidth or style2 and style2.fDefineLineWidth)
@@ -4310,6 +4317,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			self.multi2:SetValue(self.lineCol:Value().g)
 			self.multi3:SetValue(self.lineCol:Value().b)
 			self.multi4:SetValue(self.fillCol:Value().a / 255 * 100)
+			self._lastHue = nil
 		end
 		self.coloredTable = {}
 	elseif (msg == self.LINECOLOROVER) then
