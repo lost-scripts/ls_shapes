@@ -61,8 +61,9 @@ function LS_Shapes:LoadPrefs(prefs) --print("LS_Shapes:LoadPrefs(" .. tostring(p
 	self.swatchLayer = prefs:GetInt("LS_Shapes.swatchLayer", 1)
 	self.swatchPath = prefs:GetString("LS_Shapes.swatchPath", "")
 	self.brushDirectory = prefs:GetInt("LS_Shapes.brushDirectory", 2)
-	self.multiMenuMode = prefs:GetInt("LS_Shapes.multiMenuMode", 0)
-	self.multiMenuFlags = prefs:GetInt("LS_Shapes.multiMenuFlags", 0)
+	self.multiMode = prefs:GetInt("LS_Shapes.multiMode", 0)
+	self.multiFlags = prefs:GetInt("LS_Shapes.multiFlags", 0)
+	self.useHsv = prefs:GetBool("LS_Shapes.useHsv", false)
 	self.alertCantOpen = prefs:GetInt("LS_Shapes.alertCantOpen", 0)
 	self.alertShowInTools = prefs:GetInt("LS_Shapes.alertShowInTools", 0)
 	self.lastMOHO = prefs:GetString("LS_Shapes.lastMOHO", tostring(0))
@@ -98,8 +99,9 @@ function LS_Shapes:SavePrefs(prefs) --print("LS_Shapes:SavePrefs(" .. tostring(p
 	prefs:SetInt("LS_Shapes.swatchLayer", self.swatchLayer)
 	prefs:SetString("LS_Shapes.swatchPath", self.swatchPath)
 	prefs:SetInt("LS_Shapes.brushDirectory", self.brushDirectory)
-	prefs:SetInt("LS_Shapes.multiMenuMode", self.multiMenuMode)
-	prefs:SetInt("LS_Shapes.multiMenuFlags", self.multiMenuFlags)
+	prefs:SetInt("LS_Shapes.multiMode", self.multiMode)
+	prefs:SetInt("LS_Shapes.multiFlags", self.multiFlags)
+	prefs:SetBool("LS_Shapes.useHsv", self.useHsv)
 	prefs:SetInt("LS_Shapes.alertCantOpen", self.alertCantOpen)
 	prefs:SetInt("LS_Shapes.alertShowInTools", self.alertShowInTools)
 	prefs:SetInt("LS_Shapes.FirstRun2", self.FirstRun2)
@@ -126,8 +128,9 @@ function LS_Shapes:ResetPrefs()
 	LS_Shapes.swatchLayer = 1
 	LS_Shapes.swatchPath = ""
 	LS_Shapes.brushDirectory = 2
-	LS_Shapes.multiMenuMode = 0 -- 0: Fill, 1: Stroke, 2: FX, 3: Recolor (RGB), 4: Recolor (HSB)
-	LS_Shapes.multiMenuFlags = 1 -- 1: Affects Fills, 2: Affects Strokes, 4: Affects Alpha, 8: ...
+	LS_Shapes.multiMode = 0 -- 0: Fill, 1: Stroke, 2: FX, 3: Recolor
+	LS_Shapes.multiFlags = 1 -- 1: Affects Fills, 2: Affects Strokes, 4: Affects Alpha, 8: ...
+	LS_Shapes.useHsv = false
 	LS_Shapes.alertCantOpen = 0
 	LS_Shapes.alertShowInTools = 0
 end
@@ -167,9 +170,9 @@ LS_Shapes.dlog = nil
 LS_Shapes.shouldOpen = false
 LS_Shapes.shouldReopen = false
 LS_Shapes.mode = 0 -- 0: DEFAULT, 1: SHAPE, 2: STYLE (Style Management), 3: GROUP (Point Group Mgmt.)
-LS_Shapes.multiMenuLast = (LS_Shapes.multiMenuMode and LS_Shapes.multiMenuMode < 2) and LS_Shapes.multiMenuMode or 0
 LS_Shapes.multiMenuRules = false
-LS_Shapes.multiValues = {[3] = {0, 0, 0, 1}, [4] = {0, 0, 0, 0}}
+LS_Shapes.multiMenuLast = (LS_Shapes.multiMode and LS_Shapes.multiMode < 2) and LS_Shapes.multiMode or 0
+LS_Shapes.multiValues = {[3] = {0, 0, 0, 1}} -- 3: Recolor
 LS_Shapes.isHelpVisible = false
 LS_Shapes.showHelp = false
 --LS_Shapes.DarkHighlight = "224 160 0 255" --224 160 0 255
@@ -260,18 +263,19 @@ LS_ShapesDialog.OUTLINED_ALT			= MOHO.MSG_BASE + 58
 LS_ShapesDialog.FILLEDOUTLINED			= MOHO.MSG_BASE + 59
 LS_ShapesDialog.FILLEDOUTLINED_ALT		= MOHO.MSG_BASE + 60
 
-LS_ShapesDialog.MULTI1					= MOHO.MSG_BASE + 61
-LS_ShapesDialog.MULTI2					= MOHO.MSG_BASE + 62
-LS_ShapesDialog.MULTI3					= MOHO.MSG_BASE + 63
-LS_ShapesDialog.MULTI4					= MOHO.MSG_BASE + 64
-LS_ShapesDialog.APPLY					= MOHO.MSG_BASE + 65; LS_ShapesDialog.F.APPLY = {[3] = MOHO.MSGF_MULTIUNDO, [4] = MOHO.MSGF_MULTIUNDO}
-LS_ShapesDialog.APPLY_ALT				= MOHO.MSG_BASE + 66; LS_ShapesDialog.F.APPLY_ALT = {[3] = MOHO.MSGF_MULTIUNDO, [4] = MOHO.MSGF_MULTIUNDO}
-LS_ShapesDialog.SWATCHSLIDER			= MOHO.MSG_BASE + 67; LS_ShapesDialog.F.SWATCHSLIDER = MOHO.MSGF_NOTUNDO + MOHO.MSGF_PASS
-LS_ShapesDialog.INFO					= MOHO.MSG_BASE + 68; LS_ShapesDialog.F.INFO = MOHO.MSGF_NOTUNDO
+LS_ShapesDialog.HSV						= MOHO.MSG_BASE + 61; LS_ShapesDialog.F.HSV = MOHO.MSGF_NOTUNDO
+LS_ShapesDialog.MULTI1					= MOHO.MSG_BASE + 62
+LS_ShapesDialog.MULTI2					= MOHO.MSG_BASE + 63
+LS_ShapesDialog.MULTI3					= MOHO.MSG_BASE + 64
+LS_ShapesDialog.MULTI4					= MOHO.MSG_BASE + 65
+LS_ShapesDialog.APPLY					= MOHO.MSG_BASE + 66; LS_ShapesDialog.F.APPLY = {[3] = MOHO.MSGF_MULTIUNDO, [4] = MOHO.MSGF_MULTIUNDO}
+LS_ShapesDialog.APPLY_ALT				= MOHO.MSG_BASE + 67; LS_ShapesDialog.F.APPLY_ALT = {[3] = MOHO.MSGF_MULTIUNDO, [4] = MOHO.MSGF_MULTIUNDO}
+LS_ShapesDialog.SWATCHSLIDER			= MOHO.MSG_BASE + 68; LS_ShapesDialog.F.SWATCHSLIDER = MOHO.MSGF_NOTUNDO + MOHO.MSGF_PASS
+LS_ShapesDialog.INFO					= MOHO.MSG_BASE + 69; LS_ShapesDialog.F.INFO = MOHO.MSGF_NOTUNDO
 
-LS_ShapesDialog.DUMMY					= MOHO.MSG_BASE + 69
-LS_ShapesDialog.CHANGE					= MOHO.MSG_BASE + 70; LS_ShapesDialog.F.CHANGE = MOHO.MSGF_NOTUNDO
-LS_ShapesDialog.NONE					= MOHO.MSG_BASE + 71; LS_ShapesDialog.F.CHANGE = MOHO.MSGF_NOTUNDO
+LS_ShapesDialog.DUMMY					= MOHO.MSG_BASE + 70
+LS_ShapesDialog.CHANGE					= MOHO.MSG_BASE + 71; LS_ShapesDialog.F.CHANGE = MOHO.MSGF_NOTUNDO
+LS_ShapesDialog.NONE					= MOHO.MSG_BASE + 72; LS_ShapesDialog.F.CHANGE = MOHO.MSGF_NOTUNDO
 
 LS_ShapesDialog.MAINMENU				= MOHO.MSG_BASE +  300; LS_ShapesDialog.F.MAINMENU = {[6] = MOHO.MSGF_REOPEN, [7] = MOHO.MSGF_REOPEN, [8] = MOHO.MSGF_REOPEN, [9] = MOHO.MSGF_REOPEN}
 LS_ShapesDialog.MULTIMENU				= MOHO.MSG_BASE +  400
@@ -301,7 +305,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 	local doc = moho.document
 	local docH = doc and doc:Height() or 240
 	local style = moho:CurrentEditStyle()
-	local mainW = 150 --144 --140 --132
+	local mainW = 166 --150
 	local padH, padV = 3, 3
 	local butW = 16
 	local butW1 = LS_Shapes.largeButtons and 6 or 0
@@ -316,7 +320,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 	d.change = self.CHANGE
 	d.isNewRun = true
 	d.mode = 0
-	d.multiMenuMode = LS_Shapes.multiMenuMode
+	d.multiMode = LS_Shapes.multiMode
 	d.info = {i="ℹ ", w="⚠ ", t="💡 ", id="🆔 ", uid="🔣 ", n="🔢 ", liq="♒ ", pt="🅿 ", sep=" · ", upd=true, cop=true, but=false, pip=false} -- upd: update, cop: copiable, but: button, pip: beep
 	d.infoText = ""
 	d.count = 0
@@ -345,7 +349,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 			l:AddPadding(LS_Shapes.largeButtons and padH or 0) --l:AddPadding(-7)
 			d.menu1 = LM.GUI.Menu("") --☰⁝⚙…
 			d.menu1.conditionalItems = {}
-			d.menu1Popup = LM.GUI.PopupMenu(menuW, false)
+			d.menu1Popup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and menuW + 4 or menuW, false) --LS_Shapes.UseLargeFonts and menuW + 4 or menuW
 			--d.menu1Popup:SetToolTip(MOHO.Localize("/Dialogs/LayerSettings/General=General")) --"/Dialogs/LayerSettings/GeneralTab/Options=Options"
 			d.menu1Popup:SetMenu(d.menu1)
 			l:AddChild(d.menu1Popup, LM.GUI.ALIGN_LEFT, 6) --largeFonts = d.menu1Popup:Height() > 24 
@@ -534,7 +538,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				d.itemList = LM.GUI.ImageTextList(mainW, listHeight, self.CHANGE) --175
 				d.itemList:SetAllowsMultipleSelection(true)
 				d.itemList:SetDrawsPrimarySelection(true)
-				d.itemList:AddItem((" "):rep(13) .. MOHO.Localize("/Windows/Style/None=<None>"), false)
+				d.itemList:AddItem((" "):rep(15) .. MOHO.Localize("/Windows/Style/None=<None>"), false)
 				d.itemList:ScrollItemIntoView(d.shapeID or 0, false)
 				l:AddChild(d.itemList, LM.GUI.ALIGN_FILL)
 			l:Pop() --H
@@ -709,7 +713,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 					l:PushV(LM.GUI.ALIGN_FILL, 0)
 						l:AddPadding(-11) --15
 						d.brushMenu = LM.GUI.Menu("🖌")
-						d.brushMenuPopup = LM.GUI.PopupMenu(LS_Shapes.largeButtons and butW + butW1 or 22, false)
+						d.brushMenuPopup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and menuW + 4 or 22, false) --LS_Shapes.largeButtons and butW + butW1 or 22
 						d.brushMenuPopup:SetMenu(d.brushMenu)
 						l:AddChild(d.brushMenuPopup, LM.GUI.ALIGN_FILL, 0)
 					l:Pop() --V
@@ -724,50 +728,50 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:AddPadding(-2)
 				--l:Unindent(2)
 				l:PushH(LM.GUI.ALIGN_LEFT, 0)
-					l:AddPadding(-20)
-					l:AddPadding(0)
-					d.multiMenu = LM.GUI.Menu("Multi Menu") --¹²①②₁₂
-					d.multiMenuPopup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and 54 or 42, true)
+					l:AddPadding(LS_Shapes.UseLargeFonts and -24 or -20) -- Swipe left (-24 or -20)
+					l:AddPadding(0) -- Allows right-side clipping provided that container below isn't wider?
+					d.multiMenu = LM.GUI.Menu("Multi Menu")
+					d.multiMenuPopup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and 54 or 42, true) -- Popup width (54 or 42)
 					d.multiMenuPopup:SetToolTip(MOHO.Localize("/LS/Shapes/MultiFunctionMenu=Multi-Function Menu"))
 					d.multiMenuPopup:SetMenu(d.multiMenu)
 					d.multiMenu:AddItem("⚫ " .. MOHO.Localize("/LS/Shapes/Fill=Fill"), 0, self.MULTIMENU) 
 					d.multiMenu:AddItem("⚪ " .. MOHO.Localize("/LS/Shapes/Stroke=Stroke"), 0, self.MULTIMENU + 1)
 					d.multiMenu:AddItem("📌 " .. MOHO.Localize("/LS/Shapes/FXTransform=FX Transform"), 0, self.MULTIMENU + 2)
-					d.multiMenu:AddItem("🚥 " .. MOHO.Localize("/LS/Shapes/RecolorRGB=Recolor (RGBα)"), 0, self.MULTIMENU + 3)
-					d.multiMenu:AddItem("🌈 " .. MOHO.Localize("/LS/Shapes/RecolorRGB=Recolor (HSB)"), 0, self.MULTIMENU + 4) -- On second thought... there should only be one mode (RGB) and one option bellow to switch to HSB format (TODO)
+					d.multiMenu:AddItem("🌈‍ " .. MOHO.Localize("/LS/Shapes/Recolor=Recolor"), 0, self.MULTIMENU + 3)
 					d.multiMenu:AddItem("", 0, 0)
-					d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/CopyValues=Copy Values"), 0, self.MULTIMENU + 5) --✂
-					d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/PasteValues=Paste Values"), 0, self.MULTIMENU + 6) --📋
-					d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/ResetValues=Reset Values"), 0, self.MULTIMENU + 7) --↺
+					d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/CopyValues=Copy Values"), 0, self.MULTIMENU + 4) --✂
+					d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/PasteValues=Paste Values"), 0, self.MULTIMENU + 5) --📋
+					d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/ResetValues=Reset Values"), 0, self.MULTIMENU + 6) --↺
 					d.multiMenu:AddItem("", 0, 0)
 					d.multiMenu:AddItem("UTILITIES: ", 0, 0) d.multiMenu:SetEnabled(0, false)
-					d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/InvertColor=Invert Color"), 0, self.MULTIMENU + 8) --◑
-					d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/MultiplyColor=Multiply Colors"), 0, self.MULTIMENU + 9) --× Add Colors, Subtract Colors?
-					--d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/BlendColors=Blend (50%)"), 0, self.MULTIMENU + 12) --💫 This, in  any case, should be a mode in order to allow live % changes...
+					d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/InvertColor=Invert Color"), 0, self.MULTIMENU + 7) --◑
+					d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/MultiplyColor=Multiply Colors"), 0, self.MULTIMENU + 8) --× Add Colors, Subtract Colors?
 					d.multiMenu:AddItem("", 0, 0)
 					d.multiMenu:AddItem("OPTIONS: ", 0, 0) d.multiMenu:SetEnabled(0, false)
-					d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/AffectsFills=Affects Fills"), 0, self.MULTIMENU + 10)
-					d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/AffectsStrokes=Affects Strokes"), 0, self.MULTIMENU + 11)
-					d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/AffectsAlpha=Affects Alpha"), 0, self.MULTIMENU + 12)
+					d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/AffectsFills=Affects Fills"), 0, self.MULTIMENU + 9)
+					d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/AffectsStrokes=Affects Strokes"), 0, self.MULTIMENU + 10)
+					d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/AffectsAlpha=Affects Alpha"), 0, self.MULTIMENU + 11)
 					l:AddChild(d.multiMenuPopup, LM.GUI.ALIGN_FILL, 0)
-					l:AddPadding(-16)
+					l:AddPadding(LS_Shapes.UseLargeFonts and -20 or -16) -- Right clipping (-20 or -16)
 				l:Pop() --H
 				l:AddPadding(-d.multiMenuPopup:Height()) -- + 2 (if Unindent/Indent)
 				l:PushH(LM.GUI.ALIGN_RIGHT, 0)
-					l:AddPadding(24)
-					d.multi1 = LM.GUI.TextControl(0, LS_Shapes.UseLargeFonts and "-0" or "0  0", self.MULTI1, LM.GUI.FIELD_FLOAT) --32
+					l:AddPadding(24) -- Left padding to avoid overlapping (24)
+					d.hsvBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_color_hsb", MOHO.Localize("/LS/Shapes/UseHSB=Use HSB") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/HSB=Hue, Sat. & Bright.") .. ")" or "") , true, self.HSV, true)
+					l:AddChild(d.hsvBut, LM.GUI.ALIGN_FILL, 1)
+					d.multi1 = LM.GUI.TextControl(0, LS_Shapes.UseLargeFonts and "-0" or "000", self.MULTI1, LM.GUI.FIELD_FLOAT) --"0  0" --32
 					d.multi1:SetUnits(LM.GUI.UNIT_NONE)
 					d.multi1:SetWheelInc(2)
 					d.multi1:SetWheelInteger(true)
 					l:AddChild(d.multi1, LM.GUI.ALIGN_FILL, 0)
 					l:AddPadding(1)
-					d.multi2 = LM.GUI.TextControl(0, LS_Shapes.UseLargeFonts and "-0" or "0  0", self.MULTI2, LM.GUI.FIELD_FLOAT)
+					d.multi2 = LM.GUI.TextControl(0, LS_Shapes.UseLargeFonts and "-0" or "000", self.MULTI2, LM.GUI.FIELD_FLOAT)
 					d.multi2:SetUnits(LM.GUI.UNIT_NONE)
 					d.multi2:SetWheelInc(2)
 					d.multi2:SetWheelInteger(true)
 					l:AddChild(d.multi2, LM.GUI.ALIGN_FILL, 0)
 					l:AddPadding(1)
-					d.multi3 = LM.GUI.TextControl(0, LS_Shapes.UseLargeFonts and "-0" or "0  0", self.MULTI3, LM.GUI.FIELD_FLOAT)
+					d.multi3 = LM.GUI.TextControl(0, LS_Shapes.UseLargeFonts and "-0" or "000", self.MULTI3, LM.GUI.FIELD_FLOAT)
 					d.multi3:SetUnits(LM.GUI.UNIT_NONE)
 					d.multi3:SetWheelInc(2)
 					d.multi3:SetWheelInteger(true)
@@ -782,7 +786,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 					l:AddPadding(1)
 					d.applyBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_mode_apply", MOHO.Localize("/LS/Shapes/ApplyMode=Apply"), false, self.APPLY, true)
 					d.applyBut:SetAlternateMessage(self.APPLY_ALT)
-					l:AddChild(d.applyBut, LM.GUI.ALIGN_FILL, 0)
+					l:AddChild(d.applyBut, LM.GUI.ALIGN_FILL, 1)
 				l:Pop() --H
 				--l:Indent(2)
 			l:Pop() --V
@@ -816,7 +820,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:AddPadding(2)
 				l:AddPadding(0)
 				d.swatchMenu = LM.GUI.Menu("🎨") --⊞▦▩⩩⩨
-				d.swatchMenuPopup = LM.GUI.PopupMenu(menuW, false) --8 + 2?
+				d.swatchMenuPopup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and menuW + 4 or menuW, false) --8 + 2?
 				d.swatchMenuPopup:SetMenu(d.swatchMenu)
 				l:AddChild(d.swatchMenuPopup)
 				l:AddPadding(2)
@@ -1215,6 +1219,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 
 			if LS_Shapes.swatch > -1 then
 				self.multiMenuPopup:Enable(false)
+				self.hsvBut:Enable(false)
 				self.multi1:Enable(false)
 				self.multi2:Enable(false)
 				self.multi3:Enable(false)
@@ -1256,6 +1261,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 				self.style1Menu:SetChecked(self.SELECTSTYLE1, true) self.style1MenuPopup:Redraw()
 				self.swapBut:Enable(false)
 				self.style2Menu:SetChecked(self.SELECTSTYLE2, true) self.style2MenuPopup:Redraw()
+				self.swatchMenuPopup:Enable(false)
 				if (LS_Shapes.showInfobar and self.infobar) then
 					self.info[1] = "v" .. LS_Shapes.version .. " " .. LS_Shapes.stage .. (LS_Shapes.debugMode and " · 🐞" or "") .. " · " .. MOHO.Localize("/LS/Shapes/NoDoc=No doc...")
 					self.infobar:SetValue(table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", ""))
@@ -1290,13 +1296,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		--]]
 		self.itemList:Enable(true) self.itemList:Redraw()
 
-		if self.multiMenuPopup then
-			self.multiMenuPopup:Enable(true)
-			self.multi1:Enable(true)
-			self.multi2:Enable(true)
-			self.multi3:Enable(true)
-			self.multi4:Enable(true)
-		end
 		if LS_Shapes.showInfobar then
 			self.infoBut:Enable(true)
 		end
@@ -1319,11 +1318,13 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			end
 		end
 	elseif LS_Shapes.mode == 3 then
-		self.multiMenuPopup:Enable(false)
-		self.multi1:Enable(false)
-		self.multi2:Enable(false)
-		self.multi3:Enable(false)
-		self.multi4:Enable(false)
+		self.fillCheck:Enable(false)
+		self.fillCol:Enable(false)
+		self.swapColBut:Enable(false)
+		self.lineCheck:Enable(false)
+		self.lineCol:Enable(false)
+		self.lineWidth:Enable(false)
+		self.capsBut:Enable(false)
 		if LS_Shapes.pointBasedSel3 == true then
 			if styleName == "" and mesh ~= nil and pointsSel > 0 then -- Avoid Point-Based Selection select any group if a style is being edited to allow normal Style workflow
 				for i = 0, mesh:CountGroups() - 1 do
@@ -1353,18 +1354,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 	local shapeCount = mesh and math.floor(mesh:CountShapes()) or 0
 	local shapesSel = math.floor(moho:CountSelectedShapes(true)) -- Use this instead LM_SelectShape:CountSelectedShapes??
 	local shapeTable = {}
-
-	if LS_Shapes.mode < 2 then -- SHAPE Modes
-		--itemID = shapeCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, shapeCount) - 1 or -1
-		--item = mesh and itemID > -1 and mesh:ShapeByID(itemID) or nil
-	elseif LS_Shapes.mode == 2 then -- STYLE Mode
-		itemID = styleCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, styleCount) - 1 or -1
-		item = doc and itemID > -1 and doc:StyleByID(itemID) or nil
-	else -- GROUP Mode
-		itemID = mesh and groupCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, groupCount) - 1 or -1
-		item = mesh and itemID > -1 and mesh:Group(itemID) or nil
-	end
-	self.groupUI = item --self.groupUI = mesh and mesh:Group(self.itemList:SelItem() > 0 and self.itemList:SelItem() - 1) or nil
 
 	if (shape ~= nil) then -- Shape/s selected... MARK: SHAPE
 		LS_Shapes.mode = 1
@@ -1435,10 +1424,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			end
 		end
 
-		--self.modeBut:Enable(true)
-		self.itemName:Enable(true)
 		self.itemPreview:Enable(true)
-		self.itemVisCheck:Enable(true)
 		self.itemVisCheck:SetValue(not shape.fHidden)
 		if LS_Shapes.advanced then
 			self.fillCheck:SetValue(shape.fHasFill)
@@ -1468,7 +1454,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			self.brushBut:SetValue(brushButVal)
 			self.brushBut:Enable(brushButVal)
 		end
-		self.deleteBut:Enable(true)
 		self.info[1] = ""
 		self.info[2] = shapeLUID > -1 and self.info.id .. shapeLUID or self.info.id .. "?"
 		self.info[3] = shapeCount > 0 and self.info.n .. shapesSel .. "/" .. shapeCount or shapeCount
@@ -1498,20 +1483,17 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			self.mergeBut:Enable(false)
 		end
 
-		self.deleteBut:Enable(false)
-		self.itemName:Enable(false)
-		self.itemVisCheck:Enable(false)
 		self.itemVisCheck:SetValue(true)
 		self.itemPreview:Enable(false)
 		if LS_Shapes.advanced then
 			self.fillCheck:SetValue(true)
 			self.fillCheck:Enable(false)
-			self.fillCol:Enable(true)
+			self.fillCol:Enable(LS_Shapes.mode < 3 and true)
 			self.fillColOverride:Enable(styleName ~= "" or (style1 and style1.fDefineFillCol or style2 and style2.fDefineFillCol))
 			self.fillColOverride:SetValue(style and style.fDefineFillCol)
 			self.lineCheck:SetValue(true)
 			self.lineCheck:Enable(false)
-			self.lineCol:Enable(true)
+			self.lineCol:Enable(LS_Shapes.mode < 3 and true)
 			self.lineColOverride:Enable(styleName ~= "" or (style1 and style1.fDefineLineCol or style2 and style2.fDefineLineCol))
 			self.lineColOverride:SetValue(style and style.fDefineLineCol)
 			self.lineWidthOverride:Enable(styleName ~= "" or (style1 and style1.fDefineLineWidth or style2 and style2.fDefineLineWidth))
@@ -1538,6 +1520,17 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 	end
 
 	self.modeBut:SetLabel(MOHO.Localize(modes[LS_Shapes.mode]):gsub("%s+%b()", ""), false)
+	if LS_Shapes.mode < 2 then -- SHAPE Modes
+		--itemID = shapeCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, shapeCount) - 1 or -1
+		--item = mesh and itemID > -1 and mesh:ShapeByID(itemID) or nil
+	elseif LS_Shapes.mode == 2 then -- STYLE Mode
+		itemID = styleCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, styleCount) - 1 or -1
+		item = doc and itemID > -1 and doc:StyleByID(itemID) or nil
+	else -- GROUP Mode
+		itemID = mesh and groupCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, groupCount) - 1 or -1
+		item = mesh and itemID > -1 and mesh:Group(itemID) or nil
+	end
+	self.groupUI = item --self.groupUI = mesh and mesh:Group(self.itemList:SelItem() > 0 and self.itemList:SelItem() - 1) or nil
 
 	if self.info.upd then
 		self.infoText = table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", "")
@@ -1662,8 +1655,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		if shapeID and shapeID >= 0 then
 			self.itemName:Enable(true)
 			self.itemName:SetValue(mesh:Shape(shapeID):Name())
-			--self.itemVisCheck:Enable(true) -- TODO (20231129-2233): Study if necessary...
-			--self.itemVisCheck:SetValue(not mesh:Shape(shapeID).fHidden) -- TODO (20231129-2233): Study if necessary...
 			self.itemList:ScrollItemIntoView(shapeCount - shapeID, true)
 		elseif shapeID < 0 then
 			self.itemName:Enable(false)
@@ -1674,9 +1665,11 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 				self.itemList:ScrollItemIntoView(0, true) -- It doesn't seem to scroll to item 0
 			end
 		end
+		self.itemVisCheck:Enable(self.itemList:SelItem() > 0)
 		self.itemVisCheck:SetToolTip(MOHO.Localize("/LS/Shapes/ShapeVisibility=Shape Visibility (Hide/Unhide)"))
+		self.deleteBut:Enable(shapesSel > 0)
+		self.swapColBut:Enable(true)
 		self.skipBlock = false
-		--]]
 		LS_Shapes:Log("1.4.1")
 	elseif LS_Shapes.mode == 2 then -- STYLE Mode
 		---[[Performance Overhaul 
@@ -1797,6 +1790,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.skipBlock = false
 		self.itemName:Enable(self.itemList:SelItem() > 0)
 		self.deleteBut:Enable(stylesSel > 0)
+		self.swapColBut:Enable(true)
 		LS_Shapes:Log("1.4.2")
 	elseif LS_Shapes.mode == 3 then -- GROUP Mode
 		LS_Shapes:ProcessGroups(mesh, lDrawingUUID)
@@ -1883,7 +1877,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		if self.groupUI and itemID >= 0 then
 			self.itemName:Enable(true)
 			self.itemName:SetValue(self.groupUI:Name())
-			self.itemVisCheck:Enable(true)
 			self.itemVisCheck:SetValue(not self.groupUI.ls_fHidden)
 			self.itemList:ScrollItemIntoView(groupCount - mesh:GroupID(self.groupUI), true)
 		elseif not self.groupUI and (itemID < 1 or groupSelCount < 1) then
@@ -1895,9 +1888,11 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 				self.itemList:ScrollItemIntoView(0, true) -- It doesn't seem to scroll to item 0
 			end
 		end
+		self.itemVisCheck:Enable(self.itemList:SelItem() > 0)
 		self.itemName:Enable(self.itemList:SelItem() > 0)
 		self.itemVisCheck:SetToolTip(MOHO.Localize("/LS/Shapes/GroupVisibility=Group Visibility (Hide/Unhide)"))
 		self.deleteBut:Enable(groupSelCount > 0)
+		self.swapColBut:Enable(false)
 		self.skipBlock = false
 		LS_Shapes:Log("1.4.3")
 	end
@@ -1939,21 +1934,20 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.createButtons[2]:SetToolTip((LS_Shapes.mode < 2 and MOHO.Localize("/LS/Shapes/CreateStroke=Create Stroke") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")") or LS_Shapes.mode == 2 and MOHO.Localize("/LS/Shapes/CreateStrokeColorOverriderStyle=Create Stroke Color Overrider Style") or MOHO.Localize("/LS/Shapes/UpdatePointGroup=Update Point Group"))
 		self.createButtons[3]:SetToolTip((LS_Shapes.mode < 2 and MOHO.Localize("/LS/Shapes/CreateBoth=Create Both") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")") or LS_Shapes.mode == 2 and MOHO.Localize("/LS/Shapes/CreateStyle=Create Style") or "")
 
-		self.fillCheck:Enable(LS_Shapes.mode < 3)
-		self.fillCol:Enable(LS_Shapes.mode < 3)
-		self.swapColBut:Enable(LS_Shapes.mode < 3)
-		self.lineCheck:Enable(LS_Shapes.mode < 3)
-		self.lineCol:Enable(LS_Shapes.mode < 3)
-		self.lineWidth:Enable(LS_Shapes.mode < 3)
-		--self.lineWidth:SetCursor(not self.lineWidth:IsEnabled() and nil)
-		self.capsBut:Enable(LS_Shapes.mode < 3)
 		self.brushBut:SetToolTip(MOHO.Localize("/Dialogs/BrushPicker/Brush=Brush") .. ": " .. (brush ~= "" and brush or MOHO.Localize("/Dialogs/BrushPicker/None=None") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/PickBelow=Pick Below") .. ")" or "")))
 		self.brushMenuPopup:Enable(LS_Shapes.mode < 3)
 		self.brushMenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_shape_brush_cursortip", 0, 0) or nil)
+		self.multiMenuPopup:Enable(LS_Shapes.mode < 3)
+		self.hsvBut:Enable(LS_Shapes.mode < 3 and LS_Shapes.multiMode ~= 2)
+		self.multi1:Enable(LS_Shapes.mode < 3)
+		self.multi2:Enable(LS_Shapes.mode < 3)
+		self.multi3:Enable(LS_Shapes.mode < 3)
+		self.multi4:Enable(LS_Shapes.mode < 3)
+		self.swatchMenuPopup:Enable(LS_Shapes.mode < 3)
 		self.style1MenuPopup:Enable(styleName == "" and LS_Shapes.mode ~= 3) self.style1MenuPopup:Redraw()
 		self.style1MenuPopup:SetToolTip(MOHO.Localize("/Windows/Style/Style1=Style 1") .. (style1Name ~= "" and ": " .. style1Name or "") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/AppliesAbove=Applies Above") .. ")" or ""))
 		self.style1MenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_shape_style_1_cursortip", 0, 0) or nil)
-		self.swapBut:Enable(styleName == "" and style1UUID ~= style2UUID)
+		self.swapBut:Enable(LS_Shapes.mode < 3 and styleName == "" and style1UUID ~= style2UUID)
 		self.style2MenuPopup:Enable(styleName == "" and LS_Shapes.mode ~= 3) self.style2MenuPopup:Redraw()
 		self.style2MenuPopup:SetToolTip(MOHO.Localize("/Windows/Style/Style2=Style 2") .. (style2Name ~= "" and ": " .. style2Name or "") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/AppliesBellow=Applies Bellow") .. ")" or ""))
 		self.style2MenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_shape_style_2_cursortip", 0, 0) or nil)
@@ -1976,13 +1970,13 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 					end
 					if LS_Shapes.multiMenuRules == false then
 						if shape and LS_Shapes.LM_SelectShape and LS_Shapes.LM_SelectShape.dragMode == 0 then
-							if (curveID >= 0 and segID >= 0) and shape.fHasOutline then -- an edge was clicked on
-								LS_Shapes.multiMenuMode = 1
+							if (curveID >= 0 and segID >= 0) and shape.fHasOutline then -- An edge was clicked on
+								LS_Shapes.multiMode = 1
 							else
-								LS_Shapes.multiMenuMode = 0
+								LS_Shapes.multiMode = 0
 							end
 						elseif LS_Shapes.LM_SelectShape and LS_Shapes.LM_SelectShape.dragMode > 0 then
-							LS_Shapes.multiMenuMode = 2
+							LS_Shapes.multiMode = 2
 						end
 					end
 				end
@@ -1992,9 +1986,9 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 				end
 				if LS_Shapes.multiMenuRules == false then --print(tostring(tool.autoFill), ", ", tostring(tool.autoOutline), ", ", tostring(tool.autoStroke))
 					if (tool.autoFill ~= nil and tool.autoFill == true) and ((tool.autoOutline ~= nil and tool.autoOutline == false) or (tool.autoStroke ~= nil and tool.autoStroke == false)) then
-						LS_Shapes.multiMenuMode = 0
+						LS_Shapes.multiMode = 0
 					elseif (tool.autoOutline ~= nil and tool.autoOutline == true) or (tool.autoStroke ~= nil and tool.autoStroke == true) then
-						LS_Shapes.multiMenuMode = 1
+						LS_Shapes.multiMode = 1
 					end
 				end
 			elseif (tool.autoFillCheck ~= nil and tool.autoStrokeCheck ~= nil) then
@@ -2002,62 +1996,117 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 					LS_Shapes.multiMenuRules = false
 				end
 				if LM_TransformPoints ~= nil and (LM_TransformPoints.autoFill == true and LM_TransformPoints.autoStroke == false) then
-					LS_Shapes.multiMenuMode = 0
+					LS_Shapes.multiMode = 0
 				elseif LM_TransformPoints ~= nil and LM_TransformPoints.autoStroke == true then
-					LS_Shapes.multiMenuMode = 1
+					LS_Shapes.multiMode = 1
 				end
 			end
 		end
-		--LS_Shapes.multiMenuMode -> 0: Fill, 1: Stroke, 2: FX, 3: Recolor (RGB), 4: Recolor (HSB)
-		--LS_Shapes.multiMenuMode = (LS_Shapes.multiMenuMode > 1 and shape and shape:HasPositionDependentStyles()) and 0 or LS_Shapes.multiMenuMode
+		--LS_Shapes.multiMode -> 0: Fill, 1: Stroke, 2: FX, 3: Recolor --MARK:M. MENU
+		--LS_Shapes.multiMode = (LS_Shapes.multiMode > 1 and shape and shape:HasPositionDependentStyles()) and 0 or LS_Shapes.multiMode
 		self.multiMenu:SetEnabled(self.MULTIMENU + 2, shapeHandles) -- FX
-		self.multiMenu:SetEnabled(self.MULTIMENU + 3, mesh ~= nil) -- Recolor (RGB)
-		self.multiMenu:SetEnabled(self.MULTIMENU + 4, mesh ~= nil) -- Recolor (HSB)
-		self.multiMenu:SetEnabled(self.MULTIMENU + 5, LS_Shapes.multiMenuMode > 1) -- Copy values
-		self.multiMenu:SetEnabled(self.MULTIMENU + 6, LS_Shapes.multiValues.clipboard ~= nil) -- Paste values
-		self.multiMenu:SetEnabled(self.MULTIMENU + 7, LS_Shapes.multiMenuMode > 1 and LS_Shapes.multiMenuMode < 5) -- Reset Values
-		self.multiMenu:SetEnabled(self.MULTIMENU + 8, LS_Shapes.multiMenuMode < 2 and shapesSel < 2) -- Invert Color
-		self.multiMenu:SetEnabled(self.MULTIMENU + 9, LS_Shapes.multiMenuMode < 2 and shapesSel < 2) -- Multiply Colors
-		self.multiMenu:SetEnabled(self.MULTIMENU + 10, LS_Shapes.multiMenuMode > 2 and LS_Shapes.multiMenuMode < 5) -- Affects Fills
-		self.multiMenu:SetEnabled(self.MULTIMENU + 11, LS_Shapes.multiMenuMode > 2 and LS_Shapes.multiMenuMode < 5) -- Affects Strokes
-		self.multiMenu:SetEnabled(self.MULTIMENU + 12, LS_Shapes.multiMenuMode ~= 2) -- Affects Alpha
-		if self.multiMenu:IsEnabled(self.MULTIMENU + LS_Shapes.multiMenuMode) == false then
-			LS_Shapes.multiMenuMode = LS_Shapes.multiMenuLast
+		self.multiMenu:SetEnabled(self.MULTIMENU + 3, mesh ~= nil) -- Recolor
+		self.multiMenu:SetEnabled(self.MULTIMENU + 4, LS_Shapes.multiMode > 1) -- Copy values
+		self.multiMenu:SetEnabled(self.MULTIMENU + 5, LS_Shapes.multiValues.clipboard ~= nil) -- Paste values
+		self.multiMenu:SetEnabled(self.MULTIMENU + 6, LS_Shapes.multiMode > 1 and LS_Shapes.multiMode < 5) -- Reset Values
+		self.multiMenu:SetEnabled(self.MULTIMENU + 7, LS_Shapes.multiMode < 2 and shapesSel < 2) -- Invert Color
+		self.multiMenu:SetEnabled(self.MULTIMENU + 8, LS_Shapes.multiMode < 2 and shapesSel < 2) -- Multiply Colors
+		self.multiMenu:SetEnabled(self.MULTIMENU + 9, LS_Shapes.multiMode > 2 and LS_Shapes.multiMode < 5) -- Affects Fills
+		self.multiMenu:SetEnabled(self.MULTIMENU + 10, LS_Shapes.multiMode > 2 and LS_Shapes.multiMode < 5) -- Affects Strokes
+		self.multiMenu:SetEnabled(self.MULTIMENU + 11, LS_Shapes.multiMode ~= 2) -- Affects Alpha
+		if self.multiMenu:IsEnabled(self.MULTIMENU + LS_Shapes.multiMode) == false then
+			LS_Shapes.multiMode = LS_Shapes.multiMenuLast
 		end
 		self.multiMenu:UncheckAll()
-		self.multiMenu:SetChecked(self.MULTIMENU + LS_Shapes.multiMenuMode, true)
-		self.multiMenu:SetChecked(self.MULTIMENU + 10, MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(1)))
-		self.multiMenu:SetChecked(self.MULTIMENU + 11, MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(2)))
-		self.multiMenu:SetChecked(self.MULTIMENU + 12, MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(4)))
-		self.multiMenuPopup:SetToolTip(LS_Shapes.beginnerMode and self.multiMenu:FirstCheckedLabel():gsub("(%b())", {["(RGBα)"] = "(Red, Green, Blue, Alpha)", ["(HSB)"] = "(Hue, Saturation, Brightness)"}) or self.multiMenu:FirstCheckedLabel())
+		self.multiMenu:SetChecked(self.MULTIMENU + LS_Shapes.multiMode, true)
+		self.multiMenu:SetChecked(self.MULTIMENU + 9, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(1)))
+		self.multiMenu:SetChecked(self.MULTIMENU + 10, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(2)))
+		self.multiMenu:SetChecked(self.MULTIMENU + 11, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4)))
+		self.multiMenuPopup:SetToolTip(self.multiMenu:FirstCheckedLabel())
 		self.multiMenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_mode_cursortip", 0, 0) or nil)
 		self.multiMenuPopup:Redraw()
 		LS_Shapes:Log("1.5.4")
-		if LS_Shapes.multiMenuMode < 2 then -- Fill/Stroke
-			self.multi1:SetUnits(LM.GUI.UNIT_NONE)
-			self.multi1:SetMaxDecimalPlaces(0)
-			self.multi1:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_col_r", 0, 0))
-			self.multi1:SetValue(LS_Shapes.multiMenuMode == 0 and self.fillCol:Value().r or self.lineCol:Value().r)
 
-			self.multi2:SetUnits(LM.GUI.UNIT_NONE)
+		if shape ~= self.shape or style ~= self.style then
+			self._lastHue, self._lastSat = nil, nil
+		end
+
+		self.hsvBut:SetValue(LS_Shapes.useHsv)
+		self.multi3:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_col_b", 0, 0))
+		self.multi4:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_col_a", 0, 0))
+		if LS_Shapes.multiMode < 2 then -- Fill/Stroke
+			local col = (LS_Shapes.multiMode == 0) and self.fillCol:Value() or self.lineCol:Value()
+			local hsv = LM.ColorOps:Rgb2Hsv(col)
+			self._lastHue = self._lastHue == nil and hsv.h * 360 / 255 or self._lastHue
+			self._lastSat = self._lastSat == nil and hsv.s / 255 or self._lastSat
+
+			local hToShow = self._lastHue or hsv.h * 360 / 255; hToShow = math.floor(hToShow + 0.5)
+			local sToShow = (hsv.v == 0) and self._lastSat or (hsv.s / 255); sToShow = math.floor(sToShow * 100 + 0.5) / 100
+			local vToShow = hsv.v / 255; vToShow = math.floor(vToShow * 100 + 0.5) / 100
+			local aToShow = hsv.a / 255
+			self._lastHue, self._lastSat = hToShow, sToShow
+
+			self.multi1:SetPercentageMode(false)
+			self.multi1:SetUnits(LS_Shapes.useHsv and LM.GUI.UNIT_DEGREES or LM.GUI.UNIT_NONE)
+			self.multi1:SetWheelInc(2)
+			self.multi1:SetWheelInteger(true)
+			self.multi1:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. (LS_Shapes.useHsv and "ls_cursor_col_h" or "ls_cursor_col_r"), 0, 0))
+			self.multi1:SetValue(LS_Shapes.useHsv and hToShow or col.r)
+
+			self.multi2:SetPercentageMode(LS_Shapes.useHsv)
+			self.multi2:SetUnits(LS_Shapes.useHsv and LM.GUI.UNIT_PERCENT or LM.GUI.UNIT_NONE)
 			self.multi2:SetMaxDecimalPlaces(0)
-			self.multi2:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_col_g", 0, 0))
-			self.multi2:SetValue(LS_Shapes.multiMenuMode == 0 and self.fillCol:Value().g or self.lineCol:Value().g)
+			self.multi2:SetWheelInc(2)
+			self.multi2:SetWheelInteger(not LS_Shapes.useHsv)
+			self.multi2:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. (LS_Shapes.useHsv and "ls_cursor_col_s" or "ls_cursor_col_g"), 0, 0))
+			self.multi2:SetValue(LS_Shapes.useHsv and sToShow or col.g)
 
-			self.multi3:SetUnits(LM.GUI.UNIT_NONE)
+			self.multi3:SetPercentageMode(LS_Shapes.useHsv)
+			self.multi3:SetUnits(LS_Shapes.useHsv and LM.GUI.UNIT_PERCENT or LM.GUI.UNIT_NONE)
 			self.multi3:SetMaxDecimalPlaces(0)
-			self.multi3:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_col_b", 0, 0))
-			self.multi3:SetValue(LS_Shapes.multiMenuMode == 0 and self.fillCol:Value().b or self.lineCol:Value().b)
-			
-			self.multi4:SetUnits(LM.GUI.UNIT_PERCENT)
-			self.multi4:SetMaxDecimalPlaces(0)
+			self.multi3:SetWheelInc(2)
+			self.multi3:SetWheelInteger(not LS_Shapes.useHsv)
+			self.multi3:SetValue(LS_Shapes.useHsv and vToShow or col.b)
+
 			self.multi4:SetPercentageMode(true)
-			self.multi4:SetWheelInc(0.1)
+			self.multi4:SetUnits(LM.GUI.UNIT_PERCENT)
+			self.multi4:SetMaxDecimalPlaces(1)
+			self.multi4:SetWheelInc(2)
 			self.multi4:SetWheelInteger(false)
-			self.multi4:SetCursor(LM.GUI.Cursor(LS_Shapes.multiMenuMode < 2 and LS_Shapes.resources .. "ls_cursor_col_a" or nil, 0, 0))
-			self.multi4:SetValue(LS_Shapes.multiMenuMode == 0 and self.fillCol:Value().a / 255 or self.lineCol:Value().a / 255) --self.multi4:SetValue(LS_Shapes.multiMenuMode == 0 and self.fillCol:Value().a / 255 * 100 or self.lineCol:Value().a / 255 * 100) --> Non-PercentageMode version
-		
-		elseif LS_Shapes.multiMenuMode == 2 then -- FX Transform
+			self.multi4:SetValue(LS_Shapes.useHsv and aToShow or col.a / 255)
+
+		elseif LS_Shapes.multiMode == 3 then -- Recolor
+			self.multi1:SetPercentageMode(false)
+			self.multi1:SetUnits(LS_Shapes.useHsv and LM.GUI.UNIT_DEGREES or LM.GUI.UNIT_NONE)
+			self.multi1:SetWheelInc(2)
+			self.multi1:SetWheelInteger(true)
+			self.multi1:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. (LS_Shapes.useHsv and "ls_cursor_col_h" or "ls_cursor_col_r"), 0, 0))
+			self.multi1:SetValue(LS_Shapes.multiValues[LS_Shapes.multiMode][1])
+
+			self.multi2:SetPercentageMode(LS_Shapes.useHsv)
+			self.multi2:SetUnits(LS_Shapes.useHsv and LM.GUI.UNIT_PERCENT or LM.GUI.UNIT_NONE)
+			self.multi2:SetMaxDecimalPlaces(0)
+			self.multi2:SetWheelInc(0.2)
+			self.multi2:SetWheelInteger(not LS_Shapes.useHsv)
+			self.multi2:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. (LS_Shapes.useHsv and "ls_cursor_col_s" or "ls_cursor_col_g"), 0, 0))
+			self.multi2:SetValue(LS_Shapes.multiValues[LS_Shapes.multiMode][2])
+
+			self.multi3:SetPercentageMode(LS_Shapes.useHsv)
+			self.multi3:SetUnits(LS_Shapes.useHsv and LM.GUI.UNIT_PERCENT or LM.GUI.UNIT_NONE)
+			self.multi3:SetMaxDecimalPlaces(0)
+			self.multi3:SetWheelInc(0.2)
+			self.multi3:SetWheelInteger(not LS_Shapes.useHsv)
+			self.multi3:SetValue(LS_Shapes.multiValues[LS_Shapes.multiMode][3])
+
+			self.multi4:SetPercentageMode(true)
+			self.multi4:SetUnits(LM.GUI.UNIT_PERCENT)
+			self.multi4:SetMaxDecimalPlaces(1)
+			self.multi4:SetWheelInc(2)
+			self.multi4:SetWheelInteger(false)
+			self.multi4:SetValue(LS_Shapes.multiValues[LS_Shapes.multiMode][4])
+
+		elseif LS_Shapes.multiMode == 2 then -- FX Transform
+			self.multi1:SetPercentageMode(false)
 			self.multi1:SetUnits(LM.GUI.UNIT_NONE)
 			self.multi1:SetMaxDecimalPlaces(2)
 			self.multi1:SetWheelInc(0.01)
@@ -2065,6 +2114,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			self.multi1:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_set_x", 0, 0))
 			self.multi1:SetValue(shapeFxOffset and shapeFxOffset.value.x or 0)
 
+			self.multi2:SetPercentageMode(false)
 			self.multi2:SetUnits(LM.GUI.UNIT_NONE)
 			self.multi2:SetMaxDecimalPlaces(2)
 			self.multi2:SetWheelInc(0.01)
@@ -2072,52 +2122,22 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			self.multi2:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_set_y", 0, 0))
 			self.multi2:SetValue(shapeFxOffset and shapeFxOffset.value.y or 0)
 
+			self.multi3:SetPercentageMode(false)
 			self.multi3:SetUnits(LM.GUI.UNIT_DEGREES)
 			self.multi3:SetMaxDecimalPlaces(1)
 			self.multi3:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_transform_r", 0, 0))
 			self.multi3:SetValue(shapeFxRotation and math.deg(shapeFxRotation.value) or 0)
 
+			self.multi4:SetPercentageMode(true)
 			self.multi4:SetUnits(LM.GUI.UNIT_PERCENT)
 			self.multi4:SetMaxDecimalPlaces(1)
-			self.multi4:SetPercentageMode(true)
 			self.multi4:SetWheelInc(0.05)
 			self.multi4:SetWheelInteger(false)
 			self.multi4:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_transform_s", 0, 0))
 			self.multi4:SetValue(shapeFxScale and shapeFxScale.value or 1)
-		
-		elseif LS_Shapes.multiMenuMode == 3 or LS_Shapes.multiMenuMode == 4 then -- Recolor RGB/HSB
-			self.multi1:SetUnits(LS_Shapes.multiMenuMode == 3 and LM.GUI.UNIT_NONE or LM.GUI.UNIT_DEGREES)
-			self.multi1:SetMaxDecimalPlaces(0)
-			self.multi1:SetWheelInc(1)
-			self.multi1:SetWheelInteger(true)
-			self.multi1:SetCursor(LM.GUI.Cursor(LS_Shapes.multiMenuMode == 3 and LS_Shapes.resources .. "ls_cursor_col_r" or LS_Shapes.resources .. "ls_cursor_col_h", 0, 0))
-			self.multi1:SetValue(LS_Shapes.multiValues[LS_Shapes.multiMenuMode][1])
-
-			self.multi2:SetUnits(LS_Shapes.multiMenuMode == 3 and LM.GUI.UNIT_NONE or LM.GUI.UNIT_PERCENT)
-			self.multi2:SetMaxDecimalPlaces(0)
-			self.multi2:SetWheelInc(1)
-			self.multi2:SetWheelInteger(true)
-			self.multi2:SetCursor(LM.GUI.Cursor(LS_Shapes.multiMenuMode == 3 and LS_Shapes.resources .. "ls_cursor_col_g" or LS_Shapes.resources .. "ls_cursor_col_s", 0, 0))
-			self.multi2:SetValue(LS_Shapes.multiValues[LS_Shapes.multiMenuMode][2])
-
-			self.multi3:SetUnits(LS_Shapes.multiMenuMode == 3 and LM.GUI.UNIT_NONE or LM.GUI.UNIT_PERCENT)
-			self.multi3:SetMaxDecimalPlaces(0)
-			self.multi3:SetWheelInc(1)
-			self.multi3:SetWheelInteger(true)
-			self.multi3:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_col_b", 0, 0))
-			self.multi3:SetValue(LS_Shapes.multiValues[LS_Shapes.multiMenuMode][3])
-
-			self.multi4:SetUnits(LM.GUI.UNIT_PERCENT)
-			self.multi4:SetMaxDecimalPlaces(0)
-			self.multi4:SetPercentageMode(true)
-			self.multi4:SetWheelInc(0.1)
-			self.multi4:SetWheelInteger(false)
-			self.multi4:SetCursor(LM.GUI.Cursor(LS_Shapes.resources .. "ls_cursor_col_a", 0, 0))
-			self.multi4:SetValue((LS_Shapes.multiValues[LS_Shapes.multiMenuMode][4] / 255) * 255)
-			self.multi4:Enable(LS_Shapes.multiMenuMode == 3)
 		end
-		self.applyBut:Enable(LS_Shapes.multiMenuMode > 2)
-		self.applyBut:SetToolTip(LS_Shapes.multiMenuMode < 2 and MOHO.Localize("/LS/Shapes/ApplyMode=Apply") or MOHO.Localize("/LS/Shapes/ApplyMode=Apply") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/Randomized=Randomized") .. ")")
+		self.applyBut:Enable(LS_Shapes.multiMode > 2)
+		self.applyBut:SetToolTip(LS_Shapes.multiMode < 2 and MOHO.Localize("/LS/Shapes/ApplyMode=Apply") or MOHO.Localize("/LS/Shapes/ApplyMode=Apply") .. " (<alt> " .. MOHO.Localize("/LS/Shapes/Randomized=Randomized") .. ")")
 
 		if LS_Shapes.swatch ~= -1 and self.swatchSlider then
 			if LS_Shapes.swatch ~= self.swatch then
@@ -2984,7 +3004,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		end
 		self:Update()
 	elseif (msg >= self.MULTIMENU and msg < self.SELECTSTYLE1) then
-		self.multiMenuMode = msg - self.MULTIMENU -- Pre-update so it can be used (more) reliably below?
+		self.multiMode = msg - self.MULTIMENU -- Pre-update so it can be used (more) reliably below?
 	end
 
 	local pass = LS_Shapes.MsgFlag(self, msg, MOHO.MSGF_PASS) or false --print("Pass: " .. tostring(pass))
@@ -3802,7 +3822,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 	elseif (msg == self.COPY_ALT or msg == self.PASTE_ALT) then
 		if (msg == self.COPY_ALT) then
 			self.copiedColor = LM.ColorOps:Ls_ConvertColor(multiRgb, MOHO.LS_CT_HEX)
-			self.copiedColor = self.copiedColor and not MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(4)) and self.copiedColor:gsub("^#", ""):sub(1, 6) or self.copiedColor -- "rrggbb/rrggbbaa"
+			self.copiedColor = self.copiedColor and not MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4)) and self.copiedColor:gsub("^#", ""):sub(1, 6) or self.copiedColor -- "rrggbb/rrggbbaa"
 
 			if LM.ColorOps:Ls_ColorType(self.copiedColor, MOHO.LS_CT_HEX) then
 				moho:CopyText(self.copiedColor)
@@ -3813,12 +3833,12 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		else -- PASTE_ALT
 			local sourceCol = LM.ColorOps:Ls_ConvertColor(moho:ClipboardText():gsub("^#", ""):sub(1, 8), MOHO.LS_CT_RGB)
 			if sourceCol then
-				sourceCol = LM.ColorOps:Ls_CrushColor(sourceCol, self.fillCol:Value(), MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(4)))
+				sourceCol = LM.ColorOps:Ls_CrushColor(sourceCol, self.fillCol:Value(), MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4)))
 				self.editingColor = true
-				if LS_Shapes.multiMenuMode == 0 then -- Fill Mode
+				if LS_Shapes.multiMode == 0 then -- Fill Mode
 					self.fillCol:SetValue(sourceCol)
 					self:HandleMessage(self.FILLCOLOR)
-				elseif LS_Shapes.multiMenuMode == 1 then -- Stroke Mode
+				elseif LS_Shapes.multiMode == 1 then -- Stroke Mode
 					self.lineCol:SetValue(sourceCol)
 					self:HandleMessage(self.LINECOLOR)
 				end
@@ -3850,6 +3870,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				self.lineWidth:SetValue(mohoLineWidth * docH)
 				self.capsBut:SetValue(true)
 				self.brushBut:SetValue(false)
+				self._lastHue = nil
 				helper:delete()
 				return
 			end
@@ -3904,6 +3925,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			end
 			MOHO.Redraw()
 		end
+		self._lastHue = nil
 		self:Update()
 		moho:UpdateUI()
 	elseif (msg == self.COMBO_NORMAL) then --MARK: COMBO
@@ -4152,12 +4174,13 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				end
 			end
 		end
-		LS_Shapes.multiMenuMode = 0
+		LS_Shapes.multiMode = 0
 		if LS_Shapes.advanced then -- Is all this really necessary?
 			self.multi1:SetValue(self.fillCol:Value().r)
-			self.multi2:SetValue(self.fillCol:Value().g)
-			self.multi3:SetValue(self.fillCol:Value().b)
-			self.multi4:SetValue(self.fillCol:Value().a / 255 * 100) --(1 - self.fillCol:Value().a / 255) * 100
+			self.multi2:SetValue(self.fillCol:Value().g / (LS_Shapes.useHsv and 255 or 1))
+			self.multi3:SetValue(self.fillCol:Value().b / (LS_Shapes.useHsv and 255 or 1))
+			self.multi4:SetValue(self.fillCol:Value().a / 255) --(1 - self.fillCol:Value().a / 255) * 100
+			self._lastHue = nil
 		end
 		self.coloredTable = {}
 	elseif (msg == self.FILLCOLOROVER) then --styleName ~= "" or (style1 and style1.fDefineLineWidth or style2 and style2.fDefineLineWidth)
@@ -4172,7 +4195,6 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		MOHO.Redraw()
 		moho:UpdateUI()
 	elseif (msg == self.LINE) then --MARK: LINE MOD.
-		---[=[LM_SelectShape:HandleMessage(moho, moho.view, LM_SelectShape.LINE)
 		if (mesh ~= nil and shape ~= nil) then
 			shape.fHasOutline = self.lineCheck:Value()
 			if (shape:IsInCluster() and shape.fComboMode ~= MOHO.COMBO_INTERSECT) then
@@ -4187,7 +4209,6 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			MOHO.Redraw()
 			moho:UpdateUI()
 		end
-		--]=]
 	elseif (msg == self.LINE_ALT) then
 		local shapeLineCol = LM.ColorVector:new_local()
 		for i = 0, shapeCount - 1 do
@@ -4275,12 +4296,13 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				end
 			end
 		end
-		LS_Shapes.multiMenuMode = 1
+		LS_Shapes.multiMode = 1
 		if LS_Shapes.advanced then -- Is all this really necessary?
 			self.multi1:SetValue(self.lineCol:Value().r)
 			self.multi2:SetValue(self.lineCol:Value().g)
 			self.multi3:SetValue(self.lineCol:Value().b)
 			self.multi4:SetValue(self.fillCol:Value().a / 255 * 100)
+			self._lastHue = nil
 		end
 		self.coloredTable = {}
 	elseif (msg == self.LINECOLOROVER) then
@@ -4378,6 +4400,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		self.lineCol:SetValue(fillCol)
 		self:HandleMessage(self.LINECOLOR)
 		self.editingColor = false
+		self._lastHue = nil
 		if (doc ~= nil) then
 			moho:UpdateUI()
 		end
@@ -4492,7 +4515,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 					self:Update()
 				end
 			else -- 1: Alt
-				--[[ 20250921-1700: I pretended to add style duplicaction by holding <alt> but it seems buggy, so U-turning...
+				--[[ 20250921-1700: I pretended to add style duplication by holding <alt> but it seems buggy, so U-turning...
 				if styleSel then
 					doc:AddStyle(styleSel)
 					local lastStyle = doc:CountStyles() - 1
@@ -4530,30 +4553,88 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			elseif (msg == self.OUTLINED or msg == self.OUTLINED_ALT) then -- Update
 				if (self.groupUI ~= nil and groupSelCount == 1) then
 					mesh:AddGroup(self.groupUI:Name())
-					self:Update()
+					--self:Update()
 				else
 					LM.Beep()
 				end
 			end
+			self:Update()
 		end
 		moho:UpdateUI()
+	elseif (msg == self.HSV) then
+		LS_Shapes.useHsv = not LS_Shapes.useHsv
+		local factor = LS_Shapes.useHsv and 1/100 or 100
+		if LS_Shapes.multiMode == 3 then -- Compensate last memorized percentage values upon switching between RGB & HSV in Recolor mode
+			LS_Shapes.multiValues[LS_Shapes.multiMode][1] = not LS_Shapes.useHsv and LM.Clamp(LS_Shapes.multiValues[LS_Shapes.multiMode][1], -255, 255) or LS_Shapes.multiValues[LS_Shapes.multiMode][1]
+			LS_Shapes.multiValues[LS_Shapes.multiMode][2] = LS_Shapes.multiValues[LS_Shapes.multiMode][2] * factor 
+			LS_Shapes.multiValues[LS_Shapes.multiMode][3] = LS_Shapes.multiValues[LS_Shapes.multiMode][3] * factor 
+		end
+		self:Update()
 	elseif (msg >= self.MULTI1 and msg < self.APPLY) then --MARK: M. CTRLS
-		local col = LM.rgb_color:new_local()
-		if LS_Shapes.multiMenuMode == 0 then -- Fill
-			col.r = LM.Clamp(self.multi1:IntValue(), 0, 255) self.multi1:SetValue(col.r)
-			col.g = LM.Clamp(self.multi2:IntValue(), 0, 255) self.multi2:SetValue(col.g)
-			col.b = LM.Clamp(self.multi3:IntValue(), 0, 255) self.multi3:SetValue(col.b)
-			col.a = LM.Clamp(self.multi4:FloatValue() * 255, 0, 255) self.multi4:SetValue(col.a / 255) --col.a = LM.Clamp(self.multi4:IntValue() / 100 * 255, 0, 255) self.multi4:SetValue(col.a / 255 * 100) --> Non-PercentageMode version
-			self.fillCol:SetValue(col)
-			self:HandleMessage(self.FILLCOLOR)
-		elseif LS_Shapes.multiMenuMode == 1 then -- Stroke
-			col.r = LM.Clamp(self.multi1:IntValue(), 0, 255) self.multi1:SetValue(col.r)
-			col.g = LM.Clamp(self.multi2:IntValue(), 0, 255) self.multi2:SetValue(col.g)
-			col.b = LM.Clamp(self.multi3:IntValue(), 0, 255) self.multi3:SetValue(col.b)
-			col.a = LM.Clamp(self.multi4:FloatValue() * 255, 0, 255) self.multi4:SetValue(col.a / 255)
-			self.lineCol:SetValue(col)
-			self:HandleMessage(self.LINECOLOR)
-		elseif LS_Shapes.multiMenuMode == 2 then -- FX Transform
+		local dragBut = LS_Shapes:GetDraggingButton(self.multi1, self.multi2, self.multi3, self.multi4)
+
+		if LS_Shapes.multiMode < 2 then -- Fill/Stroke
+			LS_Shapes.multiMenuRules = dragBut == 0 -- Use this if you want to prevent on L/R click mode change
+			if LS_Shapes.multiMenuRules == false then
+				LS_Shapes.multiMode = dragBut - 1
+			end
+
+			local col = LM.rgb_color:new_local()
+			local toFill = (LS_Shapes.multiMode == 0) -- Current behavior
+
+			if self.multiMode ~= LS_Shapes.multiMode then -- If mode change detected...
+				local currentCol
+				if LS_Shapes.multiMode == 0 then
+					currentCol = self.fillCol:Value() -- Current fill color
+				else
+					currentCol = self.lineCol:Value() -- Current stroke color
+				end
+				if LS_Shapes.useHsv then
+					local hsv = LM.ColorOps:Rgb2Hsv(currentCol)
+					self.multi1:SetValue(hsv.h)
+					self.multi2:SetValue(hsv.s / 255)
+					self.multi3:SetValue(hsv.v / 255)
+					self.multi4:SetValue(hsv.a / 255)
+				else
+					self.multi1:SetValue(currentCol.r)
+					self.multi2:SetValue(currentCol.g)
+					self.multi3:SetValue(currentCol.b)
+					self.multi4:SetValue(currentCol.a / 255)
+				end
+			end
+
+			if LS_Shapes.useHsv then
+				local h = LM.Clamp(self.multi1:IntValue(), -360, 360) -- Read UI values
+				local sPct = LM.Clamp(self.multi2:FloatValue(), 0, 1)
+				local vPct = LM.Clamp(self.multi3:FloatValue(), 0, 1)
+				local aPct = LM.Clamp(self.multi4:FloatValue(), 0, 1)
+				LS_Shapes.multiValues[LS_Shapes.multiMode] = {h, sPct, vPct, aPct}
+
+				self._lastHue, self._lastSat = h, sPct -- Update memories
+
+				local h255 = h * 255 / 360
+				local s255 = sPct * 255 -- Convert to scale 0–255 for hsv_color
+				local v255 = vPct * 255
+				local a255 = aPct * 255
+
+				local hsv = LM.ColorOps:HsvColor(h255, s255, v255, a255) --print("HSV: " .. hsv.h) --Build HSV & convert to RGB
+				col = LM.ColorOps:Hsv2Rgb(hsv) --print("RGB: " .. col.r)
+			else -- RGB (normal)
+				col.r = LM.Clamp(self.multi1:IntValue(), 0, 255)
+				col.g = LM.Clamp(self.multi2:IntValue(), 0, 255)
+				col.b = LM.Clamp(self.multi3:IntValue(), 0, 255)
+				col.a = LM.Clamp(self.multi4:FloatValue() * 255, 0, 255)
+				LS_Shapes.multiValues[LS_Shapes.multiMode] = {col.r, col.g, col.b, col.a}
+			end
+
+			if toFill then
+				self.fillCol:SetValue(col)
+				self:HandleMessage(self.FILLCOLOR)
+			else
+				self.lineCol:SetValue(col)
+				self:HandleMessage(self.LINECOLOR)
+			end
+		elseif LS_Shapes.multiMode == 2 then -- FX Transform
 			if (mesh ~= nil and shape ~= nil) then
 				local offset = LM.Vector2:new_local() offset:Set(self.multi1:FloatValue(), self.multi2:FloatValue()) 
 				local rotation, scale = self.multi3:FloatValue(), self.multi4:FloatValue()
@@ -4570,9 +4651,25 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				MOHO.Redraw()
 				moho:UpdateUI()
 			end
-		elseif LS_Shapes.multiMenuMode == 3 or LS_Shapes.multiMenuMode == 4 then -- Recolor (RGB/HSB)
-			newVal[1], newVal[2], newVal[3], newVal[4] = self.multi1:IntValue(), self.multi2:IntValue(), self.multi3:IntValue(), self.multi4:IntValue()
-			if LS_Shapes.multiMenuMode == 3 then
+		elseif LS_Shapes.multiMode == 3 then -- Recolor
+			newVal[1], newVal[4] = self.multi1:IntValue(), self.multi4:FloatValue()
+			if LS_Shapes.useHsv then -- Use HSV
+				newVal[2], newVal[3] = self.multi2:FloatValue(), self.multi3:FloatValue()
+				if (newVal[1] < -360 or newVal[1] > 360) then -- Hue
+					newVal[1] = LM.Clamp(newVal[1], -360, 360)
+					self.multi1:SetValue(newVal[1])
+				elseif (newVal[2] < -1 or newVal[2] > 1) then -- Sat
+					newVal[2] = LM.Clamp(newVal[2], -1, 1)
+					self.multi2:SetValue(newVal[2])
+				elseif (newVal[3] < -1 or newVal[3] > 1) then -- Bri
+					newVal[3] = LM.Clamp(newVal[3], -1, 1)
+					self.multi3:SetValue(newVal[3])
+				elseif (newVal[4] < 0 or newVal[4] > 1) then -- Alp
+					newVal[4] = LM.Clamp(newVal[4], 0, 1)
+					self.multi4:SetValue(newVal[4])
+				end
+			else -- Use RGB
+				newVal[2], newVal[3] = self.multi2:IntValue(), self.multi3:IntValue()
 				if (newVal[1] < -255 or newVal[1] > 255) then -- R
 					newVal[1] = LM.Clamp(newVal[1], -255, 255)
 					self.multi1:SetValue(newVal[1])
@@ -4582,32 +4679,26 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				elseif (newVal[3] < -255 or newVal[3] > 255) then -- B
 					newVal[3] = LM.Clamp(newVal[3], -255, 255)
 					self.multi3:SetValue(newVal[3])
-				elseif (newVal[4] < 0 or newVal[4] > 100) then -- A
+				elseif (newVal[4] < 0 or newVal[4] > 1) then -- A
 					newVal[4] = LM.Clamp(newVal[4], 0, 1)
 					self.multi4:SetValue(newVal[4])
 				end
-			else
-				if (newVal[1] < -360 or newVal[1] > 360) then -- Hue
-					newVal[1] = LM.Clamp(newVal[1], -360, 360)
-					self.multi1:SetValue(newVal[1])
-				elseif (newVal[2] < -100 or newVal[2] > 100) then --Sat
-					newVal[2] = LM.Clamp(newVal[2], -100, 100)
-					self.multi2:SetValue(newVal[2])
-				elseif (newVal[3] < -100 or newVal[3] > 100) then --Bri
-					newVal[3] = LM.Clamp(newVal[3], -100, 100)
-					self.multi3:SetValue(newVal[3])
-				end
 			end
-			LS_Shapes.multiValues[LS_Shapes.multiMenuMode][1] = self.multi1:IntValue()
-			LS_Shapes.multiValues[LS_Shapes.multiMenuMode][2] = self.multi2:IntValue()
-			LS_Shapes.multiValues[LS_Shapes.multiMenuMode][3] = self.multi3:IntValue()
-			LS_Shapes.multiValues[LS_Shapes.multiMenuMode][4] = LS_Shapes.multiMenuMode == 3 and self.multi4:FloatValue() or self.multi4:IntValue()
-			moho:UpdateUI() -- 20240207-1945: This seems to make that confirm with enter key alse work here?
+			LS_Shapes.multiValues[LS_Shapes.multiMode][1] = self.multi1:IntValue()
+			LS_Shapes.multiValues[LS_Shapes.multiMode][2] = LS_Shapes.useHsv and self.multi2:FloatValue() or self.multi2:IntValue()
+			LS_Shapes.multiValues[LS_Shapes.multiMode][3] = LS_Shapes.useHsv and self.multi3:FloatValue() or self.multi3:IntValue()
+			LS_Shapes.multiValues[LS_Shapes.multiMode][4] = self.multi4:FloatValue() -- All modes use a last percentage field ATM
+			moho:UpdateUI() -- 20240207-1945: This seems to make that confirm with enter key also work here?
 		end
 	elseif (msg == self.APPLY or msg == self.APPLY_ALT) then
-		if LS_Shapes.multiMenuMode == 3 or LS_Shapes.multiMenuMode == 4 then -- Recolor (RGB/HSB)
-			local colTable = {LS_Shapes.multiValues[LS_Shapes.multiMenuMode][1], LS_Shapes.multiValues[LS_Shapes.multiMenuMode][2], LS_Shapes.multiValues[LS_Shapes.multiMenuMode][3], LS_Shapes.multiValues[LS_Shapes.multiMenuMode][4] * 255}
+		if LS_Shapes.multiMode == 3 then -- Recolor
 			local randomize = msg == self.APPLY_ALT
+			local colTable = {}
+			colTable[1] = LS_Shapes.multiValues[LS_Shapes.multiMode][1]
+			colTable[2] = LS_Shapes.multiValues[LS_Shapes.multiMode][2] * (LS_Shapes.useHsv and 100 or 1)
+			colTable[3] = LS_Shapes.multiValues[LS_Shapes.multiMode][3] * (LS_Shapes.useHsv and 100 or 1)
+			colTable[4] = LS_Shapes.multiValues[LS_Shapes.multiMode][4] * 255
+
 			for i = 0, layersSel - 1 do
 				local iLayer = doc:GetSelectedLayer(i)
 				local iLayerDrawing = iLayer:LayerType() == MOHO.LT_SWITCH and moho.drawingLayer or iLayer
@@ -4631,25 +4722,25 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 							end
 							--]]
 							if randomize then
-								if LS_Shapes.multiValues[LS_Shapes.multiMenuMode][1] ~= 0 then
-									if LS_Shapes.multiValues[LS_Shapes.multiMenuMode][1] > 0 then
-										colTable[1] = math.random(0, LS_Shapes.multiValues[LS_Shapes.multiMenuMode][1])
+								if LS_Shapes.multiValues[LS_Shapes.multiMode][1] ~= 0 then
+									if LS_Shapes.multiValues[LS_Shapes.multiMode][1] > 0 then
+										colTable[1] = math.random(0, math.floor(LS_Shapes.multiValues[LS_Shapes.multiMode][1]))
 									else
-										colTable[1] = math.random(LS_Shapes.multiValues[LS_Shapes.multiMenuMode][1], 0)
+										colTable[1] = math.random(math.floor(LS_Shapes.multiValues[LS_Shapes.multiMode][1]), 0)
 									end
 								end
-								if LS_Shapes.multiValues[LS_Shapes.multiMenuMode][2] ~= 0 then
-									if LS_Shapes.multiValues[LS_Shapes.multiMenuMode][2] > 0 then
-										colTable[2] = math.random(0, LS_Shapes.multiValues[LS_Shapes.multiMenuMode][2])
+								if LS_Shapes.multiValues[LS_Shapes.multiMode][2] ~= 0 then
+									if LS_Shapes.multiValues[LS_Shapes.multiMode][2] > 0 then
+										colTable[2] = math.random(0, math.floor(LS_Shapes.multiValues[LS_Shapes.multiMode][2]))
 									else
-										colTable[2] = math.random(LS_Shapes.multiValues[LS_Shapes.multiMenuMode][2], 0)
+										colTable[2] = math.random(math.floor(LS_Shapes.multiValues[LS_Shapes.multiMode][2]), 0)
 									end
 								end
-								if LS_Shapes.multiValues[LS_Shapes.multiMenuMode][3] ~= 0 then
-									if LS_Shapes.multiValues[LS_Shapes.multiMenuMode][3] > 0 then
-										colTable[3] = math.random(0, LS_Shapes.multiValues[LS_Shapes.multiMenuMode][3])
+								if LS_Shapes.multiValues[LS_Shapes.multiMode][3] ~= 0 then
+									if LS_Shapes.multiValues[LS_Shapes.multiMode][3] > 0 then
+										colTable[3] = math.random(0, math.floor(LS_Shapes.multiValues[LS_Shapes.multiMode][3]))
 									else
-										colTable[3] = math.random(LS_Shapes.multiValues[LS_Shapes.multiMenuMode][3], 0)
+										colTable[3] = math.random(math.floor(LS_Shapes.multiValues[LS_Shapes.multiMode][3]), 0)
 									end
 								end --print ("Random is: ", colTable[1], ", ", colTable[2], ", ", colTable[3])
 							end
@@ -4657,27 +4748,27 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 							local fillColor = jShape.fMyStyle.fFillCol:GetValue(lDrawingFrame):AsColorStruct()
 							local lineColor = jShape.fMyStyle.fLineCol:GetValue(lDrawingFrame):AsColorStruct()
 							local holdFillColor, holdLineColor = fillColor, lineColor --print ("Starting color is: ", ", ", holdFillColor.r, ", ", holdFillColor.g, ", ", holdFillColor.b)
-							fillColor = LS_Shapes.multiMenuMode == 3 and LS_Shapes:alterRGB(holdFillColor, colTable) or LS_Shapes:alterHSB(holdFillColor, colTable)
-							lineColor = LS_Shapes.multiMenuMode == 3 and LS_Shapes:alterRGB(holdLineColor, colTable) or LS_Shapes:alterHSB(holdLineColor, colTable)
+							fillColor = LS_Shapes.useHsv and LS_Shapes:alterHSB(holdFillColor, colTable) or LS_Shapes:alterRGB(holdFillColor, colTable)
+							lineColor = LS_Shapes.useHsv and LS_Shapes:alterHSB(holdLineColor, colTable) or LS_Shapes:alterRGB(holdLineColor, colTable)
 							--Recoloring in only one step is not possible due to UI space limitations (but at least values are remembered between modes)
 							--holdFillColor = fillColor
 							--fillColor = LS_Shapes:alterHSB(holdFillColor, colTable)
 							if (jShape.fSelected) then -- Affect only current layer's selected shapes
-								if MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(1)) then --print ("Ending fillColor is: ", fillColor.r, ", ", fillColor.g, ", ", fillColor.b)
-									jShape.fMyStyle.fFillCol:SetValue(lDrawingFrame, LM.ColorOps:Ls_CrushColor(fillColor, jShape.fMyStyle.fFillCol.value, MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(4))))
+								if MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(1)) then --print ("Ending fillColor is: ", fillColor.r, ", ", fillColor.g, ", ", fillColor.b)
+									jShape.fMyStyle.fFillCol:SetValue(lDrawingFrame, LM.ColorOps:Ls_CrushColor(fillColor, jShape.fMyStyle.fFillCol.value, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4))))
 									jShape.fMyStyle.fFillCol:StoreValue()
 								end
-								if MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(2)) then
-									jShape.fMyStyle.fLineCol:SetValue(lDrawingFrame, LM.ColorOps:Ls_CrushColor(lineColor, jShape.fMyStyle.fLineCol.value, MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(4))))
+								if MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(2)) then
+									jShape.fMyStyle.fLineCol:SetValue(lDrawingFrame, LM.ColorOps:Ls_CrushColor(lineColor, jShape.fMyStyle.fLineCol.value, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4))))
 									jShape.fMyStyle.fLineCol:StoreValue()
 								end
 							elseif (not shape or layersSel > 1) then -- Affect all shapes along all selected layers
-								if MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(1)) then --print ("Ending fillColor is: ", fillColor.r, ", ", fillColor.g, ", ", fillColor.b)
-									jShape.fMyStyle.fFillCol:SetValue(lDrawingFrame, LM.ColorOps:Ls_CrushColor(fillColor, jShape.fMyStyle.fFillCol.value, MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(4))))
+								if MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(1)) then --print ("Ending fillColor is: ", fillColor.r, ", ", fillColor.g, ", ", fillColor.b)
+									jShape.fMyStyle.fFillCol:SetValue(lDrawingFrame, LM.ColorOps:Ls_CrushColor(fillColor, jShape.fMyStyle.fFillCol.value, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4))))
 									jShape.fMyStyle.fFillCol:StoreValue()
 								end
-								if MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(2)) then
-									jShape.fMyStyle.fLineCol:SetValue(lDrawingFrame, LM.ColorOps:Ls_CrushColor(lineColor, jShape.fMyStyle.fLineCol.value, MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(4))))
+								if MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(2)) then
+									jShape.fMyStyle.fLineCol:SetValue(lDrawingFrame, LM.ColorOps:Ls_CrushColor(lineColor, jShape.fMyStyle.fLineCol.value, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4))))
 									jShape.fMyStyle.fLineCol:StoreValue()
 								end
 							end
@@ -4772,21 +4863,21 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		end
 		self.infoBut:SetValue(false)
 	elseif (msg >= self.MULTIMENU and msg < self.SELECTSTYLE1) then --MARK: M. MENU
-		local multiMenuBak = LS_Shapes.multiMenuMode
+		local multiMenuBak = LS_Shapes.multiMode
 
-		if (msg >= self.MULTIMENU and msg <= self.MULTIMENU + 4) then -- Menu Modes
+		if (msg >= self.MULTIMENU and msg <= self.MULTIMENU + 3) then -- Menu Modes
 			if tool and tool.prevMousePt then
 				--tool.prevMousePt:Set(0, 0)
 			end
 			LS_Shapes.multiMenuRules = true
-			LS_Shapes.multiMenuMode = msg - self.MULTIMENU
+			LS_Shapes.multiMode = msg - self.MULTIMENU
 			LS_Shapes.multiMenuLast = msg - self.MULTIMENU < 2 and msg - self.MULTIMENU or 0
-		elseif (msg >= self.MULTIMENU + 5 and msg <= self.MULTIMENU + 9) then -- Menu Actions
-			if (msg == self.MULTIMENU + 5) then -- Copy Values
+		elseif (msg >= self.MULTIMENU + 4 and msg <= self.MULTIMENU + 8) then -- Menu Actions
+			if (msg == self.MULTIMENU + 4) then -- Copy Values
 				LS_Shapes.multiValues.clipboard = {self.multi1:Value(), self.multi2:Value(), self.multi3:Value(), self.multi4:Value()}
-			elseif (msg == self.MULTIMENU + 6) then -- Paste Values
+			elseif (msg == self.MULTIMENU + 5) then -- Paste Values
 				if (LS_Shapes.multiValues.clipboard ~= nil) then
-					if LS_Shapes.multiMenuMode == 2 then -- FX Transform
+					if LS_Shapes.multiMode == 2 then -- FX Transform
 						if (mesh ~= nil and shape ~= nil) then
 							for i = 0, shapeCount - 1 do
 								local iShape = mesh:Shape(i)
@@ -4802,15 +4893,15 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 							MOHO.Redraw()
 							moho:UpdateUI()
 						end
-					elseif LS_Shapes.multiMenuMode == 3 or LS_Shapes.multiMenuMode == 4 then -- Recolor (RGB/HSB)
-						LS_Shapes.multiValues[LS_Shapes.multiMenuMode] = LS_Shapes.multiValues.clipboard
+					elseif LS_Shapes.multiMode == 3 then -- Recolor
+						LS_Shapes.multiValues[LS_Shapes.multiMode] = LS_Shapes.multiValues.clipboard
 					end
 					MOHO.Redraw()
 				else
 					LM.Beep()
 				end
-			elseif (msg == self.MULTIMENU + 7) then -- Reset Values
-					if LS_Shapes.multiMenuMode == 2 then -- FX Transform
+			elseif (msg == self.MULTIMENU + 6) then -- Reset Values
+					if LS_Shapes.multiMode == 2 then -- FX Transform
 						if (mesh ~= nil and shape ~= nil) then
 							for i = 0, shapeCount - 1 do
 								local iShape = mesh:Shape(i)
@@ -4825,19 +4916,19 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 							MOHO.Redraw()
 							moho:UpdateUI()
 						end
-					elseif LS_Shapes.multiMenuMode == 3 or LS_Shapes.multiMenuMode == 4 then -- Recolor (RGB/HSB)
-						LS_Shapes.multiValues[LS_Shapes.multiMenuMode] = {0, 0, 0, 0} --for i = 1, #LS_Shapes.multiValues[LS_Shapes.multiMenuMode] do LS_Shapes.multiValues[LS_Shapes.multiMenuMode][i] = 0 end
+					elseif LS_Shapes.multiMode == 3 then -- Recolor
+						LS_Shapes.multiValues[LS_Shapes.multiMode] = {0, 0, 0, 1}
 					end
-			elseif (msg == self.MULTIMENU + 8) then -- Invert Color
+			elseif (msg == self.MULTIMENU + 7) then -- Invert Color
 				local col = LM.rgb_color:new_local()
-				if LS_Shapes.multiMenuMode == 0 or LS_Shapes.multiMenuMode == 1 then -- 20240207-1825: It should work individally, accordingly to selected shapes!
+				if LS_Shapes.multiMode == 0 or LS_Shapes.multiMode == 1 then -- 20240207-1825: It should work individally, accordingly to selected shapes!
 					col.r = LM.Clamp(self.multi1:IntValue(), 0, 255) self.multi1:SetValue(col.r)
 					col.g = LM.Clamp(self.multi2:IntValue(), 0, 255) self.multi2:SetValue(col.g)
 					col.b = LM.Clamp(self.multi3:IntValue(), 0, 255) self.multi3:SetValue(col.b)
 					col = LM.ColorOps:InvertColor(col.r, col.g, col.b)
 					col.a = LM.Clamp(self.multi4:FloatValue() * 255, 0, 255) self.multi4:SetValue(col.a / 255) --col.a = LM.Clamp(self.multi4:IntValue() / 100 * 255, 0, 255) self.multi4:SetValue(col.a / 255 * 100) --> Non-PercentageMode version
 
-					if LS_Shapes.multiMenuMode == 0 then
+					if LS_Shapes.multiMode == 0 then
 						self.fillCol:SetValue(col)
 						self:HandleMessage(self.FILLCOLOR)
 					else
@@ -4845,47 +4936,48 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 						self:HandleMessage(self.LINECOLOR)
 					end
 				end
-			elseif (msg == self.MULTIMENU + 9) then -- Multiply Color
+			elseif (msg == self.MULTIMENU + 8) then -- Multiply Color
 				local fillCol, lineCol, fac, col = self.fillCol:Value(), self.lineCol:Value()
-				if LS_Shapes.multiMenuMode == 0 or LS_Shapes.multiMenuMode == 1 then
-					if LS_Shapes.multiMenuMode == 0 then
+				if LS_Shapes.multiMode == 0 or LS_Shapes.multiMode == 1 then
+					if LS_Shapes.multiMode == 0 then
 						fac = self.fillCol:Value().a / 255
-						col = LM.ColorOps:Ls_MultiplyColors(fillCol, lineCol, fac, MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(4)))
+						col = LM.ColorOps:Ls_MultiplyColors(fillCol, lineCol, fac, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4)))
 						self.fillCol:SetValue(col)
 						self:HandleMessage(self.FILLCOLOR)
 					else
 						fac = self.lineCol:Value().a / 255
-						col = LM.ColorOps:Ls_MultiplyColors(fillCol, lineCol, fac, MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(4)))
+						col = LM.ColorOps:Ls_MultiplyColors(fillCol, lineCol, fac, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4)))
 						self.lineCol:SetValue(col)
 						self:HandleMessage(self.LINECOLOR)
 					end
 				end
 			end
 		else -- Menu Options
-			if (msg == self.MULTIMENU + 10) then -- Affects Fills
-				if MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(1)) then
-					LS_Shapes.multiMenuFlags = MOHO.clearbit(LS_Shapes.multiMenuFlags, MOHO.bit(1))
+			if (msg == self.MULTIMENU + 9) then -- Affects Fills
+				if MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(1)) then
+					LS_Shapes.multiFlags = MOHO.clearbit(LS_Shapes.multiFlags, MOHO.bit(1))
 				else
-					LS_Shapes.multiMenuFlags = MOHO.setbit(LS_Shapes.multiMenuFlags, MOHO.bit(1))
+					LS_Shapes.multiFlags = MOHO.setbit(LS_Shapes.multiFlags, MOHO.bit(1))
 				end
-			elseif (msg == self.MULTIMENU + 11) then -- Affects Strokes
-				if MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(2)) then
-					LS_Shapes.multiMenuFlags = MOHO.clearbit(LS_Shapes.multiMenuFlags, MOHO.bit(2))
+			elseif (msg == self.MULTIMENU + 10) then -- Affects Strokes
+				if MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(2)) then
+					LS_Shapes.multiFlags = MOHO.clearbit(LS_Shapes.multiFlags, MOHO.bit(2))
 				else
-					LS_Shapes.multiMenuFlags = MOHO.setbit(LS_Shapes.multiMenuFlags, MOHO.bit(2))
+					LS_Shapes.multiFlags = MOHO.setbit(LS_Shapes.multiFlags, MOHO.bit(2))
 				end
-			elseif (msg == self.MULTIMENU + 12) then -- Affects Alpha
-				if MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(4)) then
-					LS_Shapes.multiMenuFlags = MOHO.clearbit(LS_Shapes.multiMenuFlags, MOHO.bit(4))
+			elseif (msg == self.MULTIMENU + 11) then -- Affects Alpha
+				if MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4)) then
+					LS_Shapes.multiFlags = MOHO.clearbit(LS_Shapes.multiFlags, MOHO.bit(4))
 				else
-					LS_Shapes.multiMenuFlags = MOHO.setbit(LS_Shapes.multiMenuFlags, MOHO.bit(4))
+					LS_Shapes.multiFlags = MOHO.setbit(LS_Shapes.multiFlags, MOHO.bit(4))
 				end
 			end
-			if not MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(1)) and not MOHO.hasbit(LS_Shapes.multiMenuFlags, MOHO.bit(2)) then
-				LS_Shapes.multiMenuFlags = MOHO.setbit(LS_Shapes.multiMenuFlags, MOHO.bit(msg == self.MULTIMENU + 9 and 2 or 1)) -- Not only ensures at least one if both is checked but also act as switch!
+			if not MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(1)) and not MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(2)) then
+				LS_Shapes.multiFlags = MOHO.setbit(LS_Shapes.multiFlags, MOHO.bit(msg == self.MULTIMENU + 8 and 2 or 1)) -- Not only ensures at least one if both is checked but also act as switch!
 			end
-			--print(LS_Shapes.multiMenuFlags)
+			--print(LS_Shapes.multiFlags)
 		end
+		self._lastHue = nil
 		self:Update()
 	elseif (msg >= self.SELECTSTYLE1 and msg < self.SELECTSTYLE2) then --MARK: ITEM SEL.
 		local style1Sel = (doc and doc:StyleByID(msg - self.SELECTSTYLE1 - 1)) and (doc and doc:StyleByID(msg - self.SELECTSTYLE1 - 1).fUUID) or LM.String:new_local("")
@@ -4987,7 +5079,8 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		--return
 		--helper:delete()
 	end
-	--moho:UpdateUI()
+
+	self.multiMode = LS_Shapes.multiMode
 	helper:delete()
 end
 
@@ -5613,7 +5706,7 @@ function LS_Shapes.MsgFlag(self, msg, ...) --(tbl, int, int...) bool -- NOTE: Re
 			if type(entry) == "number" then
 				return MOHO.hasbit(entry, flagSum)
 			elseif type(entry) == "table" then
-				local idx = self.multiMenuMode
+				local idx = self.multiMode
 				local subFlag = entry[idx]
 				return subFlag and MOHO.hasbit(subFlag, flagSum) or false
 			end
@@ -5697,6 +5790,15 @@ end -- Use: ok, count, list = MOHO:GetConstants("LS_CT") for _, name in ipairs(l
 -----------------
 -- MARK: COLOR --
 -----------------
+
+function LS.ColorOps:Ls_SetRgb(col, newCol, ignoreAlpha) --(rgb_color|tbl, rgb_color|tbl, bool) rgb_color|tbl (just in case a return is needed?)
+	col = col or LM.rgb_color:new_local()
+	col.r = LM.Clamp(newCol.r or newCol[1] or 0, 0, 255) 
+	col.g = LM.Clamp(newCol.g or newCol[2] or 0, 0, 255) 
+	col.b = LM.Clamp(newCol.b or newCol[3] or 0, 0, 255) 
+	col.a = (ignoreAlpha and col.a) or LM.Clamp(newCol.a or newCol[4] or 0, 0, 255)
+	return col
+end
 
 function LM.ColorOps:Ls_Rgb2Vec(col) --(rgb_color) ColorVector
 	local cv = LM.ColorVector:new_local()
@@ -5804,8 +5906,8 @@ end
 function LS_Shapes:alterRGB(col, t) --(rgb_color, tbl) rgb_color -- Based on Mike Kelley's "mk_adjust_colors"
 	col.r = LM.Clamp(col.r + t[1], 0, 255)
 	col.g = LM.Clamp(col.g + t[2], 0, 255)
-	col.b = LM.Clamp(col.g + t[3], 0, 255)
-	col.a = LM.Clamp(col.g + t[4], 0, 255)
+	col.b = LM.Clamp(col.b + t[3], 0, 255)
+	col.a = LM.Clamp(col.a + t[4], 0, 255)
 	return col
 end
 
@@ -5974,6 +6076,18 @@ function LS_Shapes:LoadDocument(moho, docPath) --(moho, char) void
 			self.doc = doc
 		end
 	end
+end
+
+function LS_Shapes:GetDraggingButton(...) --(LM_TextControl, LM_Slider, ...) int
+	local widgets = {...}
+	for _, widget in ipairs(widgets) do
+		if widget and widget:IsMouseDragging(1) then
+			return 1 -- LMB
+		elseif widget and widget:IsMouseDragging(2) then
+			return 2 -- RMB
+		end
+	end
+	return 0 -- No button is being dragged on any given widget
 end
 
 function LS_Shapes:Lapse(wait) -- (float) bool, float
