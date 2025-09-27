@@ -1699,7 +1699,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			local styleName = tostring(doc:StyleByID(i - 1).fName:Buffer()) -- NOTE: The swapped order is to get around the style becoming an LM_String bug!
 			local style = doc:StyleByID(i - 1)
 			local styleDefLine = (style.fDefineLineWidth and style.fBrushName:Buffer() ~= "" and "; ") or style.fDefineLineWidth and "· " or style.fBrushName:Buffer() ~= "" and ", " or "  " --local defWidth = style.fDefineLineWidth and "· " or "  "
-			local styleDefFillLine = (style.fDefineFillCol and style.fDefineLineCol and "◉‍ ")  or (style.fDefineFillCol and "◍‍ ") or (style.fDefineLineCol and "◎‍ ") or "○‍ "
+			local styleDefFillLine = (style.fDefineFillCol and style.fDefineLineCol and "◉‍ ")  or (style.fDefineFillCol and "◍‍ ") or (style.fDefineLineCol and "◎‍ ") or "○‍ " --○◌⊘⨂
 
 			if doc and style then
 				for j = 0, doc:CountLayers() - 1 do
@@ -4526,9 +4526,9 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				--]]
 			end
 		elseif (mesh ~= nil and LS_Shapes.mode == 3) then -- Group Creation/Update
+			local ID = groupCount
 			if (msg == self.FILLED or msg == self.FILLED_ALT) then
 				if pointsSel > 0 then -- Create
-					local ID = groupCount
 					mesh:AddGroup("G" .. ID + 1)
 					LS_Shapes:DeselectGroups(mesh, ID)
 					self.itemList:ScrollItemIntoView(ID, false)
@@ -4552,12 +4552,14 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 				end
 			elseif (msg == self.OUTLINED or msg == self.OUTLINED_ALT) then -- Update
 				if (self.groupUI ~= nil and groupSelCount == 1) then
+					ID = itemSel
 					mesh:AddGroup(self.groupUI:Name())
-					--self:Update()
+
 				else
 					LM.Beep()
 				end
 			end
+			LS_Shapes:DeselectGroups(mesh, ID)
 			self:Update()
 		end
 		moho:UpdateUI()
