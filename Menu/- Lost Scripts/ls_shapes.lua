@@ -1296,15 +1296,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		--]]
 		self.itemList:Enable(true) self.itemList:Redraw()
 
-		if self.multiMenuPopup then
-			self.multiMenuPopup:Enable(true)
-			self.hsvBut:Enable(LS_Shapes.multiMode ~= 2)
-			self.multi1:Enable(true)
-			self.multi2:Enable(true)
-			self.multi3:Enable(true)
-			self.multi4:Enable(true)
-			self.swatchMenuPopup:Enable(true)
-		end
 		if LS_Shapes.showInfobar then
 			self.infoBut:Enable(true)
 		end
@@ -1327,12 +1318,13 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			end
 		end
 	elseif LS_Shapes.mode == 3 then
-		self.multiMenuPopup:Enable(false)
-		self.hsvBut:Enable(false)
-		self.multi1:Enable(false)
-		self.multi2:Enable(false)
-		self.multi3:Enable(false)
-		self.multi4:Enable(false)
+		self.fillCheck:Enable(false)
+		self.fillCol:Enable(false)
+		self.swapColBut:Enable(false)
+		self.lineCheck:Enable(false)
+		self.lineCol:Enable(false)
+		self.lineWidth:Enable(false)
+		self.capsBut:Enable(false)
 		if LS_Shapes.pointBasedSel3 == true then
 			if styleName == "" and mesh ~= nil and pointsSel > 0 then -- Avoid Point-Based Selection select any group if a style is being edited to allow normal Style workflow
 				for i = 0, mesh:CountGroups() - 1 do
@@ -1362,18 +1354,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 	local shapeCount = mesh and math.floor(mesh:CountShapes()) or 0
 	local shapesSel = math.floor(moho:CountSelectedShapes(true)) -- Use this instead LM_SelectShape:CountSelectedShapes??
 	local shapeTable = {}
-
-	if LS_Shapes.mode < 2 then -- SHAPE Modes
-		--itemID = shapeCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, shapeCount) - 1 or -1
-		--item = mesh and itemID > -1 and mesh:ShapeByID(itemID) or nil
-	elseif LS_Shapes.mode == 2 then -- STYLE Mode
-		itemID = styleCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, styleCount) - 1 or -1
-		item = doc and itemID > -1 and doc:StyleByID(itemID) or nil
-	else -- GROUP Mode
-		itemID = mesh and groupCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, groupCount) - 1 or -1
-		item = mesh and itemID > -1 and mesh:Group(itemID) or nil
-	end
-	self.groupUI = item --self.groupUI = mesh and mesh:Group(self.itemList:SelItem() > 0 and self.itemList:SelItem() - 1) or nil
 
 	if (shape ~= nil) then -- Shape/s selected... MARK: SHAPE
 		LS_Shapes.mode = 1
@@ -1444,10 +1424,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			end
 		end
 
-		--self.modeBut:Enable(true)
-		self.itemName:Enable(true)
 		self.itemPreview:Enable(true)
-		self.itemVisCheck:Enable(true)
 		self.itemVisCheck:SetValue(not shape.fHidden)
 		if LS_Shapes.advanced then
 			self.fillCheck:SetValue(shape.fHasFill)
@@ -1477,7 +1454,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			self.brushBut:SetValue(brushButVal)
 			self.brushBut:Enable(brushButVal)
 		end
-		self.deleteBut:Enable(true)
 		self.info[1] = ""
 		self.info[2] = shapeLUID > -1 and self.info.id .. shapeLUID or self.info.id .. "?"
 		self.info[3] = shapeCount > 0 and self.info.n .. shapesSel .. "/" .. shapeCount or shapeCount
@@ -1507,20 +1483,17 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 			self.mergeBut:Enable(false)
 		end
 
-		self.deleteBut:Enable(false)
-		self.itemName:Enable(false)
-		self.itemVisCheck:Enable(false)
 		self.itemVisCheck:SetValue(true)
 		self.itemPreview:Enable(false)
 		if LS_Shapes.advanced then
 			self.fillCheck:SetValue(true)
 			self.fillCheck:Enable(false)
-			self.fillCol:Enable(true)
+			self.fillCol:Enable(LS_Shapes.mode < 3 and true)
 			self.fillColOverride:Enable(styleName ~= "" or (style1 and style1.fDefineFillCol or style2 and style2.fDefineFillCol))
 			self.fillColOverride:SetValue(style and style.fDefineFillCol)
 			self.lineCheck:SetValue(true)
 			self.lineCheck:Enable(false)
-			self.lineCol:Enable(true)
+			self.lineCol:Enable(LS_Shapes.mode < 3 and true)
 			self.lineColOverride:Enable(styleName ~= "" or (style1 and style1.fDefineLineCol or style2 and style2.fDefineLineCol))
 			self.lineColOverride:SetValue(style and style.fDefineLineCol)
 			self.lineWidthOverride:Enable(styleName ~= "" or (style1 and style1.fDefineLineWidth or style2 and style2.fDefineLineWidth))
@@ -1547,6 +1520,17 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 	end
 
 	self.modeBut:SetLabel(MOHO.Localize(modes[LS_Shapes.mode]):gsub("%s+%b()", ""), false)
+	if LS_Shapes.mode < 2 then -- SHAPE Modes
+		--itemID = shapeCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, shapeCount) - 1 or -1
+		--item = mesh and itemID > -1 and mesh:ShapeByID(itemID) or nil
+	elseif LS_Shapes.mode == 2 then -- STYLE Mode
+		itemID = styleCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, styleCount) - 1 or -1
+		item = doc and itemID > -1 and doc:StyleByID(itemID) or nil
+	else -- GROUP Mode
+		itemID = mesh and groupCount > 0 and self.itemList:SelItem() > 0 and LM.Clamp(self.itemList:SelItem(), 0, groupCount) - 1 or -1
+		item = mesh and itemID > -1 and mesh:Group(itemID) or nil
+	end
+	self.groupUI = item --self.groupUI = mesh and mesh:Group(self.itemList:SelItem() > 0 and self.itemList:SelItem() - 1) or nil
 
 	if self.info.upd then
 		self.infoText = table.concat(self.info, self.info.sep or " · "):gsub("^" .. self.info.sep .. " *", "")
@@ -1671,8 +1655,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		if shapeID and shapeID >= 0 then
 			self.itemName:Enable(true)
 			self.itemName:SetValue(mesh:Shape(shapeID):Name())
-			--self.itemVisCheck:Enable(true) -- TODO (20231129-2233): Study if necessary...
-			--self.itemVisCheck:SetValue(not mesh:Shape(shapeID).fHidden) -- TODO (20231129-2233): Study if necessary...
 			self.itemList:ScrollItemIntoView(shapeCount - shapeID, true)
 		elseif shapeID < 0 then
 			self.itemName:Enable(false)
@@ -1683,9 +1665,11 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 				self.itemList:ScrollItemIntoView(0, true) -- It doesn't seem to scroll to item 0
 			end
 		end
+		self.itemVisCheck:Enable(self.itemList:SelItem() > 0)
 		self.itemVisCheck:SetToolTip(MOHO.Localize("/LS/Shapes/ShapeVisibility=Shape Visibility (Hide/Unhide)"))
+		self.deleteBut:Enable(shapesSel > 0)
+		self.swapColBut:Enable(true)
 		self.skipBlock = false
-		--]]
 		LS_Shapes:Log("1.4.1")
 	elseif LS_Shapes.mode == 2 then -- STYLE Mode
 		---[[Performance Overhaul 
@@ -1806,6 +1790,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.skipBlock = false
 		self.itemName:Enable(self.itemList:SelItem() > 0)
 		self.deleteBut:Enable(stylesSel > 0)
+		self.swapColBut:Enable(true)
 		LS_Shapes:Log("1.4.2")
 	elseif LS_Shapes.mode == 3 then -- GROUP Mode
 		LS_Shapes:ProcessGroups(mesh, lDrawingUUID)
@@ -1892,7 +1877,6 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		if self.groupUI and itemID >= 0 then
 			self.itemName:Enable(true)
 			self.itemName:SetValue(self.groupUI:Name())
-			self.itemVisCheck:Enable(true)
 			self.itemVisCheck:SetValue(not self.groupUI.ls_fHidden)
 			self.itemList:ScrollItemIntoView(groupCount - mesh:GroupID(self.groupUI), true)
 		elseif not self.groupUI and (itemID < 1 or groupSelCount < 1) then
@@ -1904,9 +1888,11 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 				self.itemList:ScrollItemIntoView(0, true) -- It doesn't seem to scroll to item 0
 			end
 		end
+		self.itemVisCheck:Enable(self.itemList:SelItem() > 0)
 		self.itemName:Enable(self.itemList:SelItem() > 0)
 		self.itemVisCheck:SetToolTip(MOHO.Localize("/LS/Shapes/GroupVisibility=Group Visibility (Hide/Unhide)"))
 		self.deleteBut:Enable(groupSelCount > 0)
+		self.swapColBut:Enable(false)
 		self.skipBlock = false
 		LS_Shapes:Log("1.4.3")
 	end
@@ -1948,21 +1934,20 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.createButtons[2]:SetToolTip((LS_Shapes.mode < 2 and MOHO.Localize("/LS/Shapes/CreateStroke=Create Stroke") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")") or LS_Shapes.mode == 2 and MOHO.Localize("/LS/Shapes/CreateStrokeColorOverriderStyle=Create Stroke Color Overrider Style") or MOHO.Localize("/LS/Shapes/UpdatePointGroup=Update Point Group"))
 		self.createButtons[3]:SetToolTip((LS_Shapes.mode < 2 and MOHO.Localize("/LS/Shapes/CreateBoth=Create Both") .. " (<alt> " .. MOHO.Localize("/Scripts/Tool/CreateShape/ConnectAndCreate=Connect And Create") .. ")") or LS_Shapes.mode == 2 and MOHO.Localize("/LS/Shapes/CreateStyle=Create Style") or "")
 
-		self.fillCheck:Enable(LS_Shapes.mode < 3)
-		self.fillCol:Enable(LS_Shapes.mode < 3)
-		self.swapColBut:Enable(LS_Shapes.mode < 3)
-		self.lineCheck:Enable(LS_Shapes.mode < 3)
-		self.lineCol:Enable(LS_Shapes.mode < 3)
-		self.lineWidth:Enable(LS_Shapes.mode < 3)
-		--self.lineWidth:SetCursor(not self.lineWidth:IsEnabled() and nil)
-		self.capsBut:Enable(LS_Shapes.mode < 3)
 		self.brushBut:SetToolTip(MOHO.Localize("/Dialogs/BrushPicker/Brush=Brush") .. ": " .. (brush ~= "" and brush or MOHO.Localize("/Dialogs/BrushPicker/None=None") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/PickBelow=Pick Below") .. ")" or "")))
 		self.brushMenuPopup:Enable(LS_Shapes.mode < 3)
 		self.brushMenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_shape_brush_cursortip", 0, 0) or nil)
+		self.multiMenuPopup:Enable(LS_Shapes.mode < 3)
+		self.hsvBut:Enable(LS_Shapes.mode < 3 and LS_Shapes.multiMode ~= 2)
+		self.multi1:Enable(LS_Shapes.mode < 3)
+		self.multi2:Enable(LS_Shapes.mode < 3)
+		self.multi3:Enable(LS_Shapes.mode < 3)
+		self.multi4:Enable(LS_Shapes.mode < 3)
+		self.swatchMenuPopup:Enable(LS_Shapes.mode < 3)
 		self.style1MenuPopup:Enable(styleName == "" and LS_Shapes.mode ~= 3) self.style1MenuPopup:Redraw()
 		self.style1MenuPopup:SetToolTip(MOHO.Localize("/Windows/Style/Style1=Style 1") .. (style1Name ~= "" and ": " .. style1Name or "") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/AppliesAbove=Applies Above") .. ")" or ""))
 		self.style1MenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_shape_style_1_cursortip", 0, 0) or nil)
-		self.swapBut:Enable(styleName == "" and style1UUID ~= style2UUID)
+		self.swapBut:Enable(LS_Shapes.mode < 3 and styleName == "" and style1UUID ~= style2UUID)
 		self.style2MenuPopup:Enable(styleName == "" and LS_Shapes.mode ~= 3) self.style2MenuPopup:Redraw()
 		self.style2MenuPopup:SetToolTip(MOHO.Localize("/Windows/Style/Style2=Style 2") .. (style2Name ~= "" and ": " .. style2Name or "") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/AppliesBellow=Applies Bellow") .. ")" or ""))
 		self.style2MenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_shape_style_2_cursortip", 0, 0) or nil)
@@ -4568,11 +4553,12 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			elseif (msg == self.OUTLINED or msg == self.OUTLINED_ALT) then -- Update
 				if (self.groupUI ~= nil and groupSelCount == 1) then
 					mesh:AddGroup(self.groupUI:Name())
-					self:Update()
+					--self:Update()
 				else
 					LM.Beep()
 				end
 			end
+			self:Update()
 		end
 		moho:UpdateUI()
 	elseif (msg == self.HSV) then
