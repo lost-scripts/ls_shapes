@@ -120,7 +120,7 @@ function LS_Shapes:ResetPrefs()
 	LS_Shapes.beginnerMode = true
 	LS_Shapes.debugMode = false
 	LS_Shapes.advanced = true
-	LS_Shapes.largeButtons = false
+	LS_Shapes.largeButtons = false -- -1: Off, 0: Auto, 1: On?
 	LS_Shapes.largePalette = false -- 0: Max, 1: Full, 2: Half, 3: Third?
 	LS_Shapes.showInfobar = true
 	LS_Shapes.swatch = -1
@@ -186,6 +186,9 @@ LS_Shapes.showHelp = false
 -- **************************************************
 -- Shapes Dialog
 -- **************************************************
+
+MOHO.LS_UI_REF_H = 22  -- 22px: text height at 100%
+MOHO.LS_UI_REF_W = 349 -- 349px: ref text length at 100%
 
 MOHO.MSGF_NONE = MOHO.bit(0) -- 2⁰ = 0 (MSG Flag of all defaults)
 MOHO.MSGF_NOTUNDO = MOHO.bit(1) -- 2¹ = 2 (Default: Is undoable)
@@ -305,7 +308,9 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 	local doc = moho.document
 	local docH = doc and doc:Height() or 240
 	local style = moho:CurrentEditStyle()
-	local mainW = 150 --166
+	local ref = LM.GUI.StaticText("AabcD EeefgH IijkL MnoO PqrstT Uvw... X; Y, & Z!?+/-123456789_0")
+	local facH, facW = ref:Height() / MOHO.LS_UI_REF_H, ref:Width() / MOHO.LS_UI_REF_W
+	local mainW = 150 * facW --166
 	local padH, padV = 3, 3
 	local butW = 16
 	local butW1 = LS_Shapes.largeButtons and 6 or 0
@@ -349,10 +354,9 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 			l:AddPadding(LS_Shapes.largeButtons and padH or 0) --l:AddPadding(-7)
 			d.menu1 = LM.GUI.Menu("") --☰⁝⚙…
 			d.menu1.conditionalItems = {}
-			d.menu1Popup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and menuW + 4 or menuW, false) --LS_Shapes.UseLargeFonts and menuW + 4 or menuW
-			--d.menu1Popup:SetToolTip(MOHO.Localize("/Dialogs/LayerSettings/General=General")) --"/Dialogs/LayerSettings/GeneralTab/Options=Options"
+			d.menu1Popup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and menuW + 4 or menuW, false)
 			d.menu1Popup:SetMenu(d.menu1)
-			l:AddChild(d.menu1Popup, LM.GUI.ALIGN_LEFT, 6) --largeFonts = d.menu1Popup:Height() > 24 
+			l:AddChild(d.menu1Popup, LM.GUI.ALIGN_LEFT, 6)
 			d.menu1:AddItem(MOHO.Localize("/LS/Shapes/SyncWithStyleWindow=Sync With Style Window"), 0, self.MAINMENU)
 			--d.menu1:AddItem(MOHO.Localize("/LS/Shapes/ShowActualShapePreview=Show Actual Shape Preview"), 0, self.MAINMENU + 1) -- TODO?
 			d.menu1:AddItem(MOHO.Localize("/LS/Shapes/IgnoreNonRegularVectorLayers=Ignore Non-Regular Vector Layers"), 0, self.MAINMENU + 1)
@@ -363,11 +367,10 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 			d.menu1:AddItem(MOHO.Localize("/LS/Shapes/BeginnersMode=Beginner's Mode (Tooltippy)"), 0, self.MAINMENU + 4)
 			d.menu1:AddItem(MOHO.Localize("/LS/Shapes/DebugMode=Debug Mode") .. " [?]", 0, self.MAINMENU + 5)
 			d.menu1:AddItem("", 0, 0)
-			d.menu1:AddItem(MOHO.Localize("/LS/Shapes/AdvancedMode=Advanced (Creation Controls)"), 0, self.MAINMENU + 6) d.menu1:SetEnabled(self.MAINMENU + 6, true) --Show Creation Controls?
+			d.menu1:AddItem(MOHO.Localize("/LS/Shapes/AdvancedMode=Advanced (Creation Controls)"), 0, self.MAINMENU + 6) d.menu1:SetEnabled(self.MAINMENU + 6, true)
 			d.menu1:AddItem(MOHO.Localize("/LS/Shapes/UseLargeButtons=Use Large Buttons"), 0, self.MAINMENU + 7)
 			d.menu1:AddItem(MOHO.Localize("/LS/Shapes/UseLargePalette=Use Large Palette (%d Items)"):match("[^%(]+"), 0, self.MAINMENU + 8) --MOHO.Localize("/Dialogs/ExportSettings/HalfDimensions=Use Large Palette (%dx%d)"):match("[^%(]+")
 			d.menu1:AddItem(MOHO.Localize("/Windows/LayerComps/ShowComp=Show") .. " " .. "Infobar", 0, self.MAINMENU + 9)
-			--d.menu1:AddItem(MOHO.Localize("/LS/Shapes/ResizeAndReopen=Resize & Reopen"), 0, self.MAINMENU + 9)
 			d.menu1:AddItem("", 0, 0)
 			d.menu1:AddItem(MOHO.Localize("/LS/Shapes/RestoreDefaults=Restore Defaults") .. " [?]", 0, self.MAINMENU + 10)
 			d.menu1:AddItem("", 0, 0)
@@ -755,7 +758,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 						l:AddChild(d.multiMenuPopup, LM.GUI.ALIGN_FILL, 0)
 						l:AddPadding(LS_Shapes.UseLargeFonts and -20 or -16) -- Right clipping (-20 or -16)
 					l:Pop() --H
-					d.hsvBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_color_hsb", MOHO.Localize("/LS/Shapes/UseHSB=Use HSB") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/HSB=Hue, Sat. & Bright.") .. ")" or "") , true, self.HSV, true)
+					d.hsvBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_mode_hsb" .. (facH > 1 and "_large" or ""), MOHO.Localize("/LS/Shapes/UseHSB=Use HSB") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/HSB=Hue, Sat. & Bright.") .. ")" or "") , true, self.HSV, true)
 					l:AddChild(d.hsvBut, LM.GUI.ALIGN_FILL, 1)
 				l:Pop() --V
 				l:AddPadding(-d.multiMenuPopup:Height() - d.hsvBut:Height() - 1) -- + 2 (if Unindent/Indent)
@@ -788,7 +791,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 						l:AddChild(d.multi4, LM.GUI.ALIGN_FILL, 0)
 						l:AddPadding(1)
 					l:Pop() --H
-					d.applyBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_mode_apply", MOHO.Localize("/LS/Shapes/ApplyMode=Apply") , false, self.APPLY, true)
+					d.applyBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_mode_apply" .. (facH > 1 and "_large" or ""), MOHO.Localize("/LS/Shapes/ApplyMode=Apply") , false, self.APPLY, true)
 					d.applyBut:SetAlternateMessage(self.APPLY_ALT)
 					l:AddChild(d.applyBut, LM.GUI.ALIGN_FILL, 24) -- Left padding to avoid overlapping (along with padding above)
 				l:Pop() --V
@@ -885,7 +888,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				d.infoBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_info_small", "Copy Info", true, self.INFO, true)
 				l:AddChild(d.infoBut, LM.GUI.ALIGN_LEFT, 2)
 				d.infobar = LM.GUI.DynamicText("ℹ Room For Some Info", 0) d.infobar:Enable(false)
-				l:AddPadding(-(d.infobar:Height() - (LS_Shapes.UseLargeFonts and 7 or 4))) --print(d.i:Height(), d.infobar:Height()) --18
+				l:AddPadding(-(d.infobar:Height() - (LS_Shapes.UseLargeFonts and 7 or 4))) --print(d.infoBut:Height(), d.infobar:Height()) --18
 				l:AddChild(d.infobar, LM.GUI.ALIGN_FILL, d.infoBut:Width() + 4)
 			l:Pop() --V
 		end
@@ -2772,7 +2775,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			else
 				-- Exit without changes
 			end
-		elseif (msg >= self.MAINMENU + 6 and msg <= self.MAINMENU + 9) then -- Try to encompass here options which require auto-reopening.
+		elseif (msg >= self.MAINMENU + 6 and msg <= self.MAINMENU + 9) then -- Try to encompass here options which require auto-reopening
 			if (msg == self.MAINMENU + 6) and doc ~= nil then -- Advanced (Creation Controls)
 				LS_Shapes.advanced = not LS_Shapes.advanced
 				--self.menu1:SetChecked(msg, LS_Shapes.advanced) -- Not necessary in this case, but another possibility of update entries' checkmarks...
