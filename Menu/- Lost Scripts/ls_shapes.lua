@@ -971,10 +971,10 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.menu1:AddItem("", 0, 0)
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/OpenOnStartup=Open On Startup"), 0, self.MAINMENU + 2)
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/ShowInTools=Show In \"Tools\" Palette"), 0, self.MAINMENU + 3)
-		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/BeginnersMode=Beginner's Mode (Tooltippy)"), 0, self.MAINMENU + 4)
+		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/BeginnersMode=Beginner's Mode") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/Tooltippy=Tooltippy") .. ")" or ""), 0, self.MAINMENU + 4)
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/DebugMode=Debug Mode") .. " [?]", 0, self.MAINMENU + 5)
 		self.menu1:AddItem("", 0, 0)
-		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/AdvancedMode=Advanced (Creation Controls)"), 0, self.MAINMENU + 6) self.menu1:SetEnabled(self.MAINMENU + 6, true)
+		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/AdvancedMode=Advanced" .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/CreationControls=Creation Controls") .. ")" or "")), 0, self.MAINMENU + 6) self.menu1:SetEnabled(self.MAINMENU + 6, true)
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/UseLargeButtons=Use Large Buttons") .. (LS_Shapes.largeButtons == 0 and " [Auto]" or ""), 0, self.MAINMENU + 7)
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/UseLargePalette=Use Large Palette (%d Items)"):match("[^%(]+"), 0, self.MAINMENU + 8) --MOHO.Localize("/Dialogs/ExportSettings/HalfDimensions=Use Large Palette (%dx%d)"):match("[^%(]+")
 		self.menu1:AddItem(MOHO.Localize("/Windows/LayerComps/ShowComp=Show") .. " " .. "Infobar", 0, self.MAINMENU + 9)
@@ -2746,6 +2746,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			end
 		elseif (msg == self.MAINMENU + 4) then -- Beginner's Mode
 			LS_Shapes.beginnerMode = not LS_Shapes.beginnerMode
+			self.menu1:RemoveAllItems()
 		elseif (msg == self.MAINMENU + 5) then -- Debug Mode
 			local log = LS_Shapes:FileExists(self.resPath .. '\\LOG.txt')
 			local alert = LM.GUI.Alert(LM.GUI.ALERT_INFO, string.format(MOHO.Localize("/LS/Shapes/DebugModeAlert2=Debug Mode is currently: %s"), LS_Shapes.debugMode and "ENABLED" or "DISABLED"),			
