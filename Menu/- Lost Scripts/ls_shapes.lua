@@ -51,6 +51,7 @@ function LS_Shapes:LoadPrefs(prefs) --print("LS_Shapes:LoadPrefs(" .. tostring(p
 	self.shouldOpen = prefs:GetBool("LS_Shapes.shouldOpen", true)
 	self.showInTools = prefs:GetBool("LS_Shapes.showInTools", true)
 	self.beginnerMode = prefs:GetBool("LS_Shapes.beginnerMode", true)
+	self.helpViewed = prefs:GetBool("LS_Shapes.helpViewed", false)
 	self.debugMode = prefs:GetBool("LS_Shapes.debugMode", false)
 	self.advanced = prefs:GetBool("LS_Shapes.advanced", true)
 	self.largeButtons = prefs:GetInt("LS_Shapes.largeButtons", 0)
@@ -89,6 +90,7 @@ function LS_Shapes:SavePrefs(prefs) --print("LS_Shapes:SavePrefs(" .. tostring(p
 	prefs:SetBool("LS_Shapes.shouldOpen", true)
 	prefs:SetBool("LS_Shapes.showInTools", self.showInTools)
 	prefs:SetBool("LS_Shapes.beginnerMode", self.beginnerMode)
+	prefs:SetBool("LS_Shapes.helpViewed", self.helpViewed)
 	prefs:SetBool("LS_Shapes.debugMode", self.debugMode)
 	prefs:SetBool("LS_Shapes.advanced", self.advanced)
 	prefs:SetInt("LS_Shapes.largeButtons", self.largeButtons)
@@ -118,6 +120,7 @@ function LS_Shapes:ResetPrefs()
 	LS_Shapes.openOnStartup = false
 	LS_Shapes.showInTools = true
 	LS_Shapes.beginnerMode = true
+	LS_Shapes.helpViewed = false
 	LS_Shapes.debugMode = false
 	LS_Shapes.advanced = true
 	LS_Shapes.largeButtons = 0 -- -1: Off, 0: Auto, 1: On
@@ -983,11 +986,11 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.menu1:AddItem("", 0, 0)
 		if (LS_Shapes:FileExists(self.resPath .. '\\HELP.png') == true) or (LS_Shapes:FileExists(self.resPath .. '\\@HELPME.url') == true) or LS_Shapes.repo then
 			table.insert (self.menu1.conditionalItems, self.MAINMENU + 11)
-			self.menu1:AddItem(MOHO.Localize("/Menus/Help/Help=Help") .. "...", 0, self.menu1.conditionalItems[#self.menu1.conditionalItems])
+			self.menu1:AddItem(MOHO.Localize("/Menus/Help/Help=Help") .. "..." .. ((not LS_Shapes.helpViewed and LS_Shapes.beginnerMode) and "      ‍👈‍  " .. MOHO.Localize("/LS/Shapes/GetStartedHere=GET STARTED HERE!") or ""), 0, self.menu1.conditionalItems[#self.menu1.conditionalItems])
 		end
 		if (LS_Shapes:FileExists(self.resPath .. '\\@VISITME.url') == true) or (LS_Shapes.webpage and LS_Shapes.webpage ~= "") then
 			table.insert (self.menu1.conditionalItems, self.MAINMENU + 12)
-			self.menu1:AddItem(MOHO.Localize("/LS/Shapes/VisitWebpage=Visit Webpage") .. "...", 0, self.menu1.conditionalItems[#self.menu1.conditionalItems])
+			self.menu1:AddItem(MOHO.Localize("/LS/Shapes/VisitWebpage=Visit Webpage..."), 0, self.menu1.conditionalItems[#self.menu1.conditionalItems])
 		end
 		if (LS_Shapes:FileExists(self.resPath .. '\\@UPDATEME.url') == true) or (LS_Shapes.repoLatest and LS_Shapes.repoLatest ~= "") then
 			table.insert (self.menu1.conditionalItems, self.MAINMENU + 13)
@@ -2817,6 +2820,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 		elseif (msg == self.MAINMENU + 11) then -- Help...
 			LS_Shapes.showHelp = not LS_Shapes.isHelpVisible and true or false
 			if (LS_Shapes.showHelp and (not LS_Shapes.isHelpVisible)) then
+				LS_Shapes.helpViewed = true
 				if LS_Shapes:FileExists(self.resPath .. '\\HELP.png') then
 					local hDlog = LS_Shapes.h:new()
 					LS_Shapes.isHelpVisible = true
