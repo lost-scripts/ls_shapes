@@ -184,12 +184,12 @@ LS_Shapes.showHelp = false
 --LS_Shapes.LightHighlight = "34 124 175 255" --34 124 175 255
 --LS_Shapes.MohoLineWidth = 0.005556
 --LS_Shapes.UILightness_v12beta = 0.088000 --0.207000
---LS_Shapes.UseLargeFonts = false
 
 -- **************************************************
 -- Shapes Dialog
 -- **************************************************
 
+MOHO.LS_UI_REF_EW = 16  -- 16/23 (normal/large emoji length)
 MOHO.LS_UI_REF_TH = 22  -- 22px: text height at 100%
 MOHO.LS_UI_REF_TW = 303 -- 303px: textRef length at 100%
 MOHO.LS_UI_REF_MW = 23  -- 22px: menuRef length at 100%
@@ -312,6 +312,9 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 	local doc = moho.document
 	local docH = doc and doc:Height() or 240
 	local style = moho:CurrentEditStyle()
+	local emojiRef = LM.GUI.StaticText("⚫") -- 16px
+	local emojiDif = emojiRef:Width() - MOHO.LS_UI_REF_EW
+	local emojiFac = LS_Shapes.Round(LM.Clamp(emojiRef:Width() / MOHO.LS_UI_REF_EW, 1, 1.5), 2)
 	local textRef = LM.GUI.StaticText("AabcD EeefgH IijkL MnoO PqrstT Uuvw. X, Y & Z!?+/-123") -- 303px
 	local textFacH = LS_Shapes.Round(LM.Clamp(textRef:Height() / MOHO.LS_UI_REF_TH, 1, 1.5), 2) -- Use it when heights must match exactly
 	local textFacW = LS_Shapes.Round(LM.Clamp(textRef:Width() / MOHO.LS_UI_REF_TW, 1, 1.5), 2) -- More accurate than textFacH due to rounding
@@ -319,7 +322,6 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 	local menuRef = LM.GUI.ImagePopupMenu(LS_Shapes.resources .. "ls_pixel", false, false) -- 23px -- ALSO: LM.GUI.CheckBox("", 0) --22px
 	local menuFac = LS_Shapes.Round(LM.Clamp((menuRef:Width() - 1) / MOHO.LS_UI_REF_MW, 1, 1.5), 2)
 	local menuDif = menuRef:Width() - MOHO.LS_UI_REF_MW
-	local menu =  {[-1] = {-44, -29}, [0] = {math.floor(-39 / menuFac), math.floor(-27 / menuFac)}, [1] = {-38, -26}}
 	local menuW = 22 * textFacW
 	local menuL = (LS_Shapes.largeButtons == 0 and textFacH > 1 or LS_Shapes.largeButtons == 1) and 4 * textFacW or 0
 	local butW = 16 * (LS_Shapes.largeButtons == 0 and textFacW or 1)
@@ -364,18 +366,16 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 		--l:AddPadding(-4) -- Comment if modeBut
 		l:PushV(LM.GUI.ALIGN_FILL, 0) -- A parent set to FILL seems necessary to allow clipping bellow!
 			l:Indent(6)
-			l:PushH(LM.GUI.ALIGN_LEFT, 0)
-				---[[Adaptative menu
-				d.menu1Popup = LM.GUI.PopupMenu(66 + menuDif, false)
-				--l:AddPadding(menuDif) -- Clip (font relative) arrow space
-				l:AddPadding(menu[LS_Shapes.largeButtons][1] - menuDif) -- Swipe left (-24 or -20)
-				l:AddPadding(0) -- Allows right-side clipping provided that parent is FILL and... container below isn't wider?
+			l:PushH(LM.GUI.ALIGN_LEFT, 0) -- Adaptative menu
 				d.menu1 = LM.GUI.Menu("≡") --☰⁝
-				d.menu1.conditionalItems = {}
+				d.menu1.ls = {items = {}, [-1] = {-44, -29}, [0] = {math.floor(-39 / menuFac), math.floor(-27 / menuFac)}, [1] = {-38, -26}}
+				l:AddPadding(d.menu1.ls[LS_Shapes.largeButtons][1] - menuDif) -- Swipe left
+				l:AddPadding(0) -- Allows right-side clipping provided that parent is FILL and... container bellow isn't wider?
+				d.menu1Popup = LM.GUI.PopupMenu(66 + menuDif, false) -- Compensate here left shift due to font relative arrow size (Alternative: l:AddPadding(menuDif))
 				d.menu1Popup:SetMenu(d.menu1)
 				l:AddChild(d.menu1Popup, LM.GUI.ALIGN_FILL, 0)
-				l:AddPadding(menu[LS_Shapes.largeButtons][2] - menuDif) -- Right clipping (-20 or -16)
-				--]]
+				l:AddPadding(d.menu1.ls[LS_Shapes.largeButtons][2] - menuDif) -- Right clipping
+
 				l:AddPadding(1)
 				l:Unindent(6)
 			l:Pop() --H
@@ -695,6 +695,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:AddPadding(-2)
 				--l:Unindent(2)
 				l:PushV(LM.GUI.ALIGN_LEFT, 1)
+					--[[
 					l:PushH(LM.GUI.ALIGN_LEFT, 0)
 						l:AddPadding(LS_Shapes.UseLargeFonts and -24 or -20) -- Swipe left (-24 or -20)
 						l:AddPadding(0) -- Allows right-side clipping provided that container below isn't wider?
@@ -702,25 +703,38 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 						d.multiMenuPopup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and 56 or 44, true) -- Popup width (54 or 42)
 						d.multiMenuPopup:SetToolTip(MOHO.Localize("/LS/Shapes/MultiFunctionMenu=Multi-Function Menu"))
 						d.multiMenuPopup:SetMenu(d.multiMenu)
-						d.multiMenu:AddItem("⚫ " .. MOHO.Localize("/LS/Shapes/Fill=Fill"), 0, self.MULTIMENU) 
-						d.multiMenu:AddItem("⚪ " .. MOHO.Localize("/LS/Shapes/Stroke=Stroke"), 0, self.MULTIMENU + 1)
-						d.multiMenu:AddItem("📌 " .. MOHO.Localize("/LS/Shapes/FXTransform=FX Transform"), 0, self.MULTIMENU + 2)
-						d.multiMenu:AddItem("🌈‍ " .. MOHO.Localize("/LS/Shapes/Recolor=Recolor"), 0, self.MULTIMENU + 3)
+						l:AddChild(d.multiMenuPopup, LM.GUI.ALIGN_FILL, 0)
+						l:AddPadding(LS_Shapes.UseLargeFonts and -20 or -16) -- Right clipping (-20 or -16)
+					l:Pop() --H
+					--]]
+					l:PushH(LM.GUI.ALIGN_LEFT, 0)
+						d.multiMenu = LM.GUI.Menu("Multi Menu")
+						d.multiMenu:AddItem("⚫    " .. MOHO.Localize("/LS/Shapes/Fill=Fill      "), 0, self.MULTIMENU) 
+						d.multiMenu:AddItem("‍⚪    " .. MOHO.Localize("/LS/Shapes/Stroke=Stroke    "), 0, self.MULTIMENU + 1)
+						d.multiMenu:AddItem("‍📌    " .. MOHO.Localize("/LS/Shapes/FXTransform=FX Transform"), 0, self.MULTIMENU + 2)
+						d.multiMenu:AddItem("‍🌈‍    " .. MOHO.Localize("/LS/Shapes/Recolor=Recolor   "), 0, self.MULTIMENU + 3)
 						d.multiMenu:AddItem("", 0, 0)
-						d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/CopyValues=Copy Values"), 0, self.MULTIMENU + 4) --✂
-						d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/PasteValues=Paste Values"), 0, self.MULTIMENU + 5) --📋
-						d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/ResetValues=Reset Values"), 0, self.MULTIMENU + 6) --↺
+						d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/Edit=Edit:"):upper(), 0, 0) d.multiMenu:SetEnabled(0, false)
+						d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/CopyValues=Copy Values"), 0, self.MULTIMENU + 4) --✂
+						d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/PasteValues=Paste Values"), 0, self.MULTIMENU + 5) --📋
+						d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/ResetValues=Reset Values"), 0, self.MULTIMENU + 6) --↺
 						d.multiMenu:AddItem("", 0, 0)
-						d.multiMenu:AddItem("UTILITIES: ", 0, 0) d.multiMenu:SetEnabled(0, false)
+						d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/Utilities=Utilities:"):upper(), 0, 0) d.multiMenu:SetEnabled(0, false)
 						d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/InvertColor=Invert Color"), 0, self.MULTIMENU + 7) --◑
 						d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/MultiplyColor=Multiply Colors"), 0, self.MULTIMENU + 8) --× Add Colors, Subtract Colors?
 						d.multiMenu:AddItem("", 0, 0)
-						d.multiMenu:AddItem("OPTIONS: ", 0, 0) d.multiMenu:SetEnabled(0, false)
+						d.multiMenu:AddItem(MOHO.Localize("/LS/Shapes/Options=Options:"):upper(), 0, 0) d.multiMenu:SetEnabled(0, false)
 						d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/AffectsFills=Affects Fills"), 0, self.MULTIMENU + 9)
 						d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/AffectsStrokes=Affects Strokes"), 0, self.MULTIMENU + 10)
 						d.multiMenu:AddItem("   " .. MOHO.Localize("/LS/Shapes/AffectsAlpha=Affects Alpha"), 0, self.MULTIMENU + 11)
+						d.multiMenu.ls = {[-1] = {-44, -40}, [0] = {math.floor(-44 / menuFac), math.floor((-40 - emojiDif / 2) / menuFac)}, [1] = {-40, -38}}
+						l:AddPadding(d.multiMenu.ls[LS_Shapes.largeButtons][1] - (emojiDif / 2) - menuDif / 2) -- Swipe left
+						l:AddPadding(0) -- Allows right-side clipping provided that parent is FILL and... container bellow isn't wider?
+						d.multiMenuPopup = LM.GUI.PopupMenu(66 + emojiDif + menuDif, true) -- Compensate here left shift due to font relative arrow size (Alternative: l:AddPadding(menuDif))
+						d.multiMenuPopup:SetToolTip(MOHO.Localize("/LS/Shapes/MultiFunctionMenu=Multi-Function Menu"))
+						d.multiMenuPopup:SetMenu(d.multiMenu)
 						l:AddChild(d.multiMenuPopup, LM.GUI.ALIGN_FILL, 0)
-						l:AddPadding(LS_Shapes.UseLargeFonts and -20 or -16) -- Right clipping (-20 or -16)
+						l:AddPadding(d.multiMenu.ls[LS_Shapes.largeButtons][2] - (emojiDif / 2) - menuDif / 2) -- Right clipping
 					l:Pop() --H
 					d.hsvBut = LM.GUI.ImageButton(LS_Shapes.resources .. "ls_mode_hsb" .. (d.large and "_lg" or ""), MOHO.Localize("/LS/Shapes/UseHSB=Use HSB") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/HSB=Hue, Sat. & Bright.") .. ")" or "") , true, self.HSV, true)
 					l:AddChild(d.hsvBut, LM.GUI.ALIGN_FILL, 1)
@@ -975,7 +989,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/OpenOnStartup=Open On Startup"), 0, self.MAINMENU + 2)
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/ShowInTools=Show In \"Tools\" Palette"), 0, self.MAINMENU + 3)
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/BeginnersMode=Beginner's Mode") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/Tooltippy=Tooltippy") .. ")" or ""), 0, self.MAINMENU + 4)
-		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/DebugMode=Debug Mode") .. " [?]", 0, self.MAINMENU + 5)
+		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/DebugMode=Debug Mode..."), 0, self.MAINMENU + 5)
 		self.menu1:AddItem("", 0, 0)
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/AdvancedMode=Advanced" .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/CreationControls=Creation Controls") .. ")" or "")), 0, self.MAINMENU + 6) self.menu1:SetEnabled(self.MAINMENU + 6, true)
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/UseLargeButtons=Use Large Buttons") .. (LS_Shapes.largeButtons == 0 and " [Auto]" or ""), 0, self.MAINMENU + 7)
@@ -985,18 +999,18 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.menu1:AddItem(MOHO.Localize("/LS/Shapes/RestoreDefaults=Restore Defaults") .. " [?]", 0, self.MAINMENU + 10)
 		self.menu1:AddItem("", 0, 0)
 		if (LS_Shapes:FileExists(self.resPath .. '\\HELP.png') == true) or (LS_Shapes:FileExists(self.resPath .. '\\@HELPME.url') == true) or LS_Shapes.repo then
-			table.insert (self.menu1.conditionalItems, self.MAINMENU + 11)
-			self.menu1:AddItem(MOHO.Localize("/Menus/Help/Help=Help") .. "..." .. ((not LS_Shapes.helpViewed and LS_Shapes.beginnerMode) and "      ‍👈‍  " .. MOHO.Localize("/LS/Shapes/GetStartedHere=GET STARTED HERE!") or ""), 0, self.menu1.conditionalItems[#self.menu1.conditionalItems])
+			table.insert (self.menu1.ls.items, self.MAINMENU + 11)
+			self.menu1:AddItem(MOHO.Localize("/Menus/Help/Help=Help") .. "..." .. ((not LS_Shapes.helpViewed and LS_Shapes.beginnerMode) and "      ‍👈‍  " .. MOHO.Localize("/LS/Shapes/GetStartedHere=GET STARTED HERE!") or ""), 0, self.menu1.ls.items[#self.menu1.ls.items])
 		end
 		if (LS_Shapes:FileExists(self.resPath .. '\\@VISITME.url') == true) or (LS_Shapes.webpage and LS_Shapes.webpage ~= "") then
-			table.insert (self.menu1.conditionalItems, self.MAINMENU + 12)
-			self.menu1:AddItem(MOHO.Localize("/LS/Shapes/VisitWebpage=Visit Webpage..."), 0, self.menu1.conditionalItems[#self.menu1.conditionalItems])
+			table.insert (self.menu1.ls.items, self.MAINMENU + 12)
+			self.menu1:AddItem(MOHO.Localize("/LS/Shapes/VisitWebpage=Visit Webpage..."), 0, self.menu1.ls.items[#self.menu1.ls.items])
 		end
 		if (LS_Shapes:FileExists(self.resPath .. '\\@UPDATEME.url') == true) or (LS_Shapes.repoLatest and LS_Shapes.repoLatest ~= "") then
-			table.insert (self.menu1.conditionalItems, self.MAINMENU + 13)
-			self.menu1:AddItem(MOHO.Localize("/Menus/Help/CheckForUpdates=Check For Updates..."), 0, self.menu1.conditionalItems[#self.menu1.conditionalItems])
+			table.insert (self.menu1.ls.items, self.MAINMENU + 13)
+			self.menu1:AddItem(MOHO.Localize("/Menus/Help/CheckForUpdates=Check For Updates..."), 0, self.menu1.ls.items[#self.menu1.ls.items])
 		end
-		if (#self.menu1.conditionalItems > 1) then
+		if (#self.menu1.ls.items > 1) then
 			self.menu1:AddItem("", 0, 0)
 		end
 		self.menu1:AddItem(MOHO.Localize("/Menus/Application/About=About") .. " " .. LS_Shapes:UILabel() .. "...", 0, self.MAINMENU + 14)
