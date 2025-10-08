@@ -323,7 +323,7 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 	local menuFac = LS_Shapes.Round(LM.Clamp((menuRef:Width() - 1) / MOHO.LS_UI_REF_MW, 1, 1.5), 2)
 	local menuDif = menuRef:Width() - MOHO.LS_UI_REF_MW
 	local menuW = 22 * textFacW
-	local menuL = (LS_Shapes.largeButtons == 0 and textFacH > 1 or LS_Shapes.largeButtons == 1) and 4 * textFacW or 0
+	local menuL = 4 * ((LS_Shapes.largeButtons == -1 and 0) or (LS_Shapes.largeButtons == 0 and textFacW) or 1) --(LS_Shapes.largeButtons == 0 and textFacH > 1 or LS_Shapes.largeButtons == 1) and 4 * textFacW or 0
 	local butW = 16 * (LS_Shapes.largeButtons == 0 and textFacW or 1)
 	local butL = 6 * ((LS_Shapes.largeButtons == -1 and 0) or (LS_Shapes.largeButtons == 0 and textFacW) or 1)
 	local padH, padV = 3, 3
@@ -784,9 +784,8 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:Unindent(3)
 				l:PushH(LM.GUI.ALIGN_LEFT, 0)
 					l:AddPadding(-4)
-					d.style1Menu = LM.GUI.Menu("Style 1") --¹²₁₂⒈⒉
-					d.style1MenuPopup = LM.GUI.PopupMenu(math.floor((mainW + butW + butL + padH - menuW - 8) / 2), true) ---6
-					--d.style1MenuPopup:SetToolTip(MOHO.Localize("/Windows/Style/Style1=Style 1") .. " (" .. MOHO.Localize("/LS/Shapes/AppliesAbove=Applies Above") .. ")")
+					d.style1Menu = LM.GUI.Menu("Style 1")
+					d.style1MenuPopup = LM.GUI.PopupMenu(math.floor((mainW - (menuW + menuL)) / 2) + 4, true)
 					d.style1MenuPopup:SetMenu(d.style1Menu)
 					l:AddChild(d.style1MenuPopup, LM.GUI.ALIGN_LEFT, 0)
 				l:Pop() --H
@@ -797,17 +796,22 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:PushH(LM.GUI.ALIGN_LEFT, 0)
 					l:AddPadding(-4)
 					d.style2Menu = LM.GUI.Menu("Style 2")
-					d.style2MenuPopup = LM.GUI.PopupMenu(math.floor((mainW + butW + butL + padH - menuW - 8) / 2), true) --6
-					--d.style2MenuPopup:SetToolTip(MOHO.Localize("/Windows/Style/Style2=Style 2") .. " (" .. MOHO.Localize("/LS/Shapes/AppliesBelow=Applies Below") .. ")")
+					d.style2MenuPopup = LM.GUI.PopupMenu(math.floor((mainW - (menuW + menuL)) / 2) + 4, true)
 					d.style2MenuPopup:SetMenu(d.style2Menu)
 					l:AddChild(d.style2MenuPopup)
 				l:Pop() --H
 				l:AddPadding(2)
 				l:AddPadding(0)
-				d.swatchMenu = LM.GUI.Menu("🎨") --⊞▦▩⩩⩨
-				d.swatchMenuPopup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and menuW + 4 or menuW, false) --8 + 2?
-				d.swatchMenuPopup:SetMenu(d.swatchMenu)
-				l:AddChild(d.swatchMenuPopup)
+				l:PushH(LM.GUI.ALIGN_FILL, 0) -- Adaptative menu
+					d.swatchMenu = LM.GUI.Menu("🎨") --⊞▦▩
+					d.swatchMenu.ls = {[-1] = {-42, -26}, [0] = {math.floor(-42 / menuFac), math.floor(-27 / menuFac)}, [1] = {-37 - menuL, -22 - menuL}}
+					l:AddPadding(d.swatchMenu.ls[LS_Shapes.largeButtons][1] - menuDif) -- Swipe left
+					l:AddPadding(0) -- Allows right-side clipping provided that parent is FILL and space is enough
+					d.swatchMenuPopup = LM.GUI.PopupMenu(66 + menuL + menuDif, false) -- Compensate here left shift due to font relative arrow size (Alternative: l:AddPadding(menuDif))
+					d.swatchMenuPopup:SetMenu(d.swatchMenu)
+					l:AddChild(d.swatchMenuPopup, LM.GUI.ALIGN_FILL, 0)
+					l:AddPadding(d.swatchMenu.ls[LS_Shapes.largeButtons][2] - menuDif) -- Right clipping
+				l:Pop() --H
 				l:AddPadding(2)
 				l:Indent(3)
 			l:Pop() --H
@@ -1966,8 +1970,8 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.style2MenuPopup:Enable(styleName == "" and LS_Shapes.mode ~= 3) self.style2MenuPopup:Redraw()
 		self.style2MenuPopup:SetToolTip(MOHO.Localize("/Windows/Style/Style2=Style 2") .. (style2Name ~= "" and ": " .. style2Name or "") .. (LS_Shapes.beginnerMode and " (" .. MOHO.Localize("/LS/Shapes/AppliesBellow=Applies Bellow") .. ")" or ""))
 		self.style2MenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_shape_style_2_cursortip", 0, 0) or nil)
-		self.swatchMenuPopup:SetToolTip(MOHO.Localize("/Windows/Style/Swatches=Swatches") .. " (" .. self.swatchMenu:FirstCheckedLabel():gsub("^%s+", "") .. ")")
-		self.swatchMenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_swatches_cursortip", 0, 0) or nil)
+		self.swatchMenuPopup:SetToolTip(MOHO.Localize("/Windows/Style/Swatches=Swatches") .. ": " .. self.swatchMenu:FirstCheckedLabel():gsub("^%s+", ""))
+		--self.swatchMenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_swatches_cursortip", 0, 0) or nil)
 
 		if (tool ~= nil) then
 			if toolName:find("SelectShape") then
@@ -2038,8 +2042,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 		self.multiMenu:SetChecked(self.MULTIMENU + 9, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(1)))
 		self.multiMenu:SetChecked(self.MULTIMENU + 10, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(2)))
 		self.multiMenu:SetChecked(self.MULTIMENU + 11, MOHO.hasbit(LS_Shapes.multiFlags, MOHO.bit(4)))
-		self.multiMenuPopup:SetToolTip(self.multiMenu:FirstCheckedLabel())
-		self.multiMenuPopup:SetCursor(LS_Shapes.beginnerMode and LM.GUI.Cursor(LS_Shapes.resources .. "ls_mode_cursortip", 0, 0) or nil)
+		self.multiMenuPopup:SetToolTip(MOHO.Localize("/LS/Shapes/Submode=Submode") .. ": " .. self.multiMenu:FirstCheckedLabel():gsub("  +", " "))
 		self.multiMenuPopup:Redraw()
 		self.hsvBut:Enable(LS_Shapes.mode < 3 and LS_Shapes.multiMode ~= 2)
 		self.multi1:Enable(LS_Shapes.mode < 3)
@@ -2971,7 +2974,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 			self:Update()
 			self:UpdateColor(moho)
 			self.swatchMenu:UncheckAll()
-			self.swatchMenu:SetChecked(msg, true) --self.swatchMenuPopup:Redraw()
+			self.swatchMenu:SetChecked(msg, true)
 			helper:delete() --20240102-0425: This was missing for some reason and that seemed the cause for all the open documents mess?? (TBO!)
 			return
 		elseif (msg == self.SELECTSWATCH + self:CountRealItems(self.swatchMenu, self.SELECTSWATCH) - 4) then --print("Custom Swatches...") -- Custom Swatches...
