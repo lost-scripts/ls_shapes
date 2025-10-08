@@ -679,10 +679,16 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 					l:AddChild(d.brushBut, LM.GUI.ALIGN_FILL, 0)
 					l:PushV(LM.GUI.ALIGN_FILL, 0)
 						l:AddPadding(-11) --15
-						d.brushMenu = LM.GUI.Menu("🖌")
-						d.brushMenuPopup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and menuW + 4 or 22, false) --LS_Shapes.largeButtons and butW + butL or 22
-						d.brushMenuPopup:SetMenu(d.brushMenu)
-						l:AddChild(d.brushMenuPopup, LM.GUI.ALIGN_FILL, 0)
+						l:PushH(LM.GUI.ALIGN_FILL, 0) -- Adaptative menu
+							d.brushMenu = LM.GUI.Menu("…") --🖌
+							d.brushMenu.ls = {[-1] = {-45, -28}, [0] = {math.floor(-43 / menuFac), math.floor(-29 / menuFac)}, [1] = {-40 - menuL, -24 - menuL}}
+							l:AddPadding(d.brushMenu.ls[LS_Shapes.largeButtons][1] - menuDif) -- Swipe left
+							l:AddPadding(0) -- Allows right-side clipping provided that parent is FILL and space is enough
+							d.brushMenuPopup = LM.GUI.PopupMenu(66 + menuDif, false) -- Compensate here left shift due to font relative arrow size (Alternative: l:AddPadding(menuDif))
+							d.brushMenuPopup:SetMenu(d.brushMenu)
+							l:AddChild(d.brushMenuPopup, LM.GUI.ALIGN_FILL, 0)
+							l:AddPadding(d.brushMenu.ls[LS_Shapes.largeButtons][2] - menuDif) -- Right clipping
+						l:Pop() --H
 					l:Pop() --V
 				l:Pop() --V
 				--l:AddChild(LM.GUI.Divider(true), LM.GUI.ALIGN_FILL, 0)
@@ -695,18 +701,6 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 				l:AddPadding(-2)
 				--l:Unindent(2)
 				l:PushV(LM.GUI.ALIGN_LEFT, 1)
-					--[[
-					l:PushH(LM.GUI.ALIGN_LEFT, 0)
-						l:AddPadding(LS_Shapes.UseLargeFonts and -24 or -20) -- Swipe left (-24 or -20)
-						l:AddPadding(0) -- Allows right-side clipping provided that container below isn't wider?
-						d.multiMenu = LM.GUI.Menu("Multi Menu")
-						d.multiMenuPopup = LM.GUI.PopupMenu(LS_Shapes.UseLargeFonts and 56 or 44, true) -- Popup width (54 or 42)
-						d.multiMenuPopup:SetToolTip(MOHO.Localize("/LS/Shapes/MultiFunctionMenu=Multi-Function Menu"))
-						d.multiMenuPopup:SetMenu(d.multiMenu)
-						l:AddChild(d.multiMenuPopup, LM.GUI.ALIGN_FILL, 0)
-						l:AddPadding(LS_Shapes.UseLargeFonts and -20 or -16) -- Right clipping (-20 or -16)
-					l:Pop() --H
-					--]]
 					l:PushH(LM.GUI.ALIGN_LEFT, 0)
 						d.multiMenu = LM.GUI.Menu("Multi Menu")
 						d.multiMenu:AddItem("⚫    " .. MOHO.Localize("/LS/Shapes/Fill=Fill      "), 0, self.MULTIMENU) 
