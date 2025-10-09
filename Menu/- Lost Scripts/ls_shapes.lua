@@ -323,9 +323,9 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 	local menuFac = LS_Shapes.Round(LM.Clamp((menuRef:Width() - 1) / MOHO.LS_UI_REF_MW, 1, 1.5), 2)
 	local menuDif = menuRef:Width() - MOHO.LS_UI_REF_MW
 	local menuW = 22 * textFacW
-	local menuL = 4 * ((LS_Shapes.largeButtons == -1 and 0) or (LS_Shapes.largeButtons == 0 and textFacW) or 1) --(LS_Shapes.largeButtons == 0 and textFacH > 1 or LS_Shapes.largeButtons == 1) and 4 * textFacW or 0
+	local menuL = 4 * ((LS_Shapes.largeButtons == -1 and 0) or (LS_Shapes.largeButtons == 0 and (textFacW > 1 and textFacW or 0)) or 1)
 	local butW = 16 * (LS_Shapes.largeButtons == 0 and textFacW or 1)
-	local butL = 6 * ((LS_Shapes.largeButtons == -1 and 0) or (LS_Shapes.largeButtons == 0 and textFacW) or 1)
+	local butL = 6 * ((LS_Shapes.largeButtons == -1 and 0) or (LS_Shapes.largeButtons == 0 and (textFacW > 1 and textFacW or 0)) or 1)
 	local padH, padV = 3, 3
 	local mainW = 150 * textFacW
 
@@ -369,12 +369,12 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 			l:PushH(LM.GUI.ALIGN_LEFT, 0) -- Adaptative menu
 				d.menu1 = LM.GUI.Menu("≡") --☰⁝
 				d.menu1.ls = {items = {}, [-1] = {-44, -29}, [0] = {math.floor(-39 / menuFac), math.floor(-27 / menuFac)}, [1] = {-38, -26}}
-				l:AddPadding(d.menu1.ls[LS_Shapes.largeButtons][1] - menuDif) -- Swipe left
+				l:AddPadding(d.menu1.ls[(LS_Shapes.largeButtons == 0 and (d.large and 0 or -1)) or LS_Shapes.largeButtons][1] - menuDif) -- Swipe left
 				l:AddPadding(0) -- Allows right-side clipping provided that parent is FILL and... container bellow isn't wider?
 				d.menu1Popup = LM.GUI.PopupMenu(66 + menuDif, false) -- Compensate here left shift due to font relative arrow size (Alternative: l:AddPadding(menuDif))
 				d.menu1Popup:SetMenu(d.menu1)
 				l:AddChild(d.menu1Popup, LM.GUI.ALIGN_FILL, 0)
-				l:AddPadding(d.menu1.ls[LS_Shapes.largeButtons][2] - menuDif) -- Right clipping
+				l:AddPadding(d.menu1.ls[(LS_Shapes.largeButtons == 0 and (d.large and 0 or -1)) or LS_Shapes.largeButtons][2] - menuDif) -- Right clipping
 
 				l:AddPadding(1)
 				l:Unindent(6)
