@@ -4,8 +4,8 @@
 
 ScriptName = "LS_Shapes"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20250921-1615"
-ScriptVersion = "0.4.1"
+ScriptBuild = "20251011-2117"
+ScriptVersion = "0.4.2"
 ScriptStage = "BETA"
 ScriptTarget = "Moho® 14.3+ Pro"
 
@@ -329,9 +329,8 @@ function LS_ShapesDialog:new(moho) --print("LS_ShapesDialog:new(" .. tostring(mo
 	local padH, padV = 3, 3
 	local mainW = 150 * textFacW
 
-	d.p = _G[LS_Shapes.name] -- Shortcut to script's table
+	d.p = _G[LS_Shapes.name] -- Shortcut to script's table (parent)
 	d.p.m = moho -- ⚠ WARNING: Be careful from where you retrieve this due to the inherent mutability of the moho object!
-
 	d.v = moho.view -- The view object upon opening (try to avoid using it afterwards!)
 	d.w = {} -- widgets, wTable?
 	d.msg = MOHO.MSG_BASE
@@ -881,7 +880,7 @@ end
 function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(moho) .. "): ", " 🕗: " .. os.clock()) --MARK:-UP(D)
 	--local caller = debug.getinfo(5) and debug.getinfo(5).name or "NULL" --0: getinfo, 1: Update, 2: func, 3: NULL/NULL, 4: NULL/UpdateUI, 5: NULL/NULL
 	local helper = MOHO.ScriptInterfaceHelper:new_local()
-	local moho = helper:MohoObject() self.p.m = self.p and moho or nil
+	local moho = helper:MohoObject()
 	local pro = MOHO.IsMohoPro()
 	local doc = moho.document --local doc = (LS_Shapes.defDoc and LS_Shapes.defDoc ~= moho.document) and LS_Shapes.defDoc or moho.document --print("UP: " .. (doc and doc:Name()) or "No Doc") --20240102-1638: Attempt to patch the new opening document mess! --20240103-1809: Back to normality after fixing the cause? (TBO!)
 	local docName = doc and doc:Name() or nil
@@ -894,6 +893,7 @@ function LS_ShapesDialog:Update() --print("LS_ShapesDialog:Update(" .. tostring(
 	local modes = {[0] = "/Windows/Style/DefaultsForNewShapes=DEFAULTS (For new shapes)", "/Windows/Style/SHAPE=SHAPE", "/Windows/Style/STYLE=STYLE", "/LS/Shapes/GROUP=GROUP (For point groups)"}
 	local l = self.GetLayout and self:GetLayout() or nil --20231223-2350: Extra-checking is for avoiding crashes upon auto-opening
 	local msg = self.msg ~= nil and self.msg or MOHO.MSG_BASE
+	self.p.m = self.p and moho or nil
 	self.tempShape = moho:NewShapeProperties() or MOHO.MohoGlobals.NewShapeProperties
 
 	local itemCount = self.itemList and self.itemList:CountItems() or 1
@@ -2705,7 +2705,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 	end
 	--local caller = debug.getinfo(3) and debug.getinfo(3).name or "NULL" print(caller) --0: getinfo, 1: NULL/NULL, 2: SetSelItem/NULL, 3: NULL/Update, 4: NULL/func, 5: NULL/NULL
 	local helper = MOHO.ScriptInterfaceHelper:new_local()
-	local moho = helper:MohoObject() self.p.m = self.p and moho or nil
+	local moho = helper:MohoObject()
 	local doc = moho.document --print("HM: " .. (doc and doc:Name()) or "No Doc") --20240103-1809: Back to normality after fixing the casue of opening document mess? (TBO!)
 	--local doc = (LS_Shapes.defDoc and LS_Shapes.defDoc ~= moho.document) and LS_Shapes.defDoc or moho.document --print("HM: " .. (doc and doc:Name()) or "No Doc") --20240102-1638: A try to fix/patch the new opening document mess for now... (TBO!)
 	local docH = doc and doc:Height() or 240
@@ -2735,6 +2735,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 	local style1UUID, style2UUID = style1 and style1.fUUID:Buffer() or nil, style2 and style2.fUUID:Buffer() or nil
 	local style1ID, style2ID = LS_Shapes:StyleID(doc, style1), LS_Shapes:StyleID(doc, style2)
 
+	self.p.m = self.p and moho or nil
 	self.info[1], self.info[2], self.info[3], self.info[4] = nil
 	self.tempShape = moho:NewShapeProperties() or MOHO.MohoGlobals.NewShapeProperties
 	self.msg = msg or MOHO.MSG_BASE
@@ -2855,6 +2856,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 						LS_Shapes.isHelpVisible = false
 						LS_Shapes.showHelp = true
 						hDlog = nil --?
+						helper:delete()
 						return
 					end
 				elseif (LS_Shapes:FileExists(self.resPath .. '\\@HELPME.url') == true) then
@@ -3068,7 +3070,7 @@ function LS_ShapesDialog:HandleMessage(msg) --print("LS_ShapesDialog:HandleMessa
 	local lDrawingUUID = lDrawing and lDrawing:UUID() or ""
 	local lDrawingFrame = lDrawing and moho.drawingLayerFrame or 0
 	local lDrawingFrameAlt = moho.frame + (lDrawing and lDrawing:TotalTimingOffset() or 0)
-	local mesh = doc and moho:DrawingMesh()
+	local mesh = doc and moho:DrawingMesh() --(doc and lDrawing) and lDrawing:Mesh() or moho:DrawingMesh() --20251011-2100: Unsuccessful attempt to solve the stuck layer of other open document issue...
 	local item = nil
 	local itemID = -1
 	local pointsSel = doc and moho:CountSelectedPoints(true)
