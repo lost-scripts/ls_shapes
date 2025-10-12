@@ -5833,7 +5833,7 @@ end -- Use: ok, count, list = MOHO:GetConstants("LS_CT") for _, name in ipairs(l
 -- MARK: COLOR --
 -----------------
 
-function LS.ColorOps:Ls_SetRgb(col, newCol, ignoreAlpha) --(rgb_color|tbl, rgb_color|tbl, bool) rgb_color|tbl (just in case a return is needed?)
+function LM.ColorOps:Ls_SetRgb(col, newCol, ignoreAlpha) --(rgb_color|tbl, rgb_color|tbl, bool) rgb_color|tbl (just in case a return is needed?)
 	col = col or LM.rgb_color:new_local()
 	col.r = LM.Clamp(newCol.r or newCol[1] or 0, 0, 255) 
 	col.g = LM.Clamp(newCol.g or newCol[2] or 0, 0, 255) 
