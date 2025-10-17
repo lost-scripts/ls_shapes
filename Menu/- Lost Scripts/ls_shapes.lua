@@ -4,7 +4,7 @@
 
 ScriptName = "LS_Shapes"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20251011-2117"
+ScriptBuild = "20251017-1505"
 ScriptVersion = "0.4.2"
 ScriptStage = "BETA"
 ScriptTarget = "Moho® 14.3+ Pro"
@@ -5496,6 +5496,7 @@ end
 function LS_Shapes:Run(moho)
 	if self.dlog == nil then
 		self.mode = 0
+		self.largeButtons = ({[-1]=-1,[0]=0,[1]=1})[tonumber(LS_Shapes.largeButtons)] or 0 -- Pre-UI strict validation against cross‑platform unexpected/corrupted pref
 		--[[20230929-2230: Throw a warning, for now, if current tool has a dialog to avoid both get messed up... 20231004-1430: See dlogBypass patch bellow! :D
 		local reminder = ""
 		if self.prevClock and (os.clock() - self.prevClock) * 1000 < 300 * (speedFactor or 1) then
