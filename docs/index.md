@@ -6,14 +6,9 @@ Date: 2023-10-20 17:29:50
 Modified: 2025-10-11 22:15:00
 ---
 
-<table id="top" width="100%" border="0"><tr><td align="left" valign="middle" width="96">
-
-[![Icon](docs/index@2x.png "Icon")](#! "Icon")
-</td><td align="right" valign="middle" width="1920" nowrap>
-
-[![h-shield1-i]][h-shield1-a] [![h-shield2-i]][h-shield2-a] [![h-shield3-i]][h-shield3-a]
-</td></tr></table>
-
+<!-- HEADER_START -->
+<!-- HEADER_END -->
+ 
 # LS Shapes Window
 
 Persistent shape palette plus helpers for better management of Moho® vectors in general and *Liquid Shapes* in particular. This script provides a visual and user-friendly interface for performing complex shape operations effortlessly.
@@ -25,46 +20,46 @@ Persistent shape palette plus helpers for better management of Moho® vectors in
 <details align="center" width="100%" class="gallery-holder" style="cursor: pointer; user-select: none;">
 <summary title="Click here to expand/collapse image gallery"><strong>UI</strong> <sub><sup>(Expand/Collapse)</sup></sub><br><br>
 
-[![UI](docs/index_gallery.png "UI")](#! "UI")
+[![UI](assets/image_gallery.png "UI")](#! "UI")
 </summary><br>
 
 <table align="center" border="0" class="gallery"><tr>
 <td width="178" valign="top"><!-- width="1024px" for full width container-->
 
-![SHAPE Mode](docs/index_gallery_mode_1.png "SHAPE Mode for shape management")
+![SHAPE Mode](assets/image_gallery_mode_1.png "SHAPE Mode for shape management")
 </td><td width="178" valign="top">
 
-![STYLE Mode](docs/index_gallery_mode_2.png "STYLE Mode for style management")
+![STYLE Mode](assets/image_gallery_mode_2.png "STYLE Mode for style management")
 </td><td width="178" valign="top">
 
-![STYLE Mode](docs/index_gallery_mode_3.png "GROUP Mode for point group management")
+![STYLE Mode](assets/image_gallery_mode_3.png "GROUP Mode for point group management")
 </td><td width="178" valign="top">
 
-![TWEAK Menu](docs/index_gallery_tweak_menu.png "TWEAK Menu for shape tweaking &amp; utils")
+![TWEAK Menu](assets/image_gallery_tweak_menu.png "TWEAK Menu for shape tweaking &amp; utils")
 </td><td width="264" valign="top">
 
-![LIVE Swatches](docs/index_gallery_view_swatches.gif "Live/Scrollable (plus customizable) Swatches")
+![LIVE Swatches](assets/image_gallery_view_swatches.gif "Live/Scrollable (plus customizable) Swatches")
 </td><td width="178" valign="top">
 
-![COMPACT Mode](docs/index_gallery_window_compact.png "Or just keep it compact...")
+![COMPACT Mode](assets/image_gallery_window_compact.png "Or just keep it compact...")
 </td>
 </tr></table>
 </details>
 <!--
 <details align="center" width="100%" class="gallery-holder" style="cursor:pointer; user-select: none;">
 	<summary title="Click the arrow to expand/collapse image gallery">
-		<a inert href="#!"><img align="center" height="96px" src="docs/index_gallery.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" alt="Script UI" style="vertical-align: middle;"></a>&ensp;&ensp;
+		<a inert href="#!"><img align="center" height="96px" src="assets/image_gallery.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" alt="Script UI" style="vertical-align: middle;"></a>&ensp;&ensp;
 	</summary>
 	<br>
 	<table align="center" border="0" class="gallery">
 		<tr>
 			<td nowrap data-comment="Use width='1024px' for full width container">
-				<img src="docs/index_gallery_1.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="SHAPE Mode for shape management" height="512px" align="top">&ensp;
-				<img src="docs/index_gallery_2.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="STYLE Mode for style management" height="512px" align="top">&ensp;
-				<img src="docs/index_gallery_3.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="GROUP Mode for point group management" height="512px" align="top">&ensp;
-				<img src="docs/index_gallery_4.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="TWEAK Menu for shape tweaking &amp; utils" height="512px" align="top">&ensp;
-				<img src="docs/index_gallery_5.gif" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="Live/Scrollable (plus customizable) Swatches" height="512px" align="top">&ensp;
-				<img src="docs/index_gallery_6.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="Or just keep it compact..." align="top">
+				<img src="assets/image_gallery_1.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="SHAPE Mode for shape management" height="512px" align="top">&ensp;
+				<img src="assets/image_gallery_2.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="STYLE Mode for style management" height="512px" align="top">&ensp;
+				<img src="assets/image_gallery_3.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="GROUP Mode for point group management" height="512px" align="top">&ensp;
+				<img src="assets/image_gallery_4.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="TWEAK Menu for shape tweaking &amp; utils" height="512px" align="top">&ensp;
+				<img src="assets/image_gallery_5.gif" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="Live/Scrollable (plus customizable) Swatches" height="512px" align="top">&ensp;
+				<img src="assets/image_gallery_6.png" onerror="this.onerror=null; this.src=this.getAttribute('src').split('/').pop();" title="Or just keep it compact..." align="top">
 				<br>
 			</td>
 		</tr>
@@ -89,7 +84,7 @@ Persistent shape palette plus helpers for better management of Moho® vectors in
 
 <br>
 
-## Installation
+## Download & Install
 
 [**Download**][h-shield1-a] the file, **unzip** it, and proceed with the installation method of your choice...
 
@@ -101,7 +96,7 @@ Persistent shape palette plus helpers for better management of Moho® vectors in
 
 And that's all! The script should appear in *Tools* palette and/or under *Scripts* menu.
 
-> ⚠ **WARNING:** Please, make sure you have uninstalled every Lost Script on your system before removing any of these shared resources or they may start throwing errors or stop working. For uninstalling a script, just remove any file and folder matching its name and restart Moho® or Reload Tools And Brushes if necessary.
+> ⚠ **WARNING:** Please, make sure you have uninstalled every Lost Script on your system before removing any shared resource or they may start throwing errors or stop working. For uninstalling a script, just remove any file and folder matching its name and restart Moho® or Reload Tools And Brushes if necessary.
 
 <br>
 
