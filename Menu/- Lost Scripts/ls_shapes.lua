@@ -4,10 +4,13 @@
 
 ScriptName = "LS_Shapes"
 ScriptBirth = "20220918-0248"
-ScriptBuild = "20260103-1852"
+ScriptBuild = "20260509-0217"
 ScriptVersion = "0.4.2"
 ScriptStage = "BETA"
 ScriptTarget = "Moho® 14.3+ Pro"
+ScriptType = "Window"
+ScriptDeps = {}
+ScriptDesc = "Persistent shape palette plus helpers for better Moho&reg; vector/s management." -- ⚠ AVOID UNICODE! (Use HTML entities)
 
 -- **************************************************
 -- General information about this script
