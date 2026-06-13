@@ -4,10 +4,13 @@ Description: Shape palette plus helpers for better Moho® vectors management
 Tags: [vectors, shapes]
 Date: 2023-10-20 17:29:50
 Modified: 2025-10-11 22:15:00
+Buildme: true
 ---
 
+<!--{{% adjust-paths %}}-->
 <!-- HEADER_START -->
 <!-- HEADER_END -->
+<!--{{% /adjust-paths %}}-->
  
 # LS Shapes Window
 
@@ -88,7 +91,7 @@ Persistent shape palette plus helpers for better management of Moho® vectors in
 
 [**Download**][h-shield1-a] the file, **unzip** it, and proceed with the installation method of your choice...
 
-| MANUAL                                                                           | ASSISTED                                                                         |
+| MANUAL (RECOMMENDED)                                                             | ASSISTED BY MOHO®                                                                |
 | -------------------------------------------------------------------------------- | -------------------------------------------------------------------------------- |
 | 1. You'll get some of these folders:  `Menu / ScriptResources / Tool / Utility`  | 1. In Moho®, go to "Scripts > Install Script…" to open the installation wizard*  |
 | 2. Place'em all into the *Scripts* folder of your [Custom Content Folder][3-1a]  | 2. Click *Select A Script Folder*, browse to the unzipped folder & **select it** |
