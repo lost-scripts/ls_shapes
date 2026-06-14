@@ -1,4 +1,4 @@
-Copyright © 2022-2025, Rai López <rai.lopez@outlook.com>. All Rights Reserved.
+Copyright © 2022-2026, Rai López <rai.lopez@outlook.com>. All Rights Reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this Lost Scripts™ project and its associated documentation files (the
@@ -9,10 +9,7 @@ rights to copy and modify the Software, provided that:
 all copies or substantial portions of the Software.
 
 * Redistribution, publication, sublicensing, and/or sale of the Software are
-strictly prohibited without express permission from the copyright holder. That
-said, if the Software becomes permanently unavailable or demonstrably abandoned,
-such actions may be permitted so that the Software and its derivatives remain
-functional, with the sole requirement that proper attribution is given.
+strictly prohibited without express permission from the copyright holder.
 
 * Derivative works may be distributed or sold under licensee's own terms,
 provided that such works do not contain the original Software in its entirety
