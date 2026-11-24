@@ -3,7 +3,7 @@ Title: LS Shapes Window
 Description: Shape palette plus helpers for better Moho® vectors management
 Tags: [vectors, shapes]
 Date: 2023-10-20 17:29:50
-Modified: 2025-10-11 22:15:00
+Modified: 2026-11-23 20:10:00
 Buildme: true
 ---
 
@@ -14,7 +14,7 @@ Buildme: true
  
 # LS Shapes Window
 
-Persistent shape palette plus helpers for better management of Moho® vectors in general and *Liquid Shapes* in particular. This script provides a visual and user-friendly interface for performing complex shape operations effortlessly.
+Persistent shape palette plus helpers for better handling of Moho® vectors in general and *Liquid Shapes* in particular. This script offers a visual and user-friendly interface to perform everything from basic to complex shape operations, along with dedicated window modes that also take style and point group management to the next level!
 
 <br>
 
@@ -73,15 +73,16 @@ Persistent shape palette plus helpers for better management of Moho® vectors in
 
 ## Features
 
-- Visualize layers' shape relationships at a glance.
-- Take the most of *Liquid Shapes* thanks to improved management.
-- Rename, reorder, hide/show, etc. one or several shapes with ease.
-- New ways of shape creation independently of selected tool.
+- Visualize layer contents and shape relationships at a glance.
+- Make the most of *Liquid Shapes* thanks to improved management.
+- Rename, reorder, hide/show, etc. one or more elements with ease.
+- New ways of shape creation (including *stacked shapes*) no matter the current tool.
 - Shape selection helpers: Select all, Inverse, Similar, Identical...
-- Improved *Style* management, picking and modification.
+- Enhanced and mode-sensitive *Point-Based Selection*.
+- Improved *Style* handling, picking and creation.
 - Improved *Point Group* management, reordering and modification.
-- Many interactive "live" Swatches (and you can easily make your own).
-- Recoloring features plus other helpers.
+- Many interactive "live" Swatches (and you can easily make your own!).
+- HSV color model and recoloring features, plus many other helpful utilities.
 - Several window display modes to better suit your needs.
 - And... much more!
 
@@ -106,8 +107,8 @@ And that's all! The script should appear in *Tools* palette and/or under *Script
 ## Usage
 
 1. **Opening**: Open *Shapes Window* from Moho's *Tools* palette or via its entry in the *Scripts* menu.
-2. **Operating**: Now you can have it permanently open to perform various shape operations.
-3. **Customizing**: Unfold Window's main menu: 🔽 (at top left of the window) to access different settings & actions.
+2. **Operating**: You can now keep it open permanently open to visualize and performming various operations related to Moho® vectors.
+3. **Customizing**: Unfold Window's main menu: ≡ (at top left of the window) to access different settings & actions.
 4. **Tooltips**: If *Beginners Mode* is checked, holding the cursor over the different elements will give a hint of their functionality...
 
 <br>

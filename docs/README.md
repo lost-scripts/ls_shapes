@@ -9,9 +9,9 @@
             </picture>
         </td>
         <td align='right' valign='middle' width='916' nowrap>
-            <a href='https://github.com/lost-scripts/ls_shapes/releases/latest/download/ls_shapes.zip' title='Download latest version...'><img src='https://img.shields.io/github/downloads/lost-scripts/ls_shapes/total?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZWVlIiBkPSJNMjg4IDMyYTMyIDMyIDAgMSAwLTY0IDB2MjQzbC03My03NGEzMiAzMiAwIDAgMC00NiA0NmwxMjggMTI4YzEzIDEyIDMzIDEyIDQ2IDBsMTI4LTEyOGEzMiAzMiAwIDAgMC00Ni00NmwtNzMgNzRWMzJ6TTY0IDM1MmMtMzUgMC02NCAyOS02NCA2NHYzMmMwIDM1IDI5IDY0IDY0IDY0aDM4NGMzNSAwIDY0LTI5IDY0LTY0di0zMmMwLTM1LTI5LTY0LTY0LTY0SDM0N2wtNDYgNDVhNjQgNjQgMCAwIDEtOTAgMGwtNDUtNDVINjR6bTM2OCA1NmEyNCAyNCAwIDEgMSAwIDQ4IDI0IDI0IDAgMSAxIDAtNDh6Ii8+PC9zdmc+&color=blue&label=Download' alt='Download'></a> 
+            <a href='https://github.com/lost-scripts/ls_shapes/releases/latest/download/ls_shapes.zip' title='Download latest version...'><img src='https://img.shields.io/github/downloads/lost-scripts/ls_shapes/total?logo=data:image/svg%2bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA1MTIgNTEyIj48cGF0aCBmaWxsPSIjZWVlIiBkPSJNMjg4IDMyaC02NHYyMTRsLTc3LTc4LTQ1IDQ1IDE1NCAxNTUgMTU0LTE1NS00NS00NS03NyA3OHpNNjQgMzUyYTY0IDY0IDAgMCAwLTY0IDY0djMyYTY0IDY0IDAgMCAwIDY0IDY0aDM4NGE2NCA2NCAwIDAgMCA2NC02NHYtMzJhNjQgNjQgMCAwIDAtNjQtNjRIMzQ3bC00NiA0NWE2NCA2NCAwIDAgMS05MCAwbC00NS00NXptMzY4IDU2YTI0IDI0IDAgMSAxIDAgNDggMjQgMjQgMCAxIDEgMC00OHoiLz48L3N2Zz4=&color=blue&label=Download' alt='Download'></a> 
             <a href='https://github.com/lost-scripts/ls_shapes/releases/latest' title='Go to release in GitHub...'><img src='https://img.shields.io/github/v/release/lost-scripts/ls_shapes?logo=github&color=yellow&label=Release' alt='Release'></a> 
-            <a href='https://moho.lostmarble.com/' title='Go to Moho® homepage...'><img src='https://img.shields.io/badge/For-Moho_Moho®_14.3+_Pro-orange' alt='Moho'></a> 
+            <a href='https://moho.lostmarble.com/' title='Go to Moho® homepage...'><img src='https://img.shields.io/badge/For-Moho_Moho®_14.5+_Pro-orange' alt='Moho'></a> 
         </td>
     </tr>
 </table>
@@ -19,7 +19,7 @@
  
 # LS Shapes Window
 
-Persistent shape palette plus helpers for better management of Moho® vectors in general and *Liquid Shapes* in particular. This script provides a visual and user-friendly interface for performing complex shape operations effortlessly.
+Persistent shape palette plus helpers for better handling of Moho® vectors in general and *Liquid Shapes* in particular. This script offers a visual and user-friendly interface to perform everything from basic to complex shape operations, along with dedicated window modes that also take style and point group management to the next level!
 
 <br>
 
@@ -78,15 +78,16 @@ Persistent shape palette plus helpers for better management of Moho® vectors in
 
 ## Features
 
-- Visualize layers' shape relationships at a glance.
-- Take the most of *Liquid Shapes* thanks to improved management.
-- Rename, reorder, hide/show, etc. one or several shapes with ease.
-- New ways of shape creation independently of selected tool.
+- Visualize layer contents and shape relationships at a glance.
+- Make the most of *Liquid Shapes* thanks to improved management.
+- Rename, reorder, hide/show, etc. one or more elements with ease.
+- New ways of shape creation (including *stacked shapes*) no matter the current tool.
 - Shape selection helpers: Select all, Inverse, Similar, Identical...
-- Improved *Style* management, picking and modification.
+- Enhanced and mode-sensitive *Point-Based Selection*.
+- Improved *Style* handling, picking and creation.
 - Improved *Point Group* management, reordering and modification.
-- Many interactive "live" Swatches (and you can easily make your own).
-- Recoloring features plus other helpers.
+- Many interactive "live" Swatches (and you can easily make your own!).
+- HSV color model and recoloring features, plus many other helpful utilities.
 - Several window display modes to better suit your needs.
 - And... much more!
 
@@ -111,8 +112,8 @@ And that's all! The script should appear in *Tools* palette and/or under *Script
 ## Usage
 
 1. **Opening**: Open *Shapes Window* from Moho's *Tools* palette or via its entry in the *Scripts* menu.
-2. **Operating**: Now you can have it permanently open to perform various shape operations.
-3. **Customizing**: Unfold Window's main menu: 🔽 (at top left of the window) to access different settings & actions.
+2. **Operating**: You can now keep it open permanently open to visualize and performming various operations related to Moho® vectors.
+3. **Customizing**: Unfold Window's main menu: ≡ (at top left of the window) to access different settings & actions.
 4. **Tooltips**: If *Beginners Mode* is checked, holding the cursor over the different elements will give a hint of their functionality...
 
 <br>
